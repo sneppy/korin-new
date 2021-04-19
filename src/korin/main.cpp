@@ -1,8 +1,10 @@
+#include "core_types.h"
 #include <stdio.h>
 
-int main()
+int32 main()
 {
-	printf("Hello, korin!");
+	uint32 uid = 0xf5cd0ccd;
+	printf("Hello, korin #%x!", uid);
 
 	return 0;
 }
