@@ -1,0 +1,33 @@
+set(MODULE_NAME @MODULE_NAME@)
+
+# Find source files
+file(GLOB_RECURSE PRIVATE_FILES
+
+	"./private/*.c"
+	"./private/*.cpp"
+	"./private/*.cxx"
+	"./private/*.h"
+	"./private/*.hpp"
+	"./private/*.inl"
+)
+
+file(GLOB_RECURSE PUBLIC_FILES
+
+	"./public/*.h"
+	"./public/*.hpp"
+	"./public/*.inl"
+)
+
+# Create target for module library
+add_library(${MODULE_NAME} OBJECT
+
+	${PRIVATE_FILES}
+	${PUBLIC_FILES}
+)
+add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})
+
+# Include public directory
+target_include_directories(${MODULE_NAME}
+
+	PUBLIC "./public"
+)

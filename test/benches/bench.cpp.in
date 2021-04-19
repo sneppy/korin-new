@@ -1,0 +1,3 @@
+#include "bench_@BENCH_NAME@.h"
+
+BENCHMARK_MAIN();
