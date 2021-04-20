@@ -1,10 +1,10 @@
 #include "core_types.h"
+#include "templates/types.h"
+#include "templates/utility.h"
 #include <stdio.h>
+#include <utility>
 
 int32 main()
 {
-	uint32 uid = 0xf5cd0ccd;
-	printf("Hello, korin #%x!", uid);
-
 	return 0;
 }

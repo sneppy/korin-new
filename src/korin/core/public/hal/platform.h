@@ -1,31 +1,31 @@
 #pragma once
 
 #ifdef PLATFORM_WINDOWS
-# define PLATFORM_WINDOWS 1
+#	define PLATFORM_WINDOWS 1
 #else
-# define PLATFORM_WINDOWS 0
+#	define PLATFORM_WINDOWS 0
 #endif
 
 #ifdef PLATFORM_APPLE
-# define PLATFORM_APPLE 1
+#	define PLATFORM_APPLE 1
 #else
-# define PLATFORM_APPLE 0
+#	define PLATFORM_APPLE 0
 #endif
 
 #ifdef PLATFORM_LINUX
-# define PLATFORM_LINUX 1
+#	define PLATFORM_LINUX 1
 #else
-# define PLATFORM_LINUX 0
+#	define PLATFORM_LINUX 0
 #endif
 
 #if PLATFORM_WINDOWS
-# include "windows/platform.h"
+#	include "windows/platform.h"
 #elif PLATFORM_APPLE
-# include "apple/platform.h"
+#	include "apple/platform.h"
 #elif PLATFORM_LINUX
-# include "linux/platform.h"
+#	include "linux/platform.h"
 #else
-# error "Unknown platform"
+#	error "Unknown platform"
 #endif
 
 // Declare all C++ types in global scope
