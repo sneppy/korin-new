@@ -82,5 +82,54 @@ TEST(containers, list)
 		}
 	}
 
+	x.reset();
+
+	ASSERT_EQ(x.getNumNodes(), 0ull);
+	ASSERT_EQ(x.getHead(), nullptr);
+	ASSERT_EQ(x.getTail(), nullptr);
+
+	x.pushBack(1);
+	x.pushBack(2);
+	x.pushBack(4);
+	x.pushBack(1);
+
+	List<int32> w{x};
+	
+	ASSERT_EQ(x.getNumNodes(), w.getNumNodes());
+	for (auto xit = x.begin(), wit = w.begin(); xit != x.end(); ++xit, ++wit)
+	{
+		ASSERT_EQ(*xit, *wit);
+	}
+
+	x.pushBack(10);
+	x.pushBack(6);
+	y = x;
+	
+	ASSERT_EQ(x.getNumNodes(), y.getNumNodes());
+	for (auto xit = x.begin(), yit = y.begin(); xit != x.end(); ++xit, ++yit)
+	{
+		ASSERT_EQ(*xit, *yit);
+	}
+
+	x = w;
+
+	ASSERT_EQ(x.getNumNodes(), w.getNumNodes());
+	for (auto xit = x.begin(), wit = w.begin(); xit != x.end(); ++xit, ++wit)
+	{
+		ASSERT_EQ(*xit, *wit);
+	}
+
+	z.reset();
+	z = move(y);
+
+	ASSERT_EQ(y.getNumNodes(), 0ull);
+	ASSERT_EQ(y.getHead(), nullptr);
+	ASSERT_EQ(y.getTail(), nullptr);
+	ASSERT_EQ(z.getNumNodes(), x.getNumNodes());
+	for (auto xit = x.begin(), zit = z.begin(); xit != x.end(); ++xit, ++zit)
+	{
+		ASSERT_EQ(*xit, *zit);
+	}
+
 	SUCCEED();
 }

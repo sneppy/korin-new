@@ -322,7 +322,65 @@ namespace Containers
 			//
 		}
 
-		// TODO: Implement move semantics
+		/**
+		 * @brief Copy-construct this list.
+		 * 
+		 * @param other another list
+		 */
+		FORCE_INLINE List(List const& other)
+			: List{}
+		{
+			// Copy the list
+			copyList(other.head);
+			numNodes = other.numNodes;
+		}
+
+		/**
+		 * @brief Move-construct this list.
+		 * 
+		 * @param other another list
+		 */
+		FORCE_INLINE List(List&& other)
+			: head{other.head}
+			, tail{other.tail}
+			, numNodes{other.numNodes}
+		{
+			other.head = other.tail = nullptr;
+			other.numNodes = 0ull;
+		}
+
+		/**
+		 * @brief Copy-assign another list to this
+		 * list.
+		 * 
+		 * @param other another list
+		 * @return ref to self
+		 */
+		FORCE_INLINE List& operator=(List const& other)
+		{
+			copyList(other.head);
+			numNodes = other.numNodes;
+
+			return *this;
+		}
+
+		/**
+		 * @brief Move-assign anothre list to this
+		 * list.
+		 * 
+		 * @param other another list
+		 * @return ref to self
+		 */
+		FORCE_INLINE List& operator=(List&& other)
+		{
+			// Swap with the other list.
+			// Then the other list will be destroyed
+			swap(head, other.head);
+			swap(tail, other.tail);
+			swap(numNodes, other.numNodes);
+
+			return *this;
+		}
 
 		/**
 		 * @brief Destroy list, removing all the nodes.
@@ -722,6 +780,14 @@ namespace Containers
 			removeAt(const_cast<NodeT*>(it.node), n);
 		}
 
+		/**
+		 * @brief Remove all nodes from the list.
+		 */
+		FORCE_INLINE void reset()
+		{
+			destroy();
+		}
+
 	protected:
 		/**
 		 * @brief Creates a new node with the
@@ -746,6 +812,68 @@ namespace Containers
 			// TODO: Check node is not nullptr
 			node->~NodeT();
 			::free(node);
+		}
+
+		/**
+		 * @brief Copy the list structure (nodes and
+		 * values) from another list, starting from
+		 * the given node.
+		 * 
+		 * @param node (head) node of the other list
+		 */
+		void copyList(NodeT const* node)
+		{
+			if (!head && !node)
+			{
+				return;
+			}
+			else if (!head)
+			{
+				// Copy all nodes
+				head = tail = createNode(node->value);
+				for (NodeT* it = node->next; it; it = it->next)
+				{
+					tail->next = createNode(it->value);
+					tail->next->prev = tail;
+					tail = tail->next;
+				}
+			}
+			else if (!node)
+			{
+				// Destroy the list
+				destroy();
+			}
+			else
+			{
+				// Copy only values until possible
+				NodeT* it = head;
+				for (; it && node; it = it->next, node = node->next)
+				{
+					it->value = node->value;
+				}
+
+				if (node)
+				{
+					// Create new nodes
+					for (; node; node = node->next)
+					{
+						tail->next = createNode(it->value);
+						tail->next->prev = tail;
+						tail = tail->next;
+					}
+				}
+				else if (it)
+				{
+					// Destroy remaining nodes
+					tail = it->prev;
+					while (it)
+					{
+						NodeT* next = it->next;
+						destroyNode(it);
+						it = next;
+					}
+				}
+			}
 		}
 
 		/**
