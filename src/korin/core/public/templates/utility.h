@@ -39,6 +39,8 @@ constexpr FORCE_INLINE auto forward(typename RemoveReference<T>::Type&& x)
 }
 /** @} */
 
+#define FORWARD(x) forward<decltype(x)>(x)
+
 /**
  * @brief Swap two values of the same type.
  * The type must be movable.

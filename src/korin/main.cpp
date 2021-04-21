@@ -1,10 +1,18 @@
 #include "core_types.h"
-#include "templates/types.h"
-#include "templates/utility.h"
-#include <stdio.h>
-#include <utility>
+#include "hal/platform_crt.h"
+#include "containers/containers.h"
 
 int32 main()
 {
+	using namespace Containers;
+
+	List<int32> values;
+	values.pushBack(1);
+	values.pushFront(2);
+	values.pushFront(3);
+	values.pushBack(0);
+	
+	values.removeAt(values.begin(), 4);
+
 	return 0;
 }
