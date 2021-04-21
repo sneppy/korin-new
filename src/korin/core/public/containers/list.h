@@ -510,21 +510,21 @@ namespace Containers
 		/** @} */
 
 		/**
-		 * @brief Insert a new value at the end
+		 * @brief Append a new value to the end
 		 * of the list.
 		 * 
-		 * @param value value to insert
+		 * @param createArgs arguments used to
+		 * construct the value
 		 */
-		void pushBack(auto&& value)
+		void emplaceBack(auto&& ...createArgs)
 		{
 			if (!tail)
 			{
-				// Create first node
-				head = tail = createNode(FORWARD(value));
+				head = tail = createNode(FORWARD(createArgs)...);
 			}
 			else
 			{
-				tail->next = createNode(FORWARD(value));
+				tail->next = createNode(FORWARD(createArgs)...);
 				tail->next->prev = tail;
 				tail = tail->next;
 			}
@@ -533,23 +533,42 @@ namespace Containers
 		}
 
 		/**
-		 * @brief Insert a new value at the
+		 * @{
+		 * @brief Append a value to the end
+		 * of the list.
+		 * 
+		 * @param value value to append
+		 */
+		FORCE_INLINE void pushBack(T const& value)
+		{
+			emplaceBack(value);
+		}
+
+		FORCE_INLINE void pushBack(T&& value)
+		{
+			emplaceBack(move(value));
+		}
+		/** @} */
+
+		/**
+		 * @brief Append a value to the
 		 * beginning of the list.
 		 * 
-		 * @param value value to insert
+		 * @param createArgs arguments passed to
+		 * the value constructor
 		 */
-		void pushFront(auto&& value)
+		void emplaceFront(auto&& ...createArgs)
 		{
 			// TODO: Add check after create node
 			
 			if (!head)
 			{
 				// Create first node
-				head = tail = createNode(FORWARD(value));
+				head = tail = createNode(FORWARD(createArgs)...);
 			}
 			else
 			{
-				head->prev = createNode(FORWARD(value));
+				head->prev = createNode(FORWARD(createArgs)...);
 				head->prev->next = head;
 				head = head->prev;
 			}
@@ -558,16 +577,35 @@ namespace Containers
 		}
 
 		/**
+		 * @{
+		 * @brief Append a value to the
+		 * beginning of the list.
+		 * 
+		 * @param value value to append
+		 */
+		FORCE_INLINE void pushFront(T const& value)
+		{
+			emplaceFront(value);
+		}
+
+		FORCE_INLINE void pushFront(T&& value)
+		{
+			emplaceFront(move(value));
+		}
+		/** @} */
+
+		/**
 		 * @brief Insert a new value after the
 		 * given node.
 		 * 
-		 * @param value value to insert
 		 * @param node node after which to insert
+		 * @param createArgs arguments used to
+		 * construct the new value
 		 */
-		void insertAfter(auto&& value, NodeT* node)
+		void emplaceAfter(NodeT* node, auto&& ...createArgs)
 		{
 			// TODO: Check this list has the node
-			NodeT* next = createNode(FORWARD(value));
+			NodeT* next = createNode(FORWARD(createArgs)...);
 			if (node->next)
 			{
 				// Rather confusing naming
@@ -588,26 +626,61 @@ namespace Containers
 		 * @brief Insert a new value after the node
 		 * pointed by the iterator.
 		 * 
-		 * @param value value to insert
 		 * @param it iterator pointing to the node
-		 * 	after which to insert the value
+		 * after which to insert the value
+		 * @param createArgs arguments used to
+		 * construct the new value
 		 */
-		FORCE_INLINE void insertAfter(auto&& value, ConstIteratorT it)
+		FORCE_INLINE void emplaceAfter(ConstIteratorT it, auto&& ...createArgs)
 		{
-			insertAfter(FORWARD(value), const_cast<NodeT*>(it.node));
+			emplaceAfter(const_cast<NodeT*>(it.node), FORWARD(createArgs)...);
 		}
+
+		/**
+		 * @{
+		 * @brief Insert a value after the given node.
+		 * @see emplaceAfter(NodeT*, auto&&...)
+		 */
+		FORCE_INLINE void insertAfter(NodeT* node, T const& value)
+		{
+			emplaceAfter(node, value);
+		}
+
+		FORCE_INLINE void insertAfter(NodeT* node, T&& value)
+		{
+			emplaceAfter(node, move(value));
+		}
+		/** @} */
+
+		/**
+		 * @{
+		 * @brief Insert a value after the node pointed
+		 * by the given iterator.
+		 * @see emplaceAfter(ConstIteratorT, auto&&...)
+		 */
+		FORCE_INLINE void insertAfter(ConstIteratorT it, T const& value)
+		{
+			emplaceAfter(it, value);
+		}
+
+		FORCE_INLINE void insertAfter(ConstIteratorT it, T&& value)
+		{
+			emplaceAfter(it, move(value));
+		}
+		/** @} */
 
 		/**
 		 * @brief Insert a new value before the
 		 * given node.
 		 * 
-		 * @param value value to insert
 		 * @param node node before which to insert
+		 * @param createArgs arguments used to
+		 * construct the new value
 		 */
-		void insertBefore(auto&& value, NodeT* node)
+		void emplaceBefore(NodeT* node, auto&& ...createArgs)
 		{
 			// TODO: Check this list has the node
-			NodeT* prev = createNode(FORWARD(value));
+			NodeT* prev = createNode(FORWARD(createArgs)...);
 			if (node->prev)
 			{
 				// Rather confusing naming
@@ -628,14 +701,48 @@ namespace Containers
 		 * @brief Insert a new value before the node
 		 * pointed by the iterator.
 		 * 
-		 * @param value value to insert
 		 * @param it iterator pointing to the node
-		 * 	before which to insert the value
+		 * before which to insert the value
+		 * @param createArgs arguments used to
+		 * construct the new value
 		 */
-		FORCE_INLINE void insertBefore(auto&& value, ConstIteratorT it)
+		FORCE_INLINE void emplaceBefore(ConstIteratorT it, auto&& ...createArgs)
 		{
-			insertBefore(FORWARD(value), const_cast<NodeT*>(it.node));
+			emplaceBefore(const_cast<NodeT*>(it.node), FORWARD(createArgs)...);
 		}
+
+		/**
+		 * @{
+		 * @brief Insert a value before the given node.
+		 * @see emplaceAfter(NodeT*, auto&&...)
+		 */
+		FORCE_INLINE void insertBefore(NodeT* node, T const& value)
+		{
+			emplaceBefore(node, value);
+		}
+
+		FORCE_INLINE void insertBefore(NodeT* node, T&& value)
+		{
+			emplaceBefore(node, move(value));
+		}
+		/** @} */
+
+		/**
+		 * @{
+		 * @brief Insert a value before the node pointed
+		 * by the given iterator.
+		 * @see emplaceAfter(ConstIteratorT, auto&&...)
+		 */
+		FORCE_INLINE void insertBefore(ConstIteratorT it, T const& value)
+		{
+			emplaceBefore(it, value);
+		}
+
+		FORCE_INLINE void insertBefore(ConstIteratorT it, T&& value)
+		{
+			emplaceBefore(it, move(value));
+		}
+		/** @} */
 
 		/**
 		 * @brief Remove and return the last value
@@ -772,7 +879,7 @@ namespace Containers
 		 * by the given iterator.
 		 * 
 		 * @param it iterator pointing to the starting
-		 * 	node
+		 * node
 		 * @param n number of nodes to remove
 		 */
 		FORCE_INLINE void removeAt(ConstIteratorT it, sizet n = 1ull)
@@ -852,7 +959,19 @@ namespace Containers
 					it->value = node->value;
 				}
 
-				if (node)
+				if (it)
+				{
+					// Destroy remaining nodes
+					tail = it->prev;
+					tail->next = nullptr;
+					while (it)
+					{
+						NodeT* next = it->next;
+						destroyNode(it);
+						it = next;
+					}
+				}
+				else
 				{
 					// Create new nodes
 					for (; node; node = node->next)
@@ -860,17 +979,6 @@ namespace Containers
 						tail->next = createNode(it->value);
 						tail->next->prev = tail;
 						tail = tail->next;
-					}
-				}
-				else if (it)
-				{
-					// Destroy remaining nodes
-					tail = it->prev;
-					while (it)
-					{
-						NodeT* next = it->next;
-						destroyNode(it);
-						it = next;
 					}
 				}
 			}

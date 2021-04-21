@@ -56,8 +56,8 @@ TEST(containers, list)
 	ASSERT_EQ(y.getHead(), nullptr);
 	ASSERT_EQ(y.getTail(), nullptr);
 
-	z.insertAfter(2, z.getHead());
-	z.insertBefore(0, z.getHead());
+	z.insertAfter(z.getHead(), 2);
+	z.insertBefore(z.getHead(), 0);
 
 	ASSERT_EQ(z.getNumNodes(), 3ull);
 	ASSERT_EQ(z.getFirst(), 0);
@@ -111,14 +111,6 @@ TEST(containers, list)
 		ASSERT_EQ(*xit, *yit);
 	}
 
-	x = w;
-
-	ASSERT_EQ(x.getNumNodes(), w.getNumNodes());
-	for (auto xit = x.begin(), wit = w.begin(); xit != x.end(); ++xit, ++wit)
-	{
-		ASSERT_EQ(*xit, *wit);
-	}
-
 	z.reset();
 	z = move(y);
 
@@ -129,6 +121,14 @@ TEST(containers, list)
 	for (auto xit = x.begin(), zit = z.begin(); xit != x.end(); ++xit, ++zit)
 	{
 		ASSERT_EQ(*xit, *zit);
+	}
+
+	x = w;
+
+	ASSERT_EQ(x.getNumNodes(), w.getNumNodes());
+	for (auto xit = x.begin(), wit = w.begin(); xit != x.end(); ++xit, ++wit)
+	{
+		ASSERT_EQ(*xit, *wit);
 	}
 
 	SUCCEED();
