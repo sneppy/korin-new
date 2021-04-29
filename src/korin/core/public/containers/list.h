@@ -38,8 +38,10 @@ namespace Containers
 		friend ListConstIterator<T>;
 		friend List<T>;
 
+		using SelfT = ListIterator;
 		using NodeT = ListNode<T>;
-		using ListT = List<T>;
+		using RefT = T&;
+		using PtrT = T*;
 
 		/**
 		 * @brief Construct an iterator that starts
@@ -47,7 +49,7 @@ namespace Containers
 		 * 
 		 * @param inNode starting node
 		 */
-		FORCE_INLINE explicit ListIterator(NodeT* inNode, [[maybe_unused]] ListT* inList)
+		FORCE_INLINE explicit ListIterator(NodeT* inNode, [[maybe_unused]] void* inList)
 			: node{inNode}
 #if !BUILD_RELEASE
 			, list{inList}
@@ -60,7 +62,7 @@ namespace Containers
 		 * @brief Return a reference to the current
 		 * node value.
 		 */
-		FORCE_INLINE T& operator*() const
+		FORCE_INLINE RefT operator*() const
 		{
 			return node->value;
 		}
@@ -69,7 +71,7 @@ namespace Containers
 		 * @brief Return a pointer to the current
 		 * node value.
 		 */
-		FORCE_INLINE T* operator->() const
+		FORCE_INLINE PtrT operator->() const
 		{
 			return &(*this);
 		}
@@ -81,7 +83,7 @@ namespace Containers
 		 * 
 		 * @param other another iterator
 		 */
-		FORCE_INLINE bool operator==(const ListIterator& other) const
+		FORCE_INLINE bool operator==(const SelfT& other) const
 		{
 			// TODO: Check same list
 			return node == other.node;
@@ -93,7 +95,7 @@ namespace Containers
 		 * 
 		 * @param other another iterator
 		 */
-		FORCE_INLINE bool operator!=(const ListIterator& other) const
+		FORCE_INLINE bool operator!=(const SelfT& other) const
 		{
 			return !(*this == other);
 		}
@@ -102,7 +104,7 @@ namespace Containers
 		 * @brief Step forward iterator and return
 		 * ref to self.
 		 */
-		FORCE_INLINE ListIterator& operator++()
+		FORCE_INLINE SelfT& operator++()
 		{
 			node = node->next;
 			return *this;
@@ -113,9 +115,9 @@ namespace Containers
 		 * a new iterator pointing to the previous
 		 * node.
 		 */
-		FORCE_INLINE ListIterator operator++(int32)
+		FORCE_INLINE SelfT operator++(int32)
 		{
-			ListIterator other{*this};
+			SelfT other{*this};
 			++(*this);
 			return other;
 		}
@@ -124,7 +126,7 @@ namespace Containers
 		 * @brief Step backward iterator and return
 		 * ref to self.
 		 */
-		FORCE_INLINE ListIterator& operator--()
+		FORCE_INLINE SelfT& operator--()
 		{
 			node = node->prev;
 			return *this;
@@ -135,9 +137,9 @@ namespace Containers
 		 * a new iterator pointing to the previous
 		 * node.
 		 */
-		FORCE_INLINE ListIterator operator--(int32)
+		FORCE_INLINE SelfT operator--(int32)
 		{
-			ListIterator other{*this};
+			SelfT other{*this};
 			--(*this);
 			return other;
 		}
@@ -150,7 +152,7 @@ namespace Containers
 
 #if !BUILD_RELEASE
 		/// @brief The actual list
-		ListT* list;
+		void* list;
 #endif
 	};
 
@@ -165,9 +167,11 @@ namespace Containers
 	{
 		friend List<T>;
 
+		using SelfT = ListConstIterator;
 		using NodeT = ListNode<T>;
-		using ListT = List<T>;
 		using IteratorT = ListIterator<T>;
+		using RefT = T const&;
+		using PtrT = T const*;
 
 		/**
 		 * @brief Construct an iterator that starts
@@ -175,7 +179,7 @@ namespace Containers
 		 * 
 		 * @param inNode starting node
 		 */
-		FORCE_INLINE explicit ListConstIterator(NodeT* inNode, [[maybe_unused]] ListT* inList)
+		FORCE_INLINE explicit ListConstIterator(NodeT* inNode, [[maybe_unused]] void* inList)
 			: node{inNode}
 #if !BUILD_RELEASE
 			, list{inList}
@@ -202,7 +206,7 @@ namespace Containers
 		 * @brief Return a reference to the current
 		 * node value.
 		 */
-		FORCE_INLINE T& operator*() const
+		FORCE_INLINE RefT operator*() const
 		{
 			return node->value;
 		}
@@ -211,7 +215,7 @@ namespace Containers
 		 * @brief Return a pointer to the current
 		 * node value.
 		 */
-		FORCE_INLINE T* operator->() const
+		FORCE_INLINE PtrT operator->() const
 		{
 			return &(*this);
 		}
@@ -223,7 +227,7 @@ namespace Containers
 		 * 
 		 * @param other another iterator
 		 */
-		FORCE_INLINE bool operator==(const ListConstIterator& other) const
+		FORCE_INLINE bool operator==(const SelfT& other) const
 		{
 			// TODO: Check same list
 			return node == other.node;
@@ -235,7 +239,7 @@ namespace Containers
 		 * 
 		 * @param other another iterator
 		 */
-		FORCE_INLINE bool operator!=(const ListConstIterator& other) const
+		FORCE_INLINE bool operator!=(const SelfT& other) const
 		{
 			return !(*this == other);
 		}
@@ -244,7 +248,7 @@ namespace Containers
 		 * @brief Step forward iterator and return
 		 * ref to self.
 		 */
-		FORCE_INLINE ListConstIterator& operator++()
+		FORCE_INLINE SelfT& operator++()
 		{
 			node = node->next;
 			return *this;
@@ -255,9 +259,9 @@ namespace Containers
 		 * a new iterator pointing to the previous
 		 * node.
 		 */
-		FORCE_INLINE ListConstIterator operator++(int32)
+		FORCE_INLINE SelfT operator++(int32)
 		{
-			ListIterator other{*this};
+			SelfT other{*this};
 			++(*this);
 			return other;
 		}
@@ -266,7 +270,7 @@ namespace Containers
 		 * @brief Step backward iterator and return
 		 * ref to self.
 		 */
-		FORCE_INLINE ListConstIterator& operator--()
+		FORCE_INLINE SelfT& operator--()
 		{
 			node = node->prev;
 			return *this;
@@ -277,9 +281,9 @@ namespace Containers
 		 * a new iterator pointing to the previous
 		 * node.
 		 */
-		FORCE_INLINE ListConstIterator operator--(int32)
+		FORCE_INLINE SelfT operator--(int32)
 		{
-			ListIterator other{*this};
+			SelfT other{*this};
 			--(*this);
 			return other;
 		}
@@ -292,7 +296,7 @@ namespace Containers
 
 #if !BUILD_RELEASE
 		/// @brief The actual list
-		ListT* list;
+		void* list;
 #endif
 	};
 
@@ -631,7 +635,7 @@ namespace Containers
 		 * @param createArgs arguments used to
 		 * construct the new value
 		 */
-		FORCE_INLINE void emplaceAfter(ConstIteratorT it, auto&& ...createArgs)
+		FORCE_INLINE void emplaceAfter(ConstIteratorT const& it, auto&& ...createArgs)
 		{
 			emplaceAfter(const_cast<NodeT*>(it.node), FORWARD(createArgs)...);
 		}
@@ -658,12 +662,12 @@ namespace Containers
 		 * by the given iterator.
 		 * @see emplaceAfter(ConstIteratorT, auto&&...)
 		 */
-		FORCE_INLINE void insertAfter(ConstIteratorT it, T const& value)
+		FORCE_INLINE void insertAfter(ConstIteratorT const& it, T const& value)
 		{
 			emplaceAfter(it, value);
 		}
 
-		FORCE_INLINE void insertAfter(ConstIteratorT it, T&& value)
+		FORCE_INLINE void insertAfter(ConstIteratorT const& it, T&& value)
 		{
 			emplaceAfter(it, move(value));
 		}
@@ -706,7 +710,7 @@ namespace Containers
 		 * @param createArgs arguments used to
 		 * construct the new value
 		 */
-		FORCE_INLINE void emplaceBefore(ConstIteratorT it, auto&& ...createArgs)
+		FORCE_INLINE void emplaceBefore(ConstIteratorT const& it, auto&& ...createArgs)
 		{
 			emplaceBefore(const_cast<NodeT*>(it.node), FORWARD(createArgs)...);
 		}
@@ -733,12 +737,12 @@ namespace Containers
 		 * by the given iterator.
 		 * @see emplaceAfter(ConstIteratorT, auto&&...)
 		 */
-		FORCE_INLINE void insertBefore(ConstIteratorT it, T const& value)
+		FORCE_INLINE void insertBefore(ConstIteratorT const& it, T const& value)
 		{
 			emplaceBefore(it, value);
 		}
 
-		FORCE_INLINE void insertBefore(ConstIteratorT it, T&& value)
+		FORCE_INLINE void insertBefore(ConstIteratorT const& it, T&& value)
 		{
 			emplaceBefore(it, move(value));
 		}
@@ -882,7 +886,7 @@ namespace Containers
 		 * node
 		 * @param n number of nodes to remove
 		 */
-		FORCE_INLINE void removeAt(ConstIteratorT it, sizet n = 1ull)
+		FORCE_INLINE void removeAt(ConstIteratorT const& it, sizet n = 1ull)
 		{
 			removeAt(const_cast<NodeT*>(it.node), n);
 		}
@@ -900,13 +904,14 @@ namespace Containers
 		 * @brief Creates a new node with the
 		 * given value.
 		 * 
-		 * @param value value of the node
+		 * @param createArgs arguments used to
+		 * create the value
 		 * @return ptr to the created node
 		 */
-		FORCE_INLINE NodeT* createNode(auto&& value)
+		FORCE_INLINE NodeT* createNode(auto&& ...createArgs)
 		{
 			// TODO: Replace with allocator
-			return new (::malloc(sizeof(NodeT))) NodeT{FORWARD(value)};
+			return new (::malloc(sizeof(NodeT))) NodeT{{FORWARD(createArgs)...}};
 		}
 
 		/**
@@ -1005,7 +1010,7 @@ namespace Containers
 		 * @brief Return true if the node to test
 		 * is part of this list.
 		 */
-		FORCE_INLINE bool hasNode(NodeT const* node) const
+		FORCE_INLINE bool containsNode(NodeT const* node) const
 		{
 			for (NodeT const* it = head; it; it = it->next)
 			{

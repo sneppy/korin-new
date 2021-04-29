@@ -3,8 +3,17 @@
 #include "gtest/gtest.h"
 
 #include "containers/list.h"
+#include "containers/tree.h"
 
 using namespace Containers;
+
+struct ThreeWayCompare
+{
+	FORCE_INLINE int32 operator()(auto const& x, auto const& y) const
+	{
+		return static_cast<int32>(x > y) - static_cast<int32>(x < y);
+	}
+};
 
 TEST(containers, list)
 {
@@ -130,6 +139,67 @@ TEST(containers, list)
 	{
 		ASSERT_EQ(*xit, *wit);
 	}
+
+	SUCCEED();
+}
+
+TEST(containers, tree)
+{
+	Tree<int32, ThreeWayCompare> x, y, z;
+
+	ASSERT_EQ(x.getNumNodes(), 0ull);
+	ASSERT_EQ(x.getRootNode(), nullptr);
+	ASSERT_EQ(x.getMinNode(), nullptr);
+	ASSERT_EQ(x.getMaxNode(), nullptr);
+
+	x.insert(1);
+
+	ASSERT_EQ(x.getNumNodes(), 1ull);
+	ASSERT_NE(x.getRootNode(), nullptr);
+	ASSERT_EQ(x.getRootNode(), x.getMinNode());
+	ASSERT_EQ(x.getRootNode(), x.getMaxNode());
+	ASSERT_EQ(x.getRootNode()->value, 1);
+
+	x.insert(2);
+	x.insert(3);
+
+	ASSERT_EQ(x.getRootNode()->value, 2);
+	ASSERT_EQ(x.getMinNode()->value, 1);
+	ASSERT_EQ(x.getMaxNode()->value, 3);
+	
+	for (auto value : x)
+	{
+		ASSERT_EQ(x.findNode(value)->value, value);
+	}
+
+	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(2)));
+	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(3)));
+
+	ASSERT_EQ(x.getNumNodes(), 1ull);
+	ASSERT_NE(x.getRootNode(), nullptr);
+	ASSERT_EQ(x.getRootNode(), x.getMinNode());
+	ASSERT_EQ(x.getRootNode(), x.getMaxNode());
+	ASSERT_EQ(x.getRootNode()->value, 1);
+
+	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(1)));
+
+	ASSERT_EQ(x.getNumNodes(), 0ull);
+	ASSERT_EQ(x.getRootNode(), nullptr);
+	ASSERT_EQ(x.getMinNode(), nullptr);
+	ASSERT_EQ(x.getMaxNode(), nullptr);
+
+	for (int32 i = 0; i < 100; ++i)
+	{
+		x.insert(rand() % 20);
+	}
+
+	ASSERT_EQ(x.getNumNodes(), 100ull);
+	ASSERT_NE(x.getRootNode(), nullptr);
+
+	for (auto it = x.begin(); it != x.end(); it = x.remove(it));
+
+	ASSERT_EQ(x.getNumNodes(), 0ull);
+	ASSERT_EQ(x.getRootNode(), nullptr);
 
 	SUCCEED();
 }

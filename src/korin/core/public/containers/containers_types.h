@@ -10,13 +10,13 @@ namespace Containers
 	template<typename> struct Pair;
 	template<typename> struct Tuple;
 
-	template<typename> class Stack;
-	template<typename> class Queue;
-	template<typename> class List;
-	template<typename> class Array;
-	template<typename> class Tree;
-	template<typename> class Map;
-	template<typename> class Set;
-	template<typename> class HashMap;
-	template<typename> class HashSet;
+	template<typename>					   class Stack;
+	template<typename>					   class Queue;
+	template<typename>					   class List;
+	template<typename>					   class Array;
+	template<typename, typename>		   class Tree;
+	template<typename, typename, typename> class Map;
+	template<typename, typename>		   class Set;
+	template<typename>					   class HashMap;
+	template<typename>					   class HashSet;
 } // namespace Containers
