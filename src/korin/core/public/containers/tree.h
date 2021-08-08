@@ -150,7 +150,7 @@ namespace Containers
 		template<typename, typename> friend class Tree;
 
 		using SelfT = TreeConstIterator;
-		using NodeT = BinaryNode<T>;
+		using NodeT = BinaryNode<T> const;
 		using IteratorT = TreeIterator<T>;
 		using RefT = T const&;
 		using PtrT = T const*;
@@ -161,7 +161,7 @@ namespace Containers
 		 * 
 		 * @param inNode ptr to starting node
 		 */
-		FORCE_INLINE explicit TreeConstIterator(NodeT* inNode, [[maybe_unused]] void* inTree)
+		FORCE_INLINE explicit TreeConstIterator(NodeT* inNode, [[maybe_unused]] void const* inTree)
 			: node{inNode}
 #if !BUILD_RELEASE
 			, tree{inTree}
@@ -278,7 +278,7 @@ namespace Containers
 
 #if !BUILD_RELEASE
 		/// @brief Address of the actual tree instance.
-		void* tree;
+		void const* tree;
 #endif
 	};
 
@@ -317,7 +317,7 @@ namespace Containers
 		 * @brief Return the number of nodes in
 		 * the tree.
 		 */
-		FORCE_INLINE sizet getNumNodes() const
+		FORCE_INLINE uint64 getNumNodes() const
 		{
 			// TODO: Check against actual number of nodes
 			return numNodes;
@@ -800,7 +800,7 @@ namespace Containers
 		NodeT* root;
 
 		/// @brief Number of nodes in the tree.
-		sizet numNodes;
+		uint64 numNodes;
 	};
 } // namespace Containers
 

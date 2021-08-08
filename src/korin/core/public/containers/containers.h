@@ -67,3 +67,4 @@ namespace Containers
 
 #include "list.h"
 #include "tree.h"
+#include "set.h"

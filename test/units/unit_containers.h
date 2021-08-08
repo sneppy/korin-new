@@ -2,8 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "containers/list.h"
-#include "containers/tree.h"
+#include "containers/containers.h"
 
 using namespace Containers;
 
@@ -192,6 +191,51 @@ TEST(containers, tree)
 
 	ASSERT_EQ(x.getNumNodes(), 0ull);
 	ASSERT_EQ(x.getRootNode(), nullptr);
+
+	SUCCEED();
+}
+
+TEST(containers, set)
+{
+	Set<int32> x, y, z;
+
+	ASSERT_EQ(x.getNumItems(), 0ull);
+
+	x.insert(10);
+	x.insert(1);
+	x.insert(3);
+
+	ASSERT_EQ(x.getNumItems(), 3ull);
+	ASSERT_NE(x.get(1), x.end());
+	ASSERT_EQ(x.get(0), x.end());
+	ASSERT_EQ(*x.get(1), 1);
+	ASSERT_EQ(*x.get(3), 3);
+	ASSERT_EQ(*x.get(10), 10);
+	ASSERT_EQ(x.begin(), x.get(1));
+	ASSERT_EQ(x.rbegin(), x.get(10));
+	ASSERT_TRUE(x.has(1));
+	ASSERT_TRUE(x.has(10));
+	ASSERT_FALSE(x.has(8));
+
+	y.insert(2);
+	y.insert(0);
+	y.insert(9);
+	y.insert(3);
+	x |= y;
+
+	ASSERT_EQ(x.getNumItems(), 6ull);
+	ASSERT_TRUE(x.has(3));
+	ASSERT_TRUE(x.has(10));
+	ASSERT_TRUE(x.has(2));
+
+	x &= y;
+
+	ASSERT_EQ(x.getNumItems(), y.getNumItems());
+	for (auto v : y)
+	{
+		ASSERT_TRUE(x.has(v));
+		ASSERT_EQ(*x.get(v), v);
+	}
 
 	SUCCEED();
 }
