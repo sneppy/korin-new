@@ -21,18 +21,7 @@ namespace Containers
 	 * the end of the container otherwise
 	 */
 	template<typename ItT>
-	ItT find(ItT begin, ItT end, auto const& value)
-	{
-		for (auto it = begin; it != end; ++it)
-		{
-			if (*it == value)
-			{
-				return it;
-			}
-		}
-
-		return end;
-	}
+	ItT find(ItT begin, ItT end, auto const& value);
 
 	/**
 	 * @brief Find the first item that matches
@@ -51,20 +40,10 @@ namespace Containers
 	 * of the container otherwise
 	 */
 	template<typename ItT, typename PolicyT>
-	ItT findIf(ItT begin, ItT end, PolicyT&& policy)
-	{
-		for (auto it = begin; it != end; ++it)
-		{
-			if (policy(*it))
-			{
-				return it;
-			}
-		}
-
-		return end;
-	}
+	ItT findIf(ItT begin, ItT end, PolicyT&& policy);
 } // namespace Containers
 
 #include "list.h"
 #include "tree.h"
 #include "set.h"
+#include "containers.inl"
