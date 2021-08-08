@@ -1,7 +1,7 @@
 option(KORIN_BUILD_UNITS "If true build unit tests" OFF)
 if(KORIN_BUILD_UNITS)
 	# Make sure googletest is available
-	FetchContent_MakeAvailable(googletest)	
+	FetchContent_MakeAvailable(googletest)
 
 	# Add units
 	add_subdirectory(units)

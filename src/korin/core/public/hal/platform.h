@@ -1,22 +1,6 @@
 #pragma once
 
-#ifdef PLATFORM_WINDOWS
-#	define PLATFORM_WINDOWS 1
-#else
-#	define PLATFORM_WINDOWS 0
-#endif
-
-#ifdef PLATFORM_APPLE
-#	define PLATFORM_APPLE 1
-#else
-#	define PLATFORM_APPLE 0
-#endif
-
-#ifdef PLATFORM_LINUX
-#	define PLATFORM_LINUX 1
-#else
-#	define PLATFORM_LINUX 0
-#endif
+#include "misc/build.h"
 
 #if PLATFORM_WINDOWS
 #	include "windows/platform.h"
