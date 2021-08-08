@@ -7,14 +7,6 @@
 
 using namespace Containers;
 
-struct ThreeWayCompare
-{
-	FORCE_INLINE int32 operator()(auto const& x, auto const& y) const
-	{
-		return static_cast<int32>(x > y) - static_cast<int32>(x < y);
-	}
-};
-
 TEST(containers, list)
 {
 	List<int32> x, y, z;
@@ -145,7 +137,7 @@ TEST(containers, list)
 
 TEST(containers, tree)
 {
-	Tree<int32, ThreeWayCompare> x, y, z;
+	Tree<int32> x, y, z;
 
 	ASSERT_EQ(x.getNumNodes(), 0ull);
 	ASSERT_EQ(x.getRootNode(), nullptr);
