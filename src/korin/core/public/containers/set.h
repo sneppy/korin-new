@@ -267,6 +267,76 @@ namespace Containers
 			return *this;
 		}
 
+		/**
+		 * @brief Compute the difference between
+		 * this set and another set.
+		 * 
+		 * @param other another set
+		 * @return ref to self
+		 */
+		Set& operator^=(Set const& other)
+		{
+			auto it = tree.begin();
+			auto jt = other.tree.begin();
+
+			for (; jt != other.tree.end(); ++jt)
+			{
+				// Find next item in set
+				it = findIf(it, tree.end(), [jt](auto const& item) {
+
+					return CompareT{}(item, *jt) >= 0;
+				});
+				
+				if (it == tree.end())
+				{
+					break;
+				}
+
+				if (CompareT{}(*it, *jt) == 0)
+				{
+					it = tree.remove(it);
+				}
+			}
+
+			return *this;
+		}
+
+		/**
+		 * @brief Return a new set equal to the
+		 * union of two sets.
+		 * 
+		 * @param other another set
+		 * @return union of two sets
+		 */
+		FORCE_INLINE Set operator|=(Set const& other) const
+		{
+			return Set{*this} |= other;
+		}
+
+		/**
+		 * @brief Return a new set equal to the
+		 * intersection of two sets.
+		 * 
+		 * @param other another set
+		 * @return intersection of two sets
+		 */
+		FORCE_INLINE Set operator&=(Set const& other) const
+		{
+			return Set{*this} &= other;
+		}
+
+		/**
+		 * @brief Return a new set equal to the
+		 * difference of two sets.
+		 * 
+		 * @param other another set
+		 * @return difference of two sets
+		 */
+		FORCE_INLINE Set operator^=(Set const& other) const
+		{
+			return Set{*this} ^= other;
+		}
+
 	protected:
 		/* The RB tree instance. */
 		TreeT tree;

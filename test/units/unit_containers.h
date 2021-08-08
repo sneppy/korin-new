@@ -237,5 +237,17 @@ TEST(containers, set)
 		ASSERT_EQ(*x.get(v), v);
 	}
 
+	z.insert(1);
+	z.insert(0);
+	z.insert(9);
+	z.insert(10);
+	x ^= z;
+
+	ASSERT_EQ(x.getNumItems(), 2ull);
+	ASSERT_TRUE(x.has(2));
+	ASSERT_TRUE(x.has(3));
+	ASSERT_FALSE(x.has(0));
+	ASSERT_FALSE(x.has(9));
+
 	SUCCEED();
 }
