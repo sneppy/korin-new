@@ -12,6 +12,18 @@
 #	error "Unknown platform"
 #endif
 
+#ifndef FORCE_INLINE
+#	define FORCE_INLINE inline
+#endif
+
+#ifndef UNLIKELY
+#	define UNLIKELY(x) (x)
+#endif
+
+#ifndef LIKELY
+#	define LIKELY(x) (x)
+#endif
+
 // Declare all C++ types in global scope
 using int8 = PlatformTypes::int8;
 using int16 = PlatformTypes::int16;

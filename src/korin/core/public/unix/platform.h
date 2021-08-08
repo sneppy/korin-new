@@ -12,10 +12,11 @@ struct UnixPlatformTypes : GenericPlatformTypes
 
 #include "misc/build.h"
 
+#if BUILD_RELEASE && defined(__GNUC__)
+#	define FORCE_INLINE inline __attribute__((always_inline))
+#endif
+
 #ifdef __GNUC__
-#	if BUILD_RELEASE
-# 		define FORCE_INLINE inline __attribute__((always_inline))
-#	else
-#		define FORCE_INLINE inline
-#	endif
+#	define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#	define LIKELY(x) __builtin_expect(!!(x), 1)
 #endif
