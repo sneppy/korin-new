@@ -12,6 +12,10 @@
 #	error "Unknown platform"
 #endif
 
+#ifndef PLATFORM_POSIX
+#	define PLATFORM_POSIX 0
+#endif
+
 #ifndef FORCE_INLINE
 #	define FORCE_INLINE inline
 #endif
@@ -22,6 +26,10 @@
 
 #ifndef LIKELY
 #	define LIKELY(x) (x)
+#endif
+
+#ifndef RESTRICT
+#	define RESTRICT restrict
 #endif
 
 // Declare all C++ types in global scope
