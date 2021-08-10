@@ -8,6 +8,35 @@ namespace Containers
 {
 	template<typename T> struct TreeIterator;
 	template<typename T> struct TreeConstIterator;
+	
+	/**
+	 * @brief A node of a red-black tree, with two
+	 * child nodes (left and right) and a logical
+	 * next and previous nodes.
+	 * 
+	 * @tparam T the type of the value
+	 */
+	template<typename T>
+	struct BinaryNode : public BinaryNodeBase<BinaryNode<T>>
+	{
+		using BaseT = BinaryNodeBase<BinaryNode>;
+
+		/// @brief The value of the node.
+		T value;
+
+		/**
+		 * @brief Construct node with value
+		 * 
+		 * @param args arguments passed to value
+		 * constructor
+		 */
+		FORCE_INLINE BinaryNode(auto&& ...args)
+			: BaseT{}
+			, value{FORWARD(args)...}
+		{
+			//
+		}
+	};
 
 	/**
 	 * @brief An iterator used to iterate over
@@ -515,12 +544,12 @@ namespace Containers
 		 */
 		IteratorT emplace(auto&& ...createArgs)
 		{
+			// TODO: Update to use TreeNode::insert
 			NodeT* node = createNode(FORWARD(createArgs)...);
 
 			if (!root)
 			{
 				root = node;
-				root->color = BinaryNodeColor::Color_BLACK;
 			}
 			else
 			{
@@ -686,7 +715,7 @@ namespace Containers
 		FORCE_INLINE NodeT* createNode(auto&& ...createArgs)
 		{
 			// TODO: Replace with allocator
-			return new (::malloc(sizeof(NodeT))) NodeT{{FORWARD(createArgs)...}};
+			return new (::malloc(sizeof(NodeT))) NodeT{FORWARD(createArgs)...};
 		}
 
 		/**
@@ -772,8 +801,8 @@ namespace Containers
 		 */
 		FORCE_INLINE void repairInserted(NodeT* node)
 		{
-			Tree_Private::repairInserted(node);
-			root = Tree_Private::getRoot(node);
+			TreeNode::Impl::repairInserted(node);
+			root = TreeNode::getRoot(node);
 		}
 
 		/**
@@ -788,12 +817,12 @@ namespace Containers
 		 */
 		FORCE_INLINE void repairRemoved(NodeT* node, NodeT* repl, NodeT* parent, NodeT* valid)
 		{
-			if (Tree_Private::isBlack(node))
+			if (TreeNode::isBlack(node))
 			{
-				Tree_Private::repairRemoved(repl, parent);
+				TreeNode::Impl::repairRemoved(repl, parent);
 			}
 
-			root = valid ? Tree_Private::getRoot(valid) : nullptr;
+			root = valid ? TreeNode::getRoot(valid) : nullptr;
 		}
 
 		/// @brief Root node of the tree.
