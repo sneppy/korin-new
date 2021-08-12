@@ -169,6 +169,92 @@ namespace Containers
 			}
 
 			/**
+			 * @brief 
+			 * 
+			 */
+			template<typename NodeT, typename = ENABLE_IF_NODE_T(NodeT)>
+			constexpr void swapNodes(NodeT* node, NodeT* other)
+			{
+				// Swap parents
+				swap(node->parent, other->parent);
+				if (node->parent)
+				{
+					if (node->parent->right == other)
+						node->parent->right = node;
+					else
+						node->parent->left = node;
+				}
+				if (other->parent)
+				{
+					if (other->parent->right == node)
+						other->parent->right = other;
+					else
+						other->parent->left = other;
+				}
+
+				// Swap left children
+				swap(node->left, other->left);
+				if (node->left)
+					node->left->parent = node;
+				if (other->left)
+					other->left->parent = other;
+				
+				// Swap right children
+				swap(node->right, other->right);
+				if (node->right)
+					node->right->parent = node;
+				if (other->right)
+					other->right->parent = other;
+			}
+
+			/**
+			 * @brief 
+			 * 
+			 */
+			template<typename NodeT, typename = ENABLE_IF_NODE_T(NodeT)>
+			constexpr NodeT* replaceNode(NodeT* node)
+			{
+				ASSERT(node != nullptr)
+
+				NodeT* repl = nullptr;
+
+				if ((repl = node->left))
+				{
+					// Replace with left child
+					if ((repl->next = node->next))
+						repl->next->prev = repl;
+				}
+				else if ((repl = node->right))
+				{
+					// Replace with right child
+					if ((repl->prev = node->prev))
+						repl->prev->next = repl;
+				}
+				else
+				{
+					// Just evict from tree
+
+					if (node->prev)
+						node->prev->next = node->next;
+					
+					if (node->next)
+						node->next->prev = node->prev;
+				}
+
+				if (auto* parent = node->parent)
+				{
+					if (parent->left == node)
+						parent->left = repl;
+					else
+						parent->right = repl;
+				}
+				if (repl)
+					repl->parent = node->parent;
+				
+				return repl;
+			}
+
+			/**
 			 * @brief Rotate left around pivot node.
 			 * 
 			 * @param pivot ptr to pivot node
@@ -398,23 +484,98 @@ namespace Containers
 		template<typename NodeT, typename = ENABLE_IF_NODE_T(NodeT)>
 		constexpr FORCE_INLINE NodeT* getRoot(NodeT* node)
 		{
-			// TODO: Check node is not null
+			ASSERT(node != nullptr)
 			while (node->parent) node = node->parent;
 			return node;
 		}
+
+		/**
+		 * @brief Return the leftmost node of the tree.
+		 * 
+		 * @param root the root of the tree
+		 * @return ptr to leftmost node
+		 */
+		template<typename NodeT, typename = ENABLE_IF_NODE_T(NodeT)>
+		constexpr FORCE_INLINE NodeT* getMin(NodeT* root)
+		{
+			ASSERT(root != nullptr)
+			while (root->left) root = root->left;
+			return root;
+		}
+
+		/**
+		 * @brief Return the rightmost node of the tree.
+		 * 
+		 * @param root the root of the tree
+		 * @return ptr to rightmost node
+		 */
+		template<typename NodeT, typename = ENABLE_IF_NODE_T(NodeT)>
+		constexpr FORCE_INLINE NodeT* getMax(NodeT* root)
+		{
+			ASSERT(root != nullptr)
+			while (root->right) root = root->right;
+			return root;
+		}
+
+		/**
+		 * @brief Return the first node that matches
+		 * the search policy.
+		 * 
+		 * @param root root of the tree
+		 * @param policy a function that returns -1 if
+		 * the value is before a node, 1 if the value
+		 * is after a node and 0 if it's the same
+		 * @param outParent if given and node is not
+		 * found, it will point to the last valid node
+		 * along the path
+		 * @return ptr to node if found
+		 * @return null ptr otherwise
+		 * @{
+		 */
+		template<typename NodeT, typename PolicyT, typename = ENABLE_IF_NODE_T(NodeT)>
+		constexpr NodeT* find(NodeT* root, PolicyT&& policy, NodeT*& outParent)
+		{
+			for (auto* it = root; it;)
+			{
+				outParent = it;
+
+				const int32 cmp = policy(it);
+				if (cmp < 0)
+				{
+					it = it->left;
+				}
+				else if (cmp > 0)
+				{
+					it = it->right;
+				}
+				else
+				{
+					return it;
+				}
+			}
+
+			return nullptr;
+		}
+
+		template<typename NodeT, typename PolicyT, typename = ENABLE_IF_NODE_T(NodeT)>
+		constexpr FORCE_INLINE NodeT* find(NodeT* root, PolicyT&& policy)
+		{
+			NodeT* _ = nullptr;
+			return find(root, FORWARD(policy), _);
+		}
+		/** @} */
 
 		/**
 		 * @brief Insert a node in the tree.
 		 * 
 		 * @param root tree root node
 		 * @param node node to insert
-		 * @param cmpfn if provided, a lambda that compares
-		 * the two nodes
+		 * @param policy a function that compares two
+		 * nodes to choose which branch to take
 		 * @return new root node
-		 * @{
 		 */
-		template<typename NodeT, typename CompareT, typename = ENABLE_IF_NODE_T(NodeT)>
-		constexpr NodeT* insert(NodeT* root, NodeT* node, CompareT&& cmpfn)
+		template<typename NodeT, typename PolicyT, typename = ENABLE_IF_NODE_T(NodeT)>
+		constexpr NodeT* insert(NodeT* root, NodeT* node, PolicyT&& policy)
 		{
 			if (!root)
 			{
@@ -432,7 +593,7 @@ namespace Containers
 				// Set parent
 				parent = it;
 
-				cmp = cmpfn(node, it);
+				cmp = policy(node, it);
 				if (cmp < 0)
 				{
 					it = it->left;
@@ -460,12 +621,42 @@ namespace Containers
 			return getRoot(node);
 		}
 
-		template<typename NodeT, typename CompareT, typename = ENABLE_IF_NODE_T(NodeT)>
-		constexpr NodeT* insert(NodeT* root, NodeT* node)
+		/**
+		 * @brief Remove node from tree.
+		 * 
+		 * @param node the node of the tree to
+		 * remove
+		 * @return the new root of the tree
+		 */
+		template<typename NodeT, typename = ENABLE_IF_NODE_T(NodeT)>
+		constexpr NodeT* remove(NodeT* node)
 		{
-			return insert(root, node, CompareT{});
+			// Replace and remove the node from the tree
+			auto* next = node->next;
+			if (node->left && node->right)
+			{
+				Impl::swapNodes(node, next);
+			}
+			auto* repl = Impl::replaceNode(node);
+
+			// Repair tree after remove
+			if (isBlack(node))
+			{
+				Impl::repairRemoved(repl, node->parent);
+			}
+
+			if (repl)
+			{
+				return getRoot(repl);
+			}
+			else if (next)
+			{
+				return getRoot(next);
+			}
+
+			return nullptr;
 		}
-		/** @} */
 	} // namespace TreeNode
 } // namespace Containers
 
+#undef ENABLE_IF_NODE_T

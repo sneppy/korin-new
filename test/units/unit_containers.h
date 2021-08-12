@@ -4,9 +4,15 @@
 
 #include "containers/containers.h"
 
+template<typename ItT>
+static void shuffle(ItT begin, ItT end)
+{
+	// Shuffle
+}
+
 using namespace Containers;
 
-TEST(containers, list)
+TEST(containers, List)
 {
 	List<int32> x, y, z;
 
@@ -134,7 +140,51 @@ TEST(containers, list)
 	SUCCEED();
 }
 
-TEST(containers, tree)
+TEST(containers, TreeNode)
+{
+	struct Node : public BinaryNodeBase<Node>
+	{
+		// Node value
+		int32 value;
+	};
+
+	constexpr uint32 numNodes = 1024;
+	Node* nodes[numNodes] = {};
+	Node* root = (nodes[0] = new Node{});
+	root->color = BinaryNodeColor::Color_BLACK;	
+	root->value = 0;
+
+	for (int32 i = 1; i < numNodes; ++i)
+	{
+		nodes[i] = new Node{};
+		nodes[i]->value = i;
+		root = TreeNode::insert(root, nodes[i], [](auto* node, auto* other) {
+
+			return GreaterThan{}(node->value, other->value);
+		});
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto* node = TreeNode::find(root, [i](auto const* node) {
+
+			return GreaterThan{}(i, node->value);
+		});
+	}
+	
+	// Shuffle nodes
+	shuffle(nodes, nodes + numNodes);
+
+	for (int32 i = 1; i < numNodes; ++i)
+	{
+		root = TreeNode::remove(nodes[i]);
+		delete nodes[i];
+	}
+
+	SUCCEED();
+}
+
+TEST(containers, Tree)
 {
 	Tree<int32> x, y, z;
 
@@ -195,7 +245,7 @@ TEST(containers, tree)
 	SUCCEED();
 }
 
-TEST(containers, set)
+TEST(containers, Set)
 {
 	Set<int32> x, y, z;
 
