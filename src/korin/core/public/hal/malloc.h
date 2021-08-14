@@ -10,7 +10,7 @@ enum { MIN_ALIGNMENT = sizeof(void*) };
  * must be reallocated/freed using the same
  * allocator.
  */
-class Malloc
+class MallocBase
 {
 public:
 	/**
@@ -46,4 +46,4 @@ public:
 	virtual sizet getUsedMemory() const = 0;
 };
 
-extern Malloc* gMalloc;
+extern MallocBase* gMalloc;

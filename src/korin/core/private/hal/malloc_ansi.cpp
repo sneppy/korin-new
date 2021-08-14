@@ -32,3 +32,8 @@ sizet MallocAnsi::getUsedMemory() const
 {
 	return {};
 }
+
+#ifndef USE_CUSTOM_GLOBAL_MALLOC
+// Create the global allocator
+MallocBase* gMalloc = new MallocAnsi{};
+#endif

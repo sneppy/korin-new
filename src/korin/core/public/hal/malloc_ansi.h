@@ -12,7 +12,7 @@
  * memory via multiple instances of
  * this allocator.
  */
-class MallocAnsi : public Malloc
+class MallocAnsi : public MallocBase
 {
 public:
 	virtual void* malloc(sizet, sizet = MIN_ALIGNMENT) override;
