@@ -11,13 +11,13 @@
 #	define CHECKF(x, fmt, ...)
 #else
 #	define ASSERTF(x, fmt, ...)\
-		if (UNLIKELY(!x))\
+		if (UNLIKELY(!(x)))\
 		{\
 			fprintf(stderr, "%s:%d:" TERM_COLOR_BRIGHT_RED " error:" TERM_COLOR_RESET " " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__);\
 			exit(1);\
 		}
 #	define CHECKF(x, fmt, ...)\
-		if (UNLIKELY(!x))\
+		if (UNLIKELY(!(x)))\
 		{\
 			fprintf(stderr, "%s:%d:" TERM_COLOR_BRIGHT_YELLOW " warning:" TERM_COLOR_RESET " " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__);\
 		}
