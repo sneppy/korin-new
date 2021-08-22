@@ -19,7 +19,7 @@ namespace Containers
 	template<typename T>
 	struct BinaryNode : public BinaryNodeBase<BinaryNode<T>>
 	{
-		using BaseT = BinaryNodeBase<BinaryNode>;
+		using SuperT = BinaryNodeBase<BinaryNode>;
 
 		/// @brief The value of the node.
 		T value;
@@ -31,7 +31,7 @@ namespace Containers
 		 * constructor
 		 */
 		FORCE_INLINE BinaryNode(auto&& ...args)
-			: BaseT{}
+			: SuperT{}
 			, value{FORWARD(args)...}
 		{
 			//

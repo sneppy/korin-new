@@ -1,7 +1,13 @@
 namespace Containers
 {
+	template<typename T, typename CompareT>
+	constexpr FORCE_INLINE sizet len(Set<T, CompareT> const& container)
+	{
+		return container.getNumItems();
+	}
+
 	template<typename ItT>
-	ItT find(ItT begin, ItT end, auto const& value)
+	constexpr ItT find(ItT begin, ItT end, auto const& value)
 	{
 		for (auto it = begin; it != end; ++it)
 		{
@@ -15,7 +21,7 @@ namespace Containers
 	}
 	
 	template<typename ItT, typename PolicyT>
-	ItT findIf(ItT begin, ItT end, PolicyT&& policy)
+	constexpr ItT findIf(ItT begin, ItT end, PolicyT&& policy)
 	{
 		for (auto it = begin; it != end; ++it)
 		{
