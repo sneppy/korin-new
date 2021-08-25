@@ -1,9 +1,15 @@
 namespace Containers
 {
-	template<typename T, typename CompareT>
-	constexpr FORCE_INLINE sizet len(Set<T, CompareT> const& container)
+	template<typename T>
+	constexpr FORCE_INLINE sizet len(Array<T> const& arr)
 	{
-		return container.getNumItems();
+		return arr.getNumItems();
+	}
+
+	template<typename T, typename CompareT>
+	constexpr FORCE_INLINE sizet len(Set<T, CompareT> const& set)
+	{
+		return set.getNumItems();
 	}
 
 	template<typename ItT>
