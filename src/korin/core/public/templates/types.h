@@ -14,6 +14,45 @@ struct IsBaseOf
 };
 
 /**
+ * @brief Check if type has trivial constructor.
+ * 
+ * @tparam T the type to test
+ */
+template<typename T>
+struct IsTriviallyConstructible
+{
+	enum { value = __has_trivial_constructor(T) };
+};
+
+/**
+ * @brief Check if a type has a trivial
+ * copy assignment operator.
+ * 
+ * See @c __has_trivial_assign intrinsic.
+ * 
+ * @tparam T the type to test
+ */
+template<typename T>
+struct IsTriviallyCopyable
+{
+	enum { value = __has_trivial_assign(T) };
+};
+
+/**
+ * @brief Check if a type has a trivial
+ * destructor.
+ * 
+ * See @c __has_trivial_destructor intrinsic.
+ * 
+ * @tparam T the type to test
+ */
+template<typename T>
+struct IsTriviallyDestructible
+{
+	enum { value = __has_trivial_destructor(T) };
+};
+
+/**
  * @brief Strips the reference from a type.
  * 
  * @tparam T the type to strip the reference
