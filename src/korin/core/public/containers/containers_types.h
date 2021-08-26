@@ -15,6 +15,7 @@ namespace Containers
 	template<typename>							class Queue;
 	template<typename>							class List;
 	template<typename>							class Array;
+	template<typename>							class CircularQueue;
 	template<typename, typename = GreaterThan>	class Tree;
 	template<typename, typename, typename>		class Map;
 	template<typename, typename = GreaterThan>	class Set;

@@ -4,7 +4,8 @@
 #include "templates/utility.h"
 #include "hal/platform_memory.h"
 
-#ifndef PLATFORM_MATH
+#ifndef PLATFORM_MATH_MAX
+#define PLATFORM_MATH_MAX
 // TODO: PlatformMath
 struct PlatformMath
 {
@@ -14,7 +15,7 @@ struct PlatformMath
 		return a > b ? a : b;
 	}
 };
-#endif
+#endif /* PLATFORM_MATH_MAX */
 
 namespace Containers
 {	

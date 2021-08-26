@@ -6,6 +6,12 @@ namespace Containers
 		return arr.getNumItems();
 	}
 
+	template<typename T>
+	constexpr FORCE_INLINE sizet len(CircularQueue<T> const& queue)
+	{
+		return queue.getNumItems();
+	}
+
 	template<typename T, typename CompareT>
 	constexpr FORCE_INLINE sizet len(Set<T, CompareT> const& set)
 	{

@@ -12,77 +12,6 @@ static void shuffle(ItT begin, ItT end)
 
 using namespace Containers;
 
-TEST(containers, Array)
-{
-	Array<int32> x, y;
-
-	ASSERT_EQ(x.getNumItems(), 0ull);
-	ASSERT_EQ(len(x), x.getNumItems());
-	ASSERT_EQ(*x, nullptr);
-
-	x.append(5, 1, 76);
-
-	ASSERT_EQ(x.getNumItems(), 3ull);
-	ASSERT_NE(*x, nullptr);
-	ASSERT_EQ(*x, x.begin());
-	ASSERT_EQ(*x.begin(), 5);
-	ASSERT_EQ(*x.rbegin(), 76);
-	ASSERT_EQ(x[0], 5);
-	ASSERT_EQ(x[1], 1);
-	ASSERT_EQ(x[2], 76);
-
-	x.removeAt(0, 2);
-
-	ASSERT_EQ(x.getNumItems(), 1ull);
-	ASSERT_EQ(x.begin(), x.rbegin());
-	ASSERT_EQ(x[0], 76);
-
-	x.insert(0, 5, 6, 2);
-
-	ASSERT_EQ(x.getNumItems(), 4ull);
-	ASSERT_EQ(x[0], 5);
-	ASSERT_EQ(x[1], 6);
-	ASSERT_EQ(x[2], 2);
-	ASSERT_EQ(x[3], 76);
-
-	{
-		Array<Array<int32>> z;
-		
-		z.append(x, y);
-		z.append(Array<int32>{});
-
-		ASSERT_EQ(z.getNumItems(), 3ull);
-		ASSERT_EQ(z[0].getNumItems(), 4ull);
-		ASSERT_EQ(z[1].getNumItems(), 0ull);
-		ASSERT_EQ(z[0][2], 2);
-		ASSERT_EQ(z[0][3], 76);
-	}
-
-	Array<int32> z;
-
-	y.append(0, 3);
-	z.append(5, 1, 2);
-	x.concat(y, z);
-
-	ASSERT_EQ(x.getNumItems(), 9ull);
-	ASSERT_EQ(x[4], 0);
-	ASSERT_EQ(x[5], 3);
-	ASSERT_EQ(x[7], 1);
-
-	y = x.slice(3);
-	z = x.slice(0, 4);
-
-	ASSERT_EQ(y.getNumItems(), 6);
-	ASSERT_EQ(z.getNumItems(), 4);
-	ASSERT_EQ(y[0], 76);
-	ASSERT_EQ(y[3], x[6]);
-	ASSERT_EQ(y[5], x[8]);
-	ASSERT_EQ(z[3], 76);
-	ASSERT_EQ(z[2], x[2]);
-
-	SUCCEED();
-}
-
 TEST(containers, List)
 {
 	List<int32> x, y, z;
@@ -207,6 +136,110 @@ TEST(containers, List)
 	{
 		ASSERT_EQ(*xit, *wit);
 	}
+
+	SUCCEED();
+}
+
+TEST(containers, Array)
+{
+	Array<int32> x, y;
+
+	ASSERT_EQ(x.getNumItems(), 0ull);
+	ASSERT_EQ(len(x), x.getNumItems());
+	ASSERT_EQ(*x, nullptr);
+
+	x.append(5, 1, 76);
+
+	ASSERT_EQ(x.getNumItems(), 3ull);
+	ASSERT_NE(*x, nullptr);
+	ASSERT_EQ(*x, x.begin());
+	ASSERT_EQ(*x.begin(), 5);
+	ASSERT_EQ(*x.rbegin(), 76);
+	ASSERT_EQ(x[0], 5);
+	ASSERT_EQ(x[1], 1);
+	ASSERT_EQ(x[2], 76);
+
+	x.removeAt(0, 2);
+
+	ASSERT_EQ(x.getNumItems(), 1ull);
+	ASSERT_EQ(x.begin(), x.rbegin());
+	ASSERT_EQ(x[0], 76);
+
+	x.insert(0, 5, 6, 2);
+
+	ASSERT_EQ(x.getNumItems(), 4ull);
+	ASSERT_EQ(x[0], 5);
+	ASSERT_EQ(x[1], 6);
+	ASSERT_EQ(x[2], 2);
+	ASSERT_EQ(x[3], 76);
+
+	{
+		Array<Array<int32>> z;
+		
+		z.append(x, y);
+		z.append(Array<int32>{});
+
+		ASSERT_EQ(z.getNumItems(), 3ull);
+		ASSERT_EQ(z[0].getNumItems(), 4ull);
+		ASSERT_EQ(z[1].getNumItems(), 0ull);
+		ASSERT_EQ(z[0][2], 2);
+		ASSERT_EQ(z[0][3], 76);
+	}
+
+	Array<int32> z;
+
+	y.append(0, 3);
+	z.append(5, 1, 2);
+	x.concat(y, z);
+
+	ASSERT_EQ(x.getNumItems(), 9ull);
+	ASSERT_EQ(x[4], 0);
+	ASSERT_EQ(x[5], 3);
+	ASSERT_EQ(x[7], 1);
+
+	y = x.slice(3);
+	z = x.slice(0, 4);
+
+	ASSERT_EQ(y.getNumItems(), 6);
+	ASSERT_EQ(z.getNumItems(), 4);
+	ASSERT_EQ(y[0], 76);
+	ASSERT_EQ(y[3], x[6]);
+	ASSERT_EQ(y[5], x[8]);
+	ASSERT_EQ(z[3], 76);
+	ASSERT_EQ(z[2], x[2]);
+
+	SUCCEED();
+}
+
+TEST(containers, CircularQueue)
+{
+	CircularQueue<int32> x{16ull}, y, z;
+
+	ASSERT_EQ(x.getNumItems(), 0);
+	
+	x.push(4, 40, 5, 1);
+
+	ASSERT_EQ(x.getNumItems(), 4ull);
+	ASSERT_EQ(*x.begin(), 4);
+	
+	int32 values[4] = {};
+
+	x.pop(values[0]);
+	x.pop(values[1]);
+
+	ASSERT_EQ(x.getNumItems(), 2ull);
+	ASSERT_EQ(*x.begin(), 5);
+	ASSERT_EQ(values[0], 4);
+	ASSERT_EQ(values[1], 40);
+
+	x.push(3, 4, 1);
+	x.pop(values[2]);
+	x.pop(values[3]);
+
+	ASSERT_EQ(x.getNumItems(), 3ull);
+	ASSERT_EQ(values[2], 5);
+	ASSERT_EQ(values[3], 1);
+	ASSERT_EQ(*x.begin(), 3);
 
 	SUCCEED();
 }
