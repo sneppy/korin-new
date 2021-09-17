@@ -5,7 +5,7 @@
 /**
  * @brief Linux-platform C++ types.
  */
-struct LinuxPlatformTypes : UnixPlatformTypes
+struct LinuxPlatformTypes : public UnixPlatformTypes
 {
 	//
 };

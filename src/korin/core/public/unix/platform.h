@@ -5,7 +5,7 @@
 /**
  * @brief Unix-platform C++ types.
  */
-struct UnixPlatformTypes : GenericPlatformTypes
+struct UnixPlatformTypes : public GenericPlatformTypes
 {
 	//
 };
@@ -13,6 +13,7 @@ struct UnixPlatformTypes : GenericPlatformTypes
 #include "misc/build.h"
 
 #define PLATFORM_POSIX 1
+#define PLATFORM_USE_GCEM_LIB 1
 
 #if BUILD_RELEASE && defined(__GNUC__)
 #	define FORCE_INLINE inline __attribute__((always_inline))

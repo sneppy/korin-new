@@ -16,6 +16,10 @@
 #	define PLATFORM_POSIX 0
 #endif
 
+#ifndef PLATFORM_USE_GCEM_LIB
+#	define PLATFORM_USE_GCEM_LIB 0
+#endif
+
 #ifndef FORCE_INLINE
 #	define FORCE_INLINE inline
 #endif

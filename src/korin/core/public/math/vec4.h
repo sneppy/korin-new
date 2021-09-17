@@ -6,7 +6,7 @@
 namespace Math
 {
 	/**
-	 * @brief A templated vectot with 4 coordinates.
+	 * @brief A templated vector with 4 coordinates.
 	 * 
 	 * @tparam T the type of the coordinates
 	 */

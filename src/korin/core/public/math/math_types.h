@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core_types.h"
+#include "hal/platform_math.h"
 
 namespace Math
 {
@@ -9,12 +10,12 @@ namespace Math
 	template<typename> struct Vec4;
 	template<typename> struct Mat3;
 	template<typename> struct Mat4;
-					   struct Quat;
-					   struct TransformMatrix;
-					   struct TranslationAndRotationMatrix;
-					   struct RotationMatrix;
-					   struct PerspectiveProjectionMatrix;
-					   struct OrthographicProjectionMatrix;
+	                   struct Quat;
+	                   struct TransformMatrix;
+	                   struct TranslationAndRotationMatrix;
+	                   struct RotationMatrix;
+	                   struct PerspectiveProjectionMatrix;
+	                   struct OrthographicProjectionMatrix;
 } // namespace Math
 
 using vec2 = Math::Vec2<float32>;
