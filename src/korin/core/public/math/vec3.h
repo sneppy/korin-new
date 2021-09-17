@@ -11,7 +11,7 @@ namespace Math
 	 * @tparam T the type of the coordinates
 	 */
 	template<typename T>
-	struct Vec3
+	struct alignas(4 * sizeof(T)) Vec3
 	{
 		union
 		{

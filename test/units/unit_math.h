@@ -74,6 +74,7 @@ TEST(math, Vec3)
 
 	ASSERT_EQ(a.x, 0);
 	ASSERT_EQ(a.y, 0);
+	ASSERT_EQ(a.z, 0);
 	
 	a = {3, 4, 5};
 
@@ -142,6 +143,90 @@ TEST(math, Vec3)
 	ASSERT_EQ(a.x, 27);
 	ASSERT_EQ(a.y, -54);
 	ASSERT_EQ(a.z, 27);
+
+	SUCCEED();
+}
+
+TEST(math, Vec4)
+{
+	Vec4<int32> a, b, c;
+
+	ASSERT_EQ(a.x, 0);
+	ASSERT_EQ(a.y, 0);
+	ASSERT_EQ(a.z, 0);
+	ASSERT_EQ(a.w, 0);
+	
+	a = {3, 4, 5, 6};
+
+	ASSERT_EQ(a.x, 3);
+	ASSERT_EQ(a.y, 4);
+	ASSERT_EQ(a.z, 5);
+	ASSERT_EQ(a.w, 6);
+	ASSERT_EQ(a[0], a.x);
+	ASSERT_EQ(a[1], a.y);
+	ASSERT_EQ(a[2], a.z);
+	ASSERT_EQ(a[3], a.w);
+	ASSERT_EQ(a.dot(a), 86);
+
+	b = 4;
+
+	ASSERT_EQ(b.x, 4);
+	ASSERT_EQ(b.y, 4);
+	ASSERT_EQ(b.z, 4);
+	ASSERT_EQ(b.w, 4);
+	ASSERT_EQ(b.dot(b), 64);
+
+	c = -a;
+
+	ASSERT_EQ(c.x, -a.x);
+	ASSERT_EQ(c.y, -a.y);
+	ASSERT_EQ(c.z, -a.z);
+	ASSERT_EQ(c.w, -a.w);
+
+	a += b;
+
+	ASSERT_EQ(a.x, 7);
+	ASSERT_EQ(a.y, 8);
+	ASSERT_EQ(a.z, 9);
+	ASSERT_EQ(a.w, 10);
+
+	a -= b;
+
+	ASSERT_EQ(a.x, 3);
+	ASSERT_EQ(a.y, 4);
+	ASSERT_EQ(a.z, 5);
+	ASSERT_EQ(a.w, 6);
+
+	a *= c;
+
+	ASSERT_EQ(a.x, -9);
+	ASSERT_EQ(a.y, -16);
+	ASSERT_EQ(a.z, -25);
+	ASSERT_EQ(a.w, -36);
+
+	a /= c;
+
+	ASSERT_EQ(a.x, 3);
+	ASSERT_EQ(a.y, 4);
+	ASSERT_EQ(a.z, 5);
+	ASSERT_EQ(a.w, 6);
+
+	a += 3;
+	a -= 3;
+	a *= 3;
+	a /= 3;
+
+	b = 9 + a;
+	c = 3 * a;
+
+	ASSERT_EQ(b.x, 12);
+	ASSERT_EQ(b.y, 13);
+	ASSERT_EQ(b.z, 14);
+	ASSERT_EQ(b.w, 15);
+	ASSERT_EQ(c.x, 9);
+	ASSERT_EQ(c.y, 12);
+	ASSERT_EQ(c.z, 15);
+	ASSERT_EQ(c.w, 18);
 
 	SUCCEED();
 }
