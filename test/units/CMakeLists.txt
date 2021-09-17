@@ -3,6 +3,7 @@ set(KORIN_UNITS
 
 	"containers"
 	"memory"
+	"math"
 )
 
 foreach(UNIT_NAME ${KORIN_UNITS})
