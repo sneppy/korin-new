@@ -294,3 +294,41 @@ TEST(math, Vec4)
 
 	SUCCEED();
 }
+
+TEST(math, Quat)
+{
+	Quat<float32> q, r, p;
+	Vec3<float32> i, j, k;
+	float32 s, t;
+
+	q = {M_PI_4, {0.f, 1.f, 0.f}};
+	q.getAxisAndAngle(i, t);
+
+	ASSERT_FLOAT_EQ(t, M_PI_4 * PlatformMath::signum(i.y)); // Just in case axis has opposite direction
+	ASSERT_FLOAT_EQ(i.x, 0.f);
+	ASSERT_FLOAT_EQ(i.y, PlatformMath::signum(t));
+	ASSERT_FLOAT_EQ(i.z, 0.f);
+
+	r = {M_PI_2, {0.f, 0.f, 1.f}};
+	i = r.rotateVector({1.f, 0.f, 1.f});
+
+	EXPECT_FLOAT_EQ(i.x, 0.f);
+	EXPECT_FLOAT_EQ(i.y, 1.f);
+	EXPECT_FLOAT_EQ(i.z, 1.f);
+
+	p = q * r;
+	j = p.rotateVector(i);
+	k = q.rotateVector(r.rotateVector(i));
+	
+	EXPECT_FLOAT_EQ(j.x, k.x);
+	EXPECT_FLOAT_EQ(j.y, k.y);
+	EXPECT_FLOAT_EQ(j.z, k.z);
+
+	j = (!p).rotateVector(k);
+
+	EXPECT_FLOAT_EQ(j.x, i.x);
+	EXPECT_FLOAT_EQ(j.y, i.y);
+	EXPECT_FLOAT_EQ(j.z, i.z);
+
+	SUCCEED();
+}

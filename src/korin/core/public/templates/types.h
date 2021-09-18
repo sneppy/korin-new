@@ -1,5 +1,37 @@
 #pragma once
 
+#include "core_types.h"
+
+/**
+ * @brief Choose one or the other type
+ * based on a truth value.
+ * 
+ * @tparam cond condition to evaluate
+ * @tparam A,B types to choose from
+ */
+template<bool cond, typename A, typename B>
+struct ChooseType
+{
+	using Type = A;
+};
+
+template<typename A, typename B> struct ChooseType<false, A, B> { using Type = B; };
+
+/**
+ * @brief Returns true if type is either
+ * float32 or float64.
+ * 
+ * @tparam T the type to test
+ */
+template<typename T>
+struct IsFloating
+{
+	enum { value = false };
+};
+
+template<> struct IsFloating<float32> { enum { value = true }; };
+template<> struct IsFloating<float64> { enum { value = true }; };
+
 /**
  * @brief Check if a type is a base for
  * another type.

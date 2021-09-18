@@ -24,6 +24,20 @@ struct GenericPlatformMath
 	static constexpr FORCE_INLINE float64 abs(float64 x) { return MATH_FN_FLOAT_64(abs)(x); }
 	/** @} */
 
+	/**
+	 * @brief Returns the sign of x.
+	 * 
+	 * The sign of 0 is undefined.
+	 * 
+	 * @param x value to compute the sign of
+	 * @return sgn(x)
+	 */
+	template<typename T>
+	static constexpr FORCE_INLINE T signum(T const& x)
+	{
+		return static_cast<T>(x > T{0}) - static_cast<T>(x < T{0});
+	}
+
 	/* Return floor of x. */
 	/** @{ */
 	static constexpr FORCE_INLINE float32 floor(float32 x) { return MATH_FN_FLOAT_32(floor)(x); }

@@ -10,7 +10,7 @@ namespace Math
 	template<typename> struct Vec4;
 	template<typename> struct Mat3;
 	template<typename> struct Mat4;
-	                   struct Quat;
+	template<typename> struct Quat;
 	                   struct TransformMatrix;
 	                   struct TranslationAndRotationMatrix;
 	                   struct RotationMatrix;
@@ -37,4 +37,4 @@ using uint4 = Math::Vec4<uint32>;
 using mat3 = Math::Mat3<float32>;
 using mat4 = Math::Mat4<float32>;
 
-using quat = Math::Quat;
+using quat = Math::Quat<float32>;
