@@ -332,3 +332,99 @@ TEST(math, Quat)
 
 	SUCCEED();
 }
+
+TEST(math, Mat4)
+{
+	Mat4<float32> m, n, o;
+	Vec4<float32> i, j, k, l;
+
+	for (int32 i = 0; i < 16; ++i)
+	{
+		ASSERT_FLOAT_EQ((*m)[i], 0.f);
+	}
+
+	m = Mat4<float32>{1.f};
+
+	for (int32 i = 0; i < 16; ++i)
+	{
+		ASSERT_FLOAT_EQ((*m)[i], 1.f);
+	}
+
+	m = Mat4<float32>{0.f, 1.f, 2.f, 3.f,
+	                  4.f, 5.f, 6.f, 7.f,
+					  8.f, 9.f, 10.f, 11.f,
+					  12.f, 13.f, 14.f, 15.f};
+
+	for (int32 i = 0; i < 16; ++i)
+	{
+		ASSERT_FLOAT_EQ((*m)[i], (float32)i);
+	}
+
+	m = Mat4<float32>{2.f, 0.f, 0.f, 5.f,
+	                  0.f, 3.f, 0.f, -2.f,
+					  0.f, 0.f, -1.f, 0.f,
+					  0.f, 0.f, 0.f, 1.f};
+	i = m.dot({1.f, 0.f, 3.f, 1.f});
+
+	ASSERT_FLOAT_EQ(i.x, 7.f);
+	ASSERT_FLOAT_EQ(i.y, -2.f);
+	ASSERT_FLOAT_EQ(i.z, -3.f);
+	ASSERT_FLOAT_EQ(i.w, 1.f);
+
+	n = Mat4<float32>{-1.f, 0.f, 0.f, 0.f,
+	                  0.f, 2.f, 0.f, 1.f,
+					  0.f, 0.f, -1.f, 1.f,
+					  0.f, 0.f, 0.f, 1.f};
+	o = m.dot(n);
+	j = o.dot(i);
+	k = m.dot(n.dot(i));
+
+	ASSERT_FLOAT_EQ(j.x, k.x);
+	ASSERT_FLOAT_EQ(j.y, k.y);
+	ASSERT_FLOAT_EQ(j.z, k.z);
+	ASSERT_FLOAT_EQ(j.w, k.w);
+	
+	o = n.dot(m);
+	j = o.dot(i);
+	k = n.dot(m.dot(i));
+
+	ASSERT_FLOAT_EQ(j.x, k.x);
+	ASSERT_FLOAT_EQ(j.y, k.y);
+	ASSERT_FLOAT_EQ(j.z, k.z);
+	ASSERT_FLOAT_EQ(j.w, k.w);
+
+	m = {4.f, 0.f, 0.f, 0.f,
+	     0.f, 0.f, 2.f, 0.f,
+		 0.f, 1.f, 2.f, 0.f,
+		 1.f, 0.f, 0.f, 1.f};
+	n = {0.25f, 0.f, 0.f, 0.f, 
+		0.f, -1.f, 1.f, 0.f, 
+		0.f, 0.5f, 0.f, 0.f, 
+		-0.25f, 0.f, 0.f, 1.f};
+	o = !m;
+
+	for (int32 i = 0; i < 16; ++i)
+	{
+		ASSERT_FLOAT_EQ((*o)[i], (*n)[i]);
+	}
+	
+	m = m.dot(!m);
+
+	for (int32 i = 0; i < 4; ++i)
+	{
+		for (int32 j = 0; j < 4; ++j)
+		{
+			ASSERT_FLOAT_EQ(m[i][j], i == j ? 1.f : 0.f);
+		}
+	}
+
+	i = o.dot({1.f, 2.f, 3.f, 4.f});
+	i = (!o).dot(i);
+
+	ASSERT_FLOAT_EQ(i.x, 1.f);
+	ASSERT_FLOAT_EQ(i.y, 2.f);
+	ASSERT_FLOAT_EQ(i.z, 3.f);
+	ASSERT_FLOAT_EQ(i.w, 4.f);
+
+	SUCCEED();
+}
