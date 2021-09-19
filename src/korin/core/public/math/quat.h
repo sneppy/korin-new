@@ -17,6 +17,15 @@ namespace Math
 	{
 		static_assert(IsFloating<T>::value, "T must be either float32 or float64");
 
+		// Need to read quat coordinates
+		friend TransformationMatrix;
+		friend TranslationAndRotationMatrix;
+
+		using Vec4<T>::x;
+		using Vec4<T>::y;
+		using Vec4<T>::z;
+		using Vec4<T>::w;
+
 		/**
 		 * @brief Construct a zero-rotation quaternion.
 		 */
@@ -199,10 +208,6 @@ namespace Math
 		}
 
 	private:
-		using Vec4<T>::x;
-		using Vec4<T>::y;
-		using Vec4<T>::z;
-		using Vec4<T>::w;
 		using Vec4<T>::Vec4;
 	};
 } // namespace Math

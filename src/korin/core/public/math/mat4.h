@@ -296,6 +296,22 @@ namespace Math
 			return *this = !*this;
 		}
 
+		/**
+		 * @brief Create a new matrix and set the
+		 * values of the diagonal equal to the
+		 * given vector coordinates.
+		 * 
+		 * @param v diagonal vector
+		 * @return new matrix
+		 */
+		static constexpr FORCE_INLINE Mat4 diag(Vec4<T> const& v)
+		{
+			return {v.x, T{}, T{}, T{},
+			        T{}, v.y, T{}, T{},
+			        T{}, T{}, v.z, T{},
+			        T{}, T{}, T{}, v.w};
+		}
+
 	private:
 		/**
 		 * @brief Internal method that multiply this

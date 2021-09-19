@@ -428,3 +428,50 @@ TEST(math, Mat4)
 
 	SUCCEED();
 }
+
+TEST(math, TransformationMatrix)
+{
+	TransformationMatrix m, n, o;
+	Vec3<float32> i, j, k;
+	Quat<float32> p, q, r;
+	
+	m = {{0.f, 1.f, 3.f}};
+	i = m.transformVector({1.f, 1.f, 2.f});
+
+	ASSERT_FLOAT_EQ(i.x, 1.f);
+	ASSERT_FLOAT_EQ(i.y, 2.f);
+	ASSERT_FLOAT_EQ(i.z, 5.f);
+
+	n = {0.f, {M_PI_2, {0.f, 0.f, 1.f}}};
+	j = n.transformVector(i);
+
+	ASSERT_FLOAT_EQ(j.x, -i.y);
+	ASSERT_FLOAT_EQ(j.y, i.x);
+	ASSERT_FLOAT_EQ(j.z, i.z);
+
+	p = {{0.1f, 2.f, 0.5f}};
+	o = {{1.f, 0.f, 2.f}, p, {2.f, 1.f, 3.f}};
+	k = i;
+	i = o.transformVector(k);
+	j = p.rotateVector(k * Vec3<float32>{2.f, 1.f, 3.f}) + Vec3<float32>{1.f, 0.f, 2.f};
+
+	ASSERT_FLOAT_EQ(i.x, j.x);
+	ASSERT_FLOAT_EQ(i.y, j.y);
+	ASSERT_FLOAT_EQ(i.z, j.z);
+
+	i = (!o).transformVector(i);
+
+	ASSERT_FLOAT_EQ(i.x, k.x);
+	ASSERT_FLOAT_EQ(i.y, k.y);
+	ASSERT_FLOAT_EQ(i.z, k.z);
+
+	m = o.dot(!o);
+	n = {};
+
+	for (int32 i = 0; i < 16; ++i)
+	{
+		ASSERT_FLOAT_EQ((*m)[i], (*n)[i]);
+	}
+
+	SUCCEED();
+}

@@ -11,7 +11,7 @@ namespace Math
 	template<typename> struct Mat3;
 	template<typename> struct Mat4;
 	template<typename> struct Quat;
-	                   struct TransformMatrix;
+	                   struct TransformationMatrix;
 	                   struct TranslationAndRotationMatrix;
 	                   struct RotationMatrix;
 	                   struct PerspectiveProjectionMatrix;

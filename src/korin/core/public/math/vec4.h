@@ -257,6 +257,20 @@ namespace Math
 		{
 			return other + s;
 		}
+
+		/**
+		 * @brief Return a vector whose equal to the
+		 * element-wise difference between a scalar
+		 * and this vector
+		 * 
+		 * @param s a scalar value
+		 * @param other a 4D vector
+		 * @return new vector 
+		 */
+		constexpr FORCE_INLINE friend Vec4 operator-(T const& s, Vec4 const& other)
+		{
+			return {s - other.x, s - other.y, s - other.z, s - other.w};
+		}
 		
 		/**
 		 * @brief Returns a new vector whose coordinates
@@ -270,6 +284,20 @@ namespace Math
 		constexpr FORCE_INLINE friend Vec4 operator*(T const& s, Vec4 const& other)
 		{
 			return other * s;
+		}
+
+		/**
+		 * @brief Return a vector whose equal to the
+		 * element-wise division between a scalar
+		 * and this vector
+		 * 
+		 * @param s a scalar value
+		 * @param other a 4D vector
+		 * @return new vector 
+		 */
+		constexpr FORCE_INLINE friend Vec4 operator/(T const& s, Vec4 const& other)
+		{
+			return {s / other.x, s / other.y, s / other.z, s / other.w};
 		}
 
 		/**

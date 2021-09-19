@@ -11,7 +11,7 @@ namespace Math
 	 * @tparam T the type of the coordinates
 	 */
 	template<typename T>
-	struct alignas(4 * sizeof(T)) Vec3
+	struct Vec3
 	{
 		union
 		{
@@ -246,7 +246,7 @@ namespace Math
 		 * coordinates of this vector.
 		 * 
 		 * @param s a scalar value
-		 * @param other another 3D vector
+		 * @param other a 3D vector
 		 * @return new vector 
 		 */
 		constexpr FORCE_INLINE friend Vec3 operator+(T const& s, Vec3 const& other)
@@ -255,12 +255,26 @@ namespace Math
 		}
 
 		/**
+		 * @brief Return a vector whose equal to the
+		 * element-wise difference between a scalar
+		 * and this vector
+		 * 
+		 * @param s a scalar value
+		 * @param other a 3D vector
+		 * @return new vector 
+		 */
+		constexpr FORCE_INLINE friend Vec3 operator-(T const& s, Vec3 const& other)
+		{
+			return {s - other.x, s - other.y, s - other.z};
+		}
+
+		/**
 		 * @brief Return a vector whose coordinates are
 		 * equal to the multiplication of a scalar value
 		 * with the coordinates of this vector.
 		 * 
 		 * @param s a scalar value
-		 * @param other another 3D vector
+		 * @param other a 3D vector
 		 * @return new vector 
 		 */
 		constexpr FORCE_INLINE friend Vec3 operator*(T const& s, Vec3 const& other)
@@ -269,10 +283,24 @@ namespace Math
 		}
 
 		/**
+		 * @brief Return a vector whose equal to the
+		 * element-wise division between a scalar
+		 * and this vector
+		 * 
+		 * @param s a scalar value
+		 * @param other a 3D vector
+		 * @return new vector 
+		 */
+		constexpr FORCE_INLINE friend Vec3 operator/(T const& s, Vec3 const& other)
+		{
+			return {s / other.x, s / other.y, s / other.z};
+		}
+
+		/**
 		 * @brief Computes the cross product between
 		 * this vector and another vector.
 		 * 
-		 * @param other another 2D vector
+		 * @param other another vector
 		 * @return cross product of two vectors 
 		 */
 		constexpr FORCE_INLINE Vec3 cross(Vec3 const& other) const

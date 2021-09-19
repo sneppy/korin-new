@@ -224,6 +224,20 @@ namespace Math
 		}
 
 		/**
+		 * @brief Return a vector whose equal to the
+		 * element-wise difference between a scalar
+		 * and this vector
+		 * 
+		 * @param s a scalar value
+		 * @param other a 2D vector
+		 * @return new vector 
+		 */
+		constexpr FORCE_INLINE friend Vec2 operator-(T const& s, Vec2 const& other)
+		{
+			return {s - other.x, s - other.y};
+		}
+
+		/**
 		 * @brief Return a new vector whose coordinates
 		 * are equal to the product of the coordinates
 		 * of this vector with a scalar value.
@@ -235,6 +249,20 @@ namespace Math
 		friend constexpr FORCE_INLINE Vec2 operator*(T const& s, Vec2 const& other)
 		{
 			return other * s;
+		}
+
+		/**
+		 * @brief Return a vector whose equal to the
+		 * element-wise division between a scalar
+		 * and this vector
+		 * 
+		 * @param s a scalar value
+		 * @param other a 2D vector
+		 * @return new vector 
+		 */
+		constexpr FORCE_INLINE friend Vec2 operator/(T const& s, Vec2 const& other)
+		{
+			return {s / other.x, s / other.y};
 		}
 	};
 } // namespace Math
