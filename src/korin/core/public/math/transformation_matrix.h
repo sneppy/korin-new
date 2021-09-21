@@ -49,7 +49,7 @@ namespace Math
 		 * @param inScale scale vector
 		 */
 		constexpr TransformationMatrix(Vec3<float32> const& inTranslation, Quat<float32> const& inRotation, Vec3<float32> const& inScale = 1.f)
-			: Mat4{}
+			: TransformationMatrix{}
 		{
 			// Set rotation
 			const float32 rotX2 = inRotation.x * inRotation.x,

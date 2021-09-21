@@ -120,7 +120,7 @@ namespace Math
 		 */
 		constexpr FORCE_INLINE Quat operator!() const
 		{
-			return Quat{x, y, z, -w};
+			return Quat{-x, -y, -z, w};
 		}
 
 		/**

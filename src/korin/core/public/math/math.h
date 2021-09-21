@@ -6,3 +6,4 @@
 #include "quat.h"
 #include "mat4.h"
 #include "transformation_matrix.h"
+#include "view_matrix.h"
