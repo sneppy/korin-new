@@ -333,6 +333,78 @@ TEST(math, Quat)
 	SUCCEED();
 }
 
+TEST(math, Mat3)
+{
+	Mat3<float32> m, n, o;
+	Vec3<float32> i, j, k;
+
+	for (int32 i = 0; i < 9; ++i)
+	{
+		ASSERT_FLOAT_EQ(m[i / 3][i % 3], 0.f);
+	}
+
+	m = {0.f, 1.f, 2.f,
+	     3.f, 4.f, 5.f,
+		 6.f, 7.f, 8.f};
+	
+	for (int32 i = 0; i < 9; ++i)
+	{
+		ASSERT_FLOAT_EQ(m[i / 3][i % 3], (float32)i);
+	}
+
+	n = m.getTransposed();
+
+	for (int32 i = 0; i < 9; ++i)
+	{
+		ASSERT_FLOAT_EQ(n[i % 3][i / 3], (float32)i);
+	}
+
+	m += 1.f;
+
+	for (int32 i = 0; i < 9; ++i)
+	{
+		ASSERT_FLOAT_EQ(m[i / 3][i % 3], (float32)i + 1.f);
+	}
+
+	m -= 1.f;
+
+	for (int32 i = 0; i < 9; ++i)
+	{
+		ASSERT_FLOAT_EQ(m[i / 3][i % 3], (float32)i);
+	}
+
+	m *= 2.f;
+	
+	for (int32 i = 0; i < 9; ++i)
+	{
+		ASSERT_FLOAT_EQ(m[i / 3][i % 3], (float32)i * 2.f);
+	}
+
+	m /= 2.f;
+
+	for (int32 i = 0; i < 9; ++i)
+	{
+		ASSERT_FLOAT_EQ(m[i / 3][i % 3], (float32)i);
+	}
+
+	m = {0.f, -3.f, -2.f,
+	     1.f, -4.f, -2.f,
+		 -3.f, 4.f, 1.f};
+	n = {4.f, -5.f, -2.f,
+	     5.f, -6.f, -2.f,
+		 -8.f, 9.f, 3.f};
+	o = !m;
+	
+	for (int32 i = 0; i < 9; ++i)
+	{
+		ASSERT_FLOAT_EQ((*o)[i], (*n)[i]);
+	}
+	
+	// TODO: Test dot product with vector
+
+	SUCCEED();
+}
+
 TEST(math, Mat4)
 {
 	Mat4<float32> m, n, o;
@@ -347,7 +419,7 @@ TEST(math, Mat4)
 
 	for (int32 i = 0; i < 16; ++i)
 	{
-		ASSERT_FLOAT_EQ((*m)[i], 1.f);
+		ASSERT_FLOAT_EQ(m[i / 4][i % 4], 1.f);
 	}
 
 	m = Mat4<float32>{0.f, 1.f, 2.f, 3.f,
@@ -475,3 +547,5 @@ TEST(math, TransformationMatrix)
 
 	SUCCEED();
 }
+
+// TODO: Test ViewMatrix

@@ -283,9 +283,9 @@ namespace Math
 		 */
 		constexpr FORCE_INLINE Mat4 operator!() const
 		{
-			Mat4 comp = getComplementsMatrixTransposed();
-			T const invdet = 1.f / rows[0].dot(comp[0]);
-			return comp *= invdet;
+			Mat4 comp = getComplementsMatrix();
+			T const invdet = T{1} / rows[0].dot(comp.rows[0]);
+			return comp.transpose() *= invdet;
 		}
 
 		/**
@@ -336,13 +336,13 @@ namespace Math
 		}
 
 		/**
-		 * @brief Returns the transposed matrix of
-		 * algebraic complements of this matrix.
+		 * @brief Returns the matrix of the algebraic
+		 * complements of this matrix.
 		 * 
 		 * The result is used to compute the inverse
 		 * matrix.
 		 */
-		constexpr Mat4 getComplementsMatrixTransposed() const
+		constexpr Mat4 getComplementsMatrix() const
 		{
 			T const afbe = data[0][0] * data[1][1] - data[0][1] * data[1][0],
 			        agce = data[0][0] * data[1][2] - data[0][2] * data[1][0],
@@ -359,20 +359,23 @@ namespace Math
 			
 			return {
 				+ data[1][1] * kplo - data[1][2] * jpln + data[1][3] * jokn,
-				- data[0][1] * kplo + data[0][2] * jpln - data[0][3] * jokn,
-				+ data[3][1] * chdg - data[3][2] * bhdf + data[3][3] * bgcf,
-				- data[2][1] * chdg + data[2][2] * bhdf - data[2][3] * bgcf,
 				- data[1][0] * kplo + data[1][2] * iplm - data[1][3] * iokm,
-				+ data[0][0] * kplo - data[0][2] * iplm + data[0][3] * iokm,
-				- data[3][0] * chdg + data[3][2] * ahde - data[3][3] * agce,
-				+ data[2][0] * chdg - data[2][2] * ahde + data[2][3] * agce,
 				+ data[1][0] * jpln - data[1][1] * iplm + data[1][3] * injm,
-				- data[0][0] * jpln + data[0][1] * iplm - data[0][3] * injm,
-				+ data[3][0] * bhdf - data[3][1] * ahde + data[3][3] * afbe,
-				- data[2][0] * bhdf + data[2][1] * ahde - data[2][3] * afbe,
 				- data[1][0] * jokn + data[1][1] * iokm - data[1][2] * injm,
+
+				- data[0][1] * kplo + data[0][2] * jpln - data[0][3] * jokn,
+				+ data[0][0] * kplo - data[0][2] * iplm + data[0][3] * iokm,
+				- data[0][0] * jpln + data[0][1] * iplm - data[0][3] * injm,
 				+ data[0][0] * jokn - data[0][1] * iokm + data[0][2] * injm,
+				
+				+ data[3][1] * chdg - data[3][2] * bhdf + data[3][3] * bgcf,
+				- data[3][0] * chdg + data[3][2] * ahde - data[3][3] * agce,
+				+ data[3][0] * bhdf - data[3][1] * ahde + data[3][3] * afbe,
 				- data[3][0] * bgcf + data[3][1] * agce - data[3][2] * afbe,
+
+				- data[2][1] * chdg + data[2][2] * bhdf - data[2][3] * bgcf,
+				+ data[2][0] * chdg - data[2][2] * ahde + data[2][3] * agce,
+				- data[2][0] * bhdf + data[2][1] * ahde - data[2][3] * afbe,
 				+ data[2][0] * bgcf - data[2][1] * agce + data[2][2] * afbe
 			};
 		}
