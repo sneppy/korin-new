@@ -107,7 +107,7 @@ FORCE_INLINE MallocPooled::Pool* MallocPooled::createPool()
 	initMemoryPool(pool);
 
 	// Update root
-	root = Containers::TreeNode::insert(root, pool, [](Pool* pool, Pool* other) {
+	root = Korin::TreeNode::insert(root, pool, [](Pool* pool, Pool* other) {
 
 		return GreaterThan{}(pool->buffer, other->buffer);
 	});
@@ -118,7 +118,7 @@ FORCE_INLINE MallocPooled::Pool* MallocPooled::createPool()
 FORCE_INLINE void MallocPooled::destroyPool(Pool* pool)
 {
 	// TODO: Remove from tree and deallocate
-	root = Containers::TreeNode::remove(pool);
+	root = Korin::TreeNode::remove(pool);
 
 	// Dealloc pool
 	gMalloc->free(pool->buffer);

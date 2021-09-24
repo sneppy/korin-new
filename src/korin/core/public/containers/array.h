@@ -16,7 +16,7 @@ struct PlatformMath
 };
 #endif
 
-namespace Containers
+namespace Korin
 {	
 	/**
 	 * @brief A templated growing array
@@ -637,4 +637,4 @@ namespace Containers
 		/* Number of items in the array. */
 		sizet count;
 	};
-} // namespace Containers
+} // namespace Korin

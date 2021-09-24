@@ -1,4 +1,4 @@
-namespace Containers
+namespace Korin
 {
 	template<typename T>
 	constexpr FORCE_INLINE sizet len(Array<T> const& arr)

@@ -4,7 +4,7 @@
 #include "tree_node.h"
 #include "templates/utility.h"
 
-namespace Containers
+namespace Korin
 {
 	template<typename T> struct TreeIterator;
 	template<typename T> struct TreeConstIterator;
@@ -831,5 +831,5 @@ namespace Containers
 		/// @brief Number of nodes in the tree.
 		uint64 numNodes;
 	};
-} // namespace Containers
+} // namespace Korin
 

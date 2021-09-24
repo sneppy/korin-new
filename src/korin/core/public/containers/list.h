@@ -3,7 +3,7 @@
 #include "containers_types.h"
 #include "templates/utility.h"
 
-namespace Containers
+namespace Korin
 {
 	template<typename> struct ListIterator;
 	template<typename> struct ListConstIterator;
@@ -1029,4 +1029,4 @@ namespace Containers
 		/// @brief Number of nodes in the list.
 		sizet numNodes;
 	};
-} // namespace Containers
+} // namespace Korin

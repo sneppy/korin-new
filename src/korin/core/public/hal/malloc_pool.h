@@ -94,7 +94,7 @@ class MallocPooled : public MallocBase
 	/**
 	 * @brief Pool node class.
 	 */
-	struct Pool : public MemoryPool, public Containers::BinaryNodeBase<Pool>
+	struct Pool : public MemoryPool, public Korin::BinaryNodeBase<Pool>
 	{
 		/* Next free pools. */
 		Pool* pools = nullptr;

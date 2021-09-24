@@ -3,7 +3,7 @@
 #include "containers_types.h"
 #include "tree.h"
 
-namespace Containers
+namespace Korin
 {
 	/**
 	 * @brief Set iterators.
@@ -341,4 +341,4 @@ namespace Containers
 		/* The RB tree instance. */
 		TreeT tree;
 	};
-} // namespace Containers
+} // namespace Korin

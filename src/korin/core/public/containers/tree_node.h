@@ -7,7 +7,7 @@
 
 #define ENABLE_IF_NODE_T(T) typename EnableIf<IsBaseOf<BinaryNodeBase<T>, T>::value>::Type
 
-namespace Containers
+namespace Korin
 {
 	/**
 	 * @brief The color of a red-black tree node.
@@ -657,6 +657,6 @@ namespace Containers
 			return nullptr;
 		}
 	} // namespace TreeNode
-} // namespace Containers
+} // namespace Korin
 
 #undef ENABLE_IF_NODE_T

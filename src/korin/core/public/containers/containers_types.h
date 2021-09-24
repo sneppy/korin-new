@@ -3,13 +3,14 @@
 #include "core_types.h"
 #include "templates/ordering.h"
 
-namespace Containers
+namespace Korin
 {
 	template<typename> struct QueueNode;
 	template<typename> struct ListNode;
 	template<typename> struct BinaryNode;
 	template<typename> struct Pair;
 	template<typename> struct Tuple;
+	template<typename> struct Optional;
 
 	template<typename>							class Stack;
 	template<typename>							class Queue;
@@ -68,6 +69,6 @@ namespace Containers
 	 */
 	template<typename ItT, typename PolicyT>
 	constexpr ItT findIf(ItT begin, ItT end, PolicyT&& policy);
-} // namespace Containers
+} // namespace Korin
 
 #include "containers_types.inl"
