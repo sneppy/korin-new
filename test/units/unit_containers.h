@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 
+#include "hal/platform_crt.h"
 #include "containers/containers.h"
 
 template<typename ItT>
@@ -10,7 +11,98 @@ static void shuffle(ItT begin, ItT end)
 	// Shuffle
 }
 
-using namespace Containers;
+using namespace Korin;
+
+struct Object
+{
+	Object()
+	{
+		mem = ::malloc(100);
+	}
+
+	Object(Object const& other)
+	{
+		mem = ::malloc(100);
+		::memcpy(mem, other.mem, 100);
+	}
+
+	Object(Object&& other)
+	{
+		mem = other.mem;
+		other.mem = nullptr;
+	}
+
+	Object& operator=(Object const& other)
+	{
+		::memcpy(mem, other.mem, 100);
+		return *this;
+	}
+
+	Object& operator=(Object&& other)
+	{
+		::free(mem);
+		mem = other.mem;
+		other.mem = nullptr;
+		return *this;
+	}
+
+	~Object()
+	{
+		if (mem)
+		{
+			::free(mem);
+		}
+	}
+
+	void test()
+	{
+		char* it = reinterpret_cast<char*>(mem);
+		for (char i = 0; i < 100; ++i)
+		{
+			*it = i;
+		}
+	}
+
+protected:
+	void* mem;
+};
+
+TEST(containers, Optional)
+{
+	Optional<int32> x, y;
+
+	ASSERT_FALSE(x.hasValue());
+	ASSERT_FALSE(y.hasValue());
+	ASSERT_FALSE(static_cast<bool>(x)); // Test operator
+
+	x = 1;
+	y = 3;
+
+	ASSERT_TRUE(x.hasValue());
+	ASSERT_TRUE(y.hasValue());
+	ASSERT_EQ(x, 1);
+	ASSERT_EQ(y, 3);
+
+	x.reset();
+	y.reset();
+
+	ASSERT_FALSE(x.hasValue());
+	ASSERT_FALSE(y.hasValue());
+
+	Optional<Object> z{{}}, w;
+
+	ASSERT_TRUE(z.hasValue());
+	ASSERT_FALSE(w.hasValue());
+
+	w = Object{};
+
+	ASSERT_TRUE(w.hasValue());
+
+	z->test();
+	w->test();
+
+	SUCCEED();
+}
 
 TEST(containers, Array)
 {
@@ -47,7 +139,7 @@ TEST(containers, Array)
 
 	{
 		Array<Array<int32>> z;
-		
+
 		z.append(x, y);
 		z.append(Array<int32>{});
 
@@ -149,7 +241,7 @@ TEST(containers, List)
 	{
 		x.pushBack(i);
 	}
-	
+
 	ASSERT_EQ(x.getNumNodes(), 100ull);
 	{
 		int32 i = 0;
@@ -171,7 +263,7 @@ TEST(containers, List)
 	x.pushBack(1);
 
 	List<int32> w{x};
-	
+
 	ASSERT_EQ(x.getNumNodes(), w.getNumNodes());
 	for (auto xit = x.begin(), wit = w.begin(); xit != x.end(); ++xit, ++wit)
 	{
@@ -181,7 +273,7 @@ TEST(containers, List)
 	x.pushBack(10);
 	x.pushBack(6);
 	y = x;
-	
+
 	ASSERT_EQ(x.getNumNodes(), y.getNumNodes());
 	for (auto xit = x.begin(), yit = y.begin(); xit != x.end(); ++xit, ++yit)
 	{
@@ -222,7 +314,7 @@ TEST(containers, TreeNode)
 	constexpr uint32 numNodes = 1024;
 	Node* nodes[numNodes] = {};
 	Node* root = new Node{};
-	root->color = BinaryNodeColor::Color_BLACK;	
+	root->color = BinaryNodeColor::Color_BLACK;
 	root->value = 0;
 	nodes[0] = root;
 
@@ -243,7 +335,7 @@ TEST(containers, TreeNode)
 			return GreaterThan{}(i, node->value);
 		});
 	}
-	
+
 	// Shuffle nodes
 	shuffle(nodes, nodes + numNodes);
 
@@ -279,7 +371,7 @@ TEST(containers, Tree)
 	ASSERT_EQ(x.getRootNode()->value, 2);
 	ASSERT_EQ(x.getMinNode()->value, 1);
 	ASSERT_EQ(x.getMaxNode()->value, 3);
-	
+
 	for (auto value : x)
 	{
 		ASSERT_EQ(x.findNode(value)->value, value);
