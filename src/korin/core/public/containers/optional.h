@@ -16,7 +16,7 @@ namespace Korin
 		/**
 		 * @brief Contruct a new optional without value.
 		 */
-		constexpr FORCE_INLINE Optional()
+		FORCE_INLINE Optional()
 			: _{}
 			, initd{false}
 		{
@@ -29,7 +29,7 @@ namespace Korin
 		 * 
 		 * @param inValue value to copy 
 		 */
-		constexpr FORCE_INLINE Optional(T const& inValue)
+		FORCE_INLINE Optional(T const& inValue)
 			: value{inValue}
 			, initd{true}
 		{
@@ -42,7 +42,7 @@ namespace Korin
 		 * 
 		 * @param inValue value to move
 		 */
-		constexpr FORCE_INLINE Optional(T&& inValue)
+		FORCE_INLINE Optional(T&& inValue)
 			: value{move(inValue)}
 			, initd{true}
 		{
@@ -55,7 +55,7 @@ namespace Korin
 		 * 
 		 * @param other other optional
 		 */
-		constexpr FORCE_INLINE Optional(Optional const& other)
+		FORCE_INLINE Optional(Optional const& other)
 		{
 			if ((initd = other.initd))
 			{
@@ -70,7 +70,7 @@ namespace Korin
 		 * 
 		 * @param other another optional 
 		 */
-		constexpr FORCE_INLINE Optional(Optional&& other)
+		FORCE_INLINE Optional(Optional&& other)
 		{
 			if ((initd = other.initd))
 			{
@@ -85,7 +85,7 @@ namespace Korin
 		 * 
 		 * @param newValue new value to copy
 		 */
-		constexpr FORCE_INLINE Optional& operator=(T const& newValue)
+		FORCE_INLINE Optional& operator=(T const& newValue)
 		{
 			if (initd)
 			{
@@ -108,7 +108,7 @@ namespace Korin
 		 * 
 		 * @param newValue new value to move
 		 */
-		constexpr FORCE_INLINE Optional& operator=(T&& newValue)
+		FORCE_INLINE Optional& operator=(T&& newValue)
 		{
 			if (initd)
 			{
@@ -131,7 +131,7 @@ namespace Korin
 		 * 
 		 * @param other another optional to copy
 		 */
-		constexpr FORCE_INLINE Optional& operator=(Optional const& other)
+		FORCE_INLINE Optional& operator=(Optional const& other)
 		{
 			if (!other.initd && this->initd)
 			{
@@ -162,7 +162,7 @@ namespace Korin
 		 * 
 		 * @param other another optional to move
 		 */
-		constexpr FORCE_INLINE Optional& operator=(Optional&& other)
+		FORCE_INLINE Optional& operator=(Optional&& other)
 		{
 			if (!other.initd && this->initd)
 			{
@@ -194,7 +194,7 @@ namespace Korin
 		 * 
 		 * Destroys the optional value if present.
 		 */
-		constexpr FORCE_INLINE ~Optional()
+		FORCE_INLINE ~Optional()
 		{
 			if (initd)
 			{
@@ -211,24 +211,24 @@ namespace Korin
 		 * before using it.
 		 * @{
 		 */
-		constexpr FORCE_INLINE T const& operator*() const
+		FORCE_INLINE T const& operator*() const
 		{
 			CHECKF(initd, "Value of Optional is not initialized");
 			return value;
 		}
 
-		constexpr FORCE_INLINE T& operator*()
+		FORCE_INLINE T& operator*()
 		{
 			CHECKF(initd, "Value of Optional is not initialized");
 			return value;
 		}
 
-		constexpr FORCE_INLINE operator T const&() const
+		FORCE_INLINE operator T const&() const
 		{
 			return **this;
 		}
 		
-		constexpr FORCE_INLINE operator T&()
+		FORCE_INLINE operator T&()
 		{
 			return **this;
 		}
@@ -239,12 +239,12 @@ namespace Korin
 		 * value, or nullptr if empty.
 		 * @{
 		 */
-		constexpr FORCE_INLINE T const* getPtr() const
+		FORCE_INLINE T const* getPtr() const
 		{
 			return initd ? &value : nullptr;
 		}
 
-		constexpr FORCE_INLINE T* getPtr()
+		FORCE_INLINE T* getPtr()
 		{
 			return initd ? &value : nullptr;
 		}
@@ -258,12 +258,12 @@ namespace Korin
 		 * using it.
 		 * @{
 		 */
-		constexpr FORCE_INLINE T const* operator->() const
+		FORCE_INLINE T const* operator->() const
 		{
 			return getPtr();
 		}
 
-		constexpr FORCE_INLINE T* operator->()
+		FORCE_INLINE T* operator->()
 		{
 			return getPtr();
 		}
@@ -273,7 +273,7 @@ namespace Korin
 		 * @brief Returns true if the optional is
 		 * not empty.
 		 */
-		constexpr FORCE_INLINE bool hasValue() const
+		FORCE_INLINE bool hasValue() const
 		{
 			return initd;
 		}
@@ -281,7 +281,7 @@ namespace Korin
 		/**
 		 * @brief Reset the value of the optional.
 		 */
-		constexpr FORCE_INLINE void reset()
+		FORCE_INLINE void reset()
 		{
 			if (initd)
 			{
@@ -296,12 +296,12 @@ namespace Korin
 		 * not empty.
 		 * @{
 		 */
-		constexpr FORCE_INLINE operator bool() const
+		FORCE_INLINE operator bool() const
 		{
 			return initd;
 		}
 
-		constexpr FORCE_INLINE operator bool()
+		FORCE_INLINE operator bool()
 		{
 			return initd;
 		}
