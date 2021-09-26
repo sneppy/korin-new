@@ -196,7 +196,7 @@ namespace Korin
 			auto it = tree.begin();
 			auto jt = other.tree.begin();
 
-			for (; jt != tree.end(); jt++)
+			for (; jt != other.tree.end(); jt++)
 			{
 				// Find next item in this set greater or equal
 				// to the current item
@@ -219,7 +219,7 @@ namespace Korin
 			}
 
 			// Add remaining items
-			for (; jt != tree.end(); jt++)
+			for (; jt != other.tree.end(); jt++)
 			{
 				tree.insert(*jt);
 			}
