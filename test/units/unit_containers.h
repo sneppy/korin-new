@@ -305,24 +305,22 @@ TEST(containers, List)
 
 TEST(containers, TreeNode)
 {
-	struct Node : public BinaryNodeBase<Node>
+	struct NodeData
 	{
-		// Node value
 		int32 value;
 	};
 
+	using Node = BinaryNodeBase<NodeData>;
+
 	constexpr uint32 numNodes = 1024;
 	Node* nodes[numNodes] = {};
-	Node* root = new Node{};
-	root->color = BinaryNodeColor::Color_BLACK;
-	root->value = 0;
-	nodes[0] = root;
+	Node* root = nullptr;
 
-	for (uint32 i = 1; i < numNodes; ++i)
+	for (int32 i = 0; i < numNodes; ++i)
 	{
-		nodes[i] = new Node{};
-		nodes[i]->value = i;
-		root = TreeNode::insert(root, nodes[i], [](auto* node, auto* other) {
+		auto* node = new Node{};
+		node->value = i;
+		root = TreeNode::insert(root, node, [node](auto const* other) {
 
 			return GreaterThan{}(node->value, other->value);
 		});
@@ -334,15 +332,17 @@ TEST(containers, TreeNode)
 
 			return GreaterThan{}(i, node->value);
 		});
+		ASSERT_EQ(node->value, i);
 	}
 
-	// Shuffle nodes
-	shuffle(nodes, nodes + numNodes);
-
-	for (int32 i = 1; i < numNodes; ++i)
+	for (int32 i = 0; i < numNodes; ++i)
 	{
-		root = TreeNode::remove(nodes[i]);
-		delete nodes[i];
+		auto* node = TreeNode::find(root, [i](auto const* node) {
+
+			return GreaterThan{}(i, node->value);
+		});
+		root = TreeNode::remove(node);
+		delete node;
 	}
 
 	SUCCEED();
@@ -351,60 +351,6 @@ TEST(containers, TreeNode)
 TEST(containers, Tree)
 {
 	Tree<int32> x, y, z;
-
-	ASSERT_EQ(x.getNumNodes(), 0ull);
-	ASSERT_EQ(x.getRootNode(), nullptr);
-	ASSERT_EQ(x.getMinNode(), nullptr);
-	ASSERT_EQ(x.getMaxNode(), nullptr);
-
-	x.insert(1);
-
-	ASSERT_EQ(x.getNumNodes(), 1ull);
-	ASSERT_NE(x.getRootNode(), nullptr);
-	ASSERT_EQ(x.getRootNode(), x.getMinNode());
-	ASSERT_EQ(x.getRootNode(), x.getMaxNode());
-	ASSERT_EQ(x.getRootNode()->value, 1);
-
-	x.insert(2);
-	x.insert(3);
-
-	ASSERT_EQ(x.getRootNode()->value, 2);
-	ASSERT_EQ(x.getMinNode()->value, 1);
-	ASSERT_EQ(x.getMaxNode()->value, 3);
-
-	for (auto value : x)
-	{
-		ASSERT_EQ(x.findNode(value)->value, value);
-	}
-
-	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(2)));
-	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(3)));
-
-	ASSERT_EQ(x.getNumNodes(), 1ull);
-	ASSERT_NE(x.getRootNode(), nullptr);
-	ASSERT_EQ(x.getRootNode(), x.getMinNode());
-	ASSERT_EQ(x.getRootNode(), x.getMaxNode());
-	ASSERT_EQ(x.getRootNode()->value, 1);
-
-	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(1)));
-
-	ASSERT_EQ(x.getNumNodes(), 0ull);
-	ASSERT_EQ(x.getRootNode(), nullptr);
-	ASSERT_EQ(x.getMinNode(), nullptr);
-	ASSERT_EQ(x.getMaxNode(), nullptr);
-
-	for (int32 i = 0; i < 100; ++i)
-	{
-		x.insert(rand() % 20);
-	}
-
-	ASSERT_EQ(x.getNumNodes(), 100ull);
-	ASSERT_NE(x.getRootNode(), nullptr);
-
-	for (auto it = x.begin(); it != x.end(); it = x.remove(it));
-
-	ASSERT_EQ(x.getNumNodes(), 0ull);
-	ASSERT_EQ(x.getRootNode(), nullptr);
 
 	SUCCEED();
 }

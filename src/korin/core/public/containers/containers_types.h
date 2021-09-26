@@ -5,9 +5,6 @@
 
 namespace Korin
 {
-	template<typename> struct QueueNode;
-	template<typename> struct ListNode;
-	template<typename> struct BinaryNode;
 	template<typename> struct Pair;
 	template<typename> struct Tuple;
 	template<typename> struct Optional;
