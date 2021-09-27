@@ -15,26 +15,51 @@ using namespace Korin;
 
 struct Object
 {
-	Object()
+	struct Find
 	{
-		mem = ::malloc(100);
+		int32 operator()(Object const& lhs, Object const& rhs) const
+		{
+			return GreaterThan{}(lhs.size, rhs.size);
+		}
+	};
+
+	Object(sizet inSize)
+		: size{inSize}
+	{
+		mem = ::malloc(size);
+	}
+
+	Object()
+		: Object(100)
+	{
+		//
 	}
 
 	Object(Object const& other)
+		: size{other.size}
 	{
-		mem = ::malloc(100);
-		::memcpy(mem, other.mem, 100);
+		mem = ::malloc(size);
+		::memcpy(mem, other.mem, size);
 	}
 
 	Object(Object&& other)
+		: mem{other.mem}
+		, size{other.size}
 	{
-		mem = other.mem;
 		other.mem = nullptr;
+		other.size = 0;
 	}
 
 	Object& operator=(Object const& other)
 	{
-		::memcpy(mem, other.mem, 100);
+		if (other.size != size)
+		{
+			mem = ::realloc(mem, other.size);
+			size = other.size;
+		}
+		
+		::memcpy(mem, other.mem, size);
+
 		return *this;
 	}
 
@@ -42,7 +67,9 @@ struct Object
 	{
 		::free(mem);
 		mem = other.mem;
+		size = other.size;
 		other.mem = nullptr;
+		other.size;
 		return *this;
 	}
 
@@ -52,19 +79,27 @@ struct Object
 		{
 			::free(mem);
 		}
+
+		size = 0;
+	}
+
+	sizet getSize() const
+	{
+		return size;
 	}
 
 	void test()
 	{
 		char* it = reinterpret_cast<char*>(mem);
-		for (char i = 0; i < 100; ++i)
+		for (int32 i = 0; i < size; ++i)
 		{
-			*it = i;
+			*it = i & 0xff;
 		}
 	}
 
 protected:
 	void* mem;
+	sizet size;
 };
 
 TEST(containers, Optional)
@@ -345,12 +380,159 @@ TEST(containers, TreeNode)
 		delete node;
 	}
 
+	int32 values[numNodes] = {};
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		// Generate some collisions
+		values[i] = rand() % (numNodes << 4);
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto* node = new Node{};
+		node->value = values[i];
+		root = TreeNode::insert(root, node, [node](auto const* other) {
+
+			return GreaterThan{}(node->value, other->value);
+		});
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto const value = values[i];
+		auto* node = TreeNode::find(root, [value](auto const* node) {
+
+			return GreaterThan{}(value, node->value);
+		});
+		ASSERT_NE(node, nullptr);
+		ASSERT_EQ(node->value, value);
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto const value = values[i];
+		auto* node = TreeNode::find(root, [value](auto const* node) {
+
+			return GreaterThan{}(value, node->value);
+		});
+		root = TreeNode::remove(node);
+		delete node;
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto const value = values[i];
+		auto* node = TreeNode::find(root, [value](auto const* node) {
+
+			return GreaterThan{}(value, node->value);
+		});
+		ASSERT_EQ(node, nullptr);
+	}
+
 	SUCCEED();
 }
 
 TEST(containers, Tree)
 {
-	Tree<int32> x, y, z;
+	Tree<Object, Object::Find> x, y, z;
+
+	static constexpr int32 numValues = 1 << 10;
+	int32 values[numValues] = {};
+	for (int32 i = 0; i < numValues; ++i)
+	{
+		values[i] = 1 + (rand() & 0xf);
+	}
+	
+	for (int32 i = 0; i < numValues; ++i)
+	{
+		auto it = x.emplace(values[i]);
+		ASSERT_NE(it, x.end());
+		ASSERT_EQ(it->getSize(), values[i]);
+	}
+
+	ASSERT_EQ(x.getNumNodes(), numValues);
+
+	for (int32 i = 0; i < numValues; ++i)
+	{
+		auto it = x.find(values[i]);
+		ASSERT_NE(it, x.end());
+		ASSERT_EQ(it->getSize(), values[i]);
+	}
+
+	{
+		sizet prev = 0;
+		for (auto const& obj : x)
+		{
+			ASSERT_GE(obj.getSize(), prev);
+			prev = obj.getSize();
+		}
+	}
+	
+	y = x;
+
+	{
+		auto it = x.begin();
+		auto jt = y.begin();
+		ASSERT_EQ(y.getNumNodes(), numValues);
+		for (; it != x.end() && jt != y.end(); ++it, ++jt)
+		{
+			ASSERT_EQ(it->getSize(), jt->getSize());
+		}
+		ASSERT_EQ(it, x.end());
+		ASSERT_EQ(jt, y.end());
+	}
+
+	z = move(x);
+
+	ASSERT_EQ(z.getNumNodes(), numValues);
+	ASSERT_EQ(x.getNumNodes(), 0);
+
+	{
+		auto kt = z.begin();
+		auto jt = y.begin();
+		ASSERT_EQ(y.getNumNodes(), numValues);
+		for (; kt != z.end() && jt != y.end(); ++kt, ++jt)
+		{
+			ASSERT_EQ(kt->getSize(), jt->getSize());
+		}
+		ASSERT_EQ(kt, z.end());
+		ASSERT_EQ(jt, y.end());
+	}
+
+	for (auto it = y.begin(); it != y.end();)
+	{
+		if (it->getSize() & 0x1)
+		{
+			it = y.remove(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	for (auto it = z.begin(); it != z.end();)
+	{
+		it = z.remove(it);
+	}
+	
+	for (int32 i = 0; i < numValues; ++i)
+	{
+		auto it = z.insert(values[i]);
+		ASSERT_NE(it, z.end());
+		ASSERT_EQ(it->getSize(), values[i]);
+	}
+
+	for (int32 i = 0; i < numValues; ++i)
+	{
+		auto it = z.find(values[i]);
+		ASSERT_NE(it, z.end());
+		ASSERT_EQ(it->getSize(), values[i]);
+		z.remove(it);
+	}
+
+	y.~Tree();
+	z.~Tree();
 
 	SUCCEED();
 }

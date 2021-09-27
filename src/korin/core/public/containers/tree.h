@@ -7,24 +7,43 @@
 
 namespace Korin
 {
+	/**
+	 * @brief Payload of a binary tree node.
+	 *
+	 * @tparam T the type of the node's value
+	 */
 	template<typename T>
 	struct BinaryNodePayload
 	{
 		/* The value contained in the node. */
 		T value;
 
+		/**
+		 * @brief Copy another value.
+		 *
+		 * @param inValue value to copy
+		 */
 		constexpr FORCE_INLINE BinaryNodePayload(T const& inValue)
 			: value{inValue}
 		{
 			//
 		}
 
+		/**
+		 * @brief Move another value.
+		 *
+		 * @param inValue value to move
+		 */
 		constexpr FORCE_INLINE BinaryNodePayload(T&& inValue)
 			: value{move(inValue)}
 		{
 			//
 		}
 
+		/**
+		 * @brief Returns a ref to the contained value.
+		 * @{
+		 */
 		constexpr FORCE_INLINE T const& operator*() const
 		{
 			return value;
@@ -34,7 +53,13 @@ namespace Korin
 		{
 			return value;
 		}
+		/** @} */
 
+		/**
+		 * @brief Returns a ptr to the contained value
+		 * in order to access its members.
+		 * @{
+		 */
 		constexpr FORCE_INLINE T const* operator->() const
 		{
 			return &(**this);
@@ -44,8 +69,14 @@ namespace Korin
 		{
 			return &(**this);
 		}
+		/** @} */
 	};
 
+	/**
+	 * @brief The node of a red and black tree.
+	 * 
+	 * @tparam T the type of the node's value
+	 */
 	template<typename T>
 	using BinaryNode = BinaryNodeBase<BinaryNodePayload<T>>;
 
@@ -58,7 +89,7 @@ namespace Korin
 	template<typename T>
 	struct TreeConstIterator
 	{
-		friend Tree<T>;
+		template<typename, typename> friend class Tree;
 
 		using NodeT = BinaryNode<T>;
 		using RefT = T const&;
@@ -187,7 +218,7 @@ namespace Korin
 	template<typename T>
 	struct TreeIterator
 	{
-		friend Tree<T>;
+		template<typename, typename> friend class Tree;
 
 		using NodeT = BinaryNode<T>;
 		using RefT = T&;
@@ -322,6 +353,23 @@ namespace Korin
 #endif
 	};
 
+	/**
+	 * @brief Implements a fully managed binary
+	 * tree with red and black balancing algo.
+	 * 
+	 * A user-provided policy determines the
+	 * order of the node in the tree. The policy
+	 * accepts two values and return a positive
+	 * value if the lhs value is greater, a
+	 * negative value if the lhs is less or zero
+	 * otherwise.
+	 * 
+	 * @see GreaterThan.
+	 * 
+	 * @tparam T the type of the nodes' value
+	 * @tparam PolicyT the policy used to populate
+	 * and search the tree
+	 */
 	template<typename T, typename PolicyT>
 	class Tree
 	{
@@ -360,8 +408,14 @@ namespace Korin
 		{
 			if (other.root)
 			{
+				if (!root)
+				{
+					// Create root node
+					root = createNode(other.root->value);
+				}
+
 				// Copy over existing tree structure
-				root = copySubtree(root, other.root);
+				copySubtree(root, other.root);
 			}
 
 			numNodes = other.numNodes;
@@ -534,69 +588,78 @@ namespace Korin
 			gMalloc->free(node);
 		}
 
-		FORCE_INLINE NodeT* cloneSubtree(NodeT* src)
+		FORCE_INLINE void cloneSubtree(NodeT* src)
 		{
 			ASSERT(src != nullptr)
-
-			NodeT* dst = createNode(src->value);
-			dst->color = src->color;
-
+			
 			if (src->left)
 			{
-				auto* left = cloneSubtree(src->left);
-				TreeNode::Impl::insertLeft(dst, left);
-			}
+				// Create node
+				auto* left = createNode(src->left->value);
+				left->color = src->left->color;
+				TreeNode::Impl::insertLeft(left);
 
-			if (src->right)
-			{
-				auto* right = cloneSubtree(src->right);
-				TreeNode::Impl::insertRight(dst, right);
-			}
-
-			return dst;
-		}
-
-		FORCE_INLINE NodeT* copySubtree(NodeT* dst, NodeT* src)
-		{
-			ASSERT(src != nullptr)
-
-			if (dst)
-			{
-				dst->value = src->value;
-			}
-			else
-			{
-				dst = createNode(src->value);
+				// Clone left subtree
+				cloneSubtree(left, src->left);
 			}
 			
-			// Copy node color
-			dst->color = src->color;
-
-			if (src->left)
-			{
-				// Copy left subtree
-				auto* left = copySubtree(dst->left, src->left);
-				ASSERT(left == dst->left || dst->left == nullptr)
-
-				if (!dst->left)
-				{
-					TreeNode::Impl::insertLeft(dst, left);
-				}
-			}
-
 			if (src->right)
 			{
-				// Copy right subtree
-				auto* right = copySubtree(dst->right, src->right);
-				ASSERT(right == dst->right || dst->right == nullptr)
+				// Create node
+				auto* right = createNode(src->right->value);
+				right->color = src->right->color;
+				TreeNode::Impl::insertRight(right);
 
-				if (!dst->right)
+				// Clone right subtree
+				cloneSubtree(right, src->right);
+			}
+		}
+
+		FORCE_INLINE void copySubtree(NodeT* dst, NodeT* src)
+		{
+			ASSERT(src != nullptr)
+			
+			if (src->left)
+			{
+				auto* left = dst->left;
+
+				if (left)
 				{
+					// Copy value
+					left->value = src->left->value;
+					left->color = src->left->color;
+				}
+				else
+				{
+					// Create node and insert it
+					left = createNode(src->left->value);
+					left->color = src->left->color;
+					TreeNode::Impl::insertLeft(dst, left);
+				}
+
+				copySubtree(dst->left, src->left);
+			}
+			
+			if (src->right)
+			{
+				auto* right = dst->right;
+
+				if (right)
+				{
+					// Copy value
+					right->value = src->right->value;
+					right->color = src->right->color;
+				}
+				else
+				{
+					// Create node and insert it
+					right = createNode(src->right->value);
+					right->color = src->right->color;
 					TreeNode::Impl::insertRight(dst, right);
 				}
-			}
 
-			return dst;
+				copySubtree(dst->right, src->right);
+			}
 		}
 
 		FORCE_INLINE void destroySubtree(NodeT* root)
