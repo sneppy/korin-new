@@ -1,221 +1,120 @@
 #pragma once
 
+#include "hal/malloc.h"
+#include "templates/utility.h"
 #include "containers_types.h"
 #include "tree_node.h"
-#include "templates/utility.h"
 
 namespace Korin
 {
-	template<typename T> struct TreeIterator;
-	template<typename T> struct TreeConstIterator;
-	
 	/**
-	 * @brief A node of a red-black tree, with two
-	 * child nodes (left and right) and a logical
-	 * next and previous nodes.
-	 * 
-	 * @tparam T the type of the value
+	 * @brief Payload of a binary tree node.
+	 *
+	 * @tparam T the type of the node's value
 	 */
 	template<typename T>
-	struct BinaryNode : public BinaryNodeBase<BinaryNode<T>>
+	struct BinaryNodePayload
 	{
-		using SuperT = BinaryNodeBase<BinaryNode>;
-
-		/// @brief The value of the node.
+		/* The value contained in the node. */
 		T value;
 
 		/**
-		 * @brief Construct node with value
-		 * 
-		 * @param args arguments passed to value
-		 * constructor
+		 * @brief Copy another value.
+		 *
+		 * @param inValue value to copy
 		 */
-		FORCE_INLINE BinaryNode(auto&& ...args)
-			: SuperT{}
-			, value{FORWARD(args)...}
+		constexpr FORCE_INLINE BinaryNodePayload(T const& inValue)
+			: value{inValue}
 		{
 			//
 		}
+
+		/**
+		 * @brief Move another value.
+		 *
+		 * @param inValue value to move
+		 */
+		constexpr FORCE_INLINE BinaryNodePayload(T&& inValue)
+			: value{move(inValue)}
+		{
+			//
+		}
+
+		/**
+		 * @brief Returns a ref to the contained value.
+		 * @{
+		 */
+		constexpr FORCE_INLINE T const& operator*() const
+		{
+			return value;
+		}
+
+		constexpr FORCE_INLINE T& operator*()
+		{
+			return value;
+		}
+		/** @} */
+
+		/**
+		 * @brief Returns a ptr to the contained value
+		 * in order to access its members.
+		 * @{
+		 */
+		constexpr FORCE_INLINE T const* operator->() const
+		{
+			return &(**this);
+		}
+
+		constexpr FORCE_INLINE T* operator->()
+		{
+			return &(**this);
+		}
+		/** @} */
 	};
 
 	/**
-	 * @brief An iterator used to iterate over
-	 * the nodes of a tree.
-	 * 
-	 * @tparam T type of the values of the nodes
+	 * @brief The node of a red and black tree.
+	 *
+	 * @tparam T the type of the node's value
 	 */
 	template<typename T>
-	struct TreeIterator
-	{
-		friend TreeConstIterator<T>;
-
-		using SelfT = TreeIterator;
-		using NodeT = BinaryNode<T>;
-		using RefT = T&;
-		using PtrT = T*;
-
-		/**
-		 * @brief Construct an iterator that starts
-		 * from the given node.
-		 * 
-		 * @param inNode ptr to starting node
-		 */
-		FORCE_INLINE explicit TreeIterator(NodeT* inNode, [[maybe_unused]] void* inTree)
-			: node{inNode}
-#if !BUILD_RELEASE
-			, tree{inTree}
-#endif
-		{
-			//
-		}
-
-		/**
-		 * @brief Return a reference to the current
-		 * node value.
-		 */
-		FORCE_INLINE RefT operator*() const
-		{
-			return node->value;
-		}
-
-		/**
-		 * @brief Return a pointer to the current
-		 * node value.
-		 */
-		FORCE_INLINE PtrT operator->() const
-		{
-			return &(*this);
-		}
-
-		/**
-		 * @brief Compare two iterators, return
-		 * true if they point to the same node.
-		 * Nodes should belong to the same tree.
-		 * 
-		 * @param other another iterator
-		 */
-		FORCE_INLINE bool operator==(SelfT const& other) const
-		{
-			// TODO: Check same tree
-			return node == other.node;
-		}
-
-		/**
-		 * @brief Compare two iterators, return
-		 * true if they point to different nodes.
-		 * 
-		 * @param other another iterator
-		 */
-		FORCE_INLINE bool operator!=(SelfT const& other) const
-		{
-			return !(*this == other);
-		}
-
-		/**
-		 * @brief Step forward iterator and return
-		 * ref to self.
-		 */
-		FORCE_INLINE SelfT& operator++()
-		{
-			node = node->next;
-			return *this;
-		}
-
-		/**
-		 * @brief Step forward iterator and return
-		 * a new iterator pointing to the previous
-		 * node.
-		 */
-		FORCE_INLINE SelfT operator++(int32)
-		{
-			SelfT other{*this};
-			++(*this);
-			return other;
-		}
-
-		/**
-		 * @brief Step backward iterator and return
-		 * ref to self.
-		 */
-		FORCE_INLINE SelfT& operator--()
-		{
-			node = node->prev;
-			return *this;
-		}
-
-		/**
-		 * @brief Step backward iterator and return
-		 * a new iterator pointing to the previous
-		 * node.
-		 */
-		FORCE_INLINE SelfT operator--(int32)
-		{
-			SelfT other{*this};
-			--(*this);
-			return other;
-		}
-
-	protected:
-		TreeIterator() = delete;
-
-		/// @brief The node pointed by this iterator.
-		NodeT* node;
-
-#if !BUILD_RELEASE
-		/// @brief Address of the actual tree instance.
-		void* tree;
-#endif
-	};
+	using BinaryNode = BinaryNodeBase<BinaryNodePayload<T>>;
 
 	/**
-	 * @brief Like TreeIterator<T> but prevents
-	 * writing the values.
-	 * 
-	 * @tparam T the type of the node values
+	 * @brief Iterator class used to iterate
+	 * over a read-only binary tree.
+	 *
+	 * @tparam T the type of the node value
 	 */
 	template<typename T>
 	struct TreeConstIterator
 	{
 		template<typename, typename> friend class Tree;
 
-		using SelfT = TreeConstIterator;
-		using NodeT = BinaryNode<T> const;
-		using IteratorT = TreeIterator<T>;
+		using NodeT = BinaryNode<T>;
 		using RefT = T const&;
 		using PtrT = T const*;
 
 		/**
-		 * @brief Construct an iterator that starts
-		 * from the given node.
-		 * 
-		 * @param inNode ptr to starting node
+		 * @brief Cosntruct a new iterator pointing to
+		 * the given node.
+		 *
+		 * @param inNode the node pointed by the iterator
+		 * @param inTreeId the address of the tree (only
+		 * needed for debug checks)
 		 */
-		FORCE_INLINE explicit TreeConstIterator(NodeT* inNode, [[maybe_unused]] void const* inTree)
+		FORCE_INLINE TreeConstIterator(NodeT* inNode = nullptr, [[maybe_unused]] void* inTreeId = nullptr)
 			: node{inNode}
-#if !BUILD_RELEASE
-			, tree{inTree}
+#if !KORIN_RELEASE
+			, treeId{inTreeId}
 #endif
 		{
 			//
 		}
 
 		/**
-		 * @brief Copy a non-const iterator.
-		 * 
-		 * @param other a non-const iterator
-		 */
-		FORCE_INLINE TreeConstIterator(IteratorT const& other)
-			: node{other.node}
-#if !BUILD_RELEASE
-			, tree{other.tree}
-#endif
-		{
-			//
-		}
-
-		/**
-		 * @brief Return a reference to the current
-		 * node value.
+		 * @brief Dereference pointer, returns the
+		 * value of the pointed node.
 		 */
 		FORCE_INLINE RefT operator*() const
 		{
@@ -223,536 +122,688 @@ namespace Korin
 		}
 
 		/**
-		 * @brief Return a pointer to the current
-		 * node value.
+		 * @brief Returns a ptr to the value of the
+		 * pointed node, for member access.
 		 */
 		FORCE_INLINE PtrT operator->() const
 		{
-			return &(*this);
+			return &(**this);
 		}
 
 		/**
-		 * @brief Compare two iterators, return
-		 * true if they point to the same node.
-		 * Nodes should belong to the same tree.
-		 * 
-		 * @param other another iterator
+		 * @brief Compare two iterators, returns true
+		 * if they point to the same node.
+		 *
+		 * Both iterators should belong to the same
+		 * tree.
+		 *
+		 * @param other another tree iterator
+		 * @return true if the point to the same node
+		 * @return false otherwise
 		 */
-		FORCE_INLINE bool operator==(SelfT const& other) const
+		FORCE_INLINE bool operator==(TreeConstIterator const& other) const
 		{
-			// TODO: Check same tree
+			CHECKF(treeId == other.treeId, "Comparing iterators from different trees")
 			return node == other.node;
 		}
 
 		/**
-		 * @brief Compare two iterators, return
-		 * true if they point to different nodes.
-		 * 
-		 * @param other another iterator
+		 * @brief Compare two iterators, returns true
+		 * if they point to the same node.
+		 *
+		 * Both iterators should belong to the same
+		 * tree.
+		 *
+		 * @param other another tree iterator
+		 * @return true if the point to different nodes
+		 * @return false otherwise
 		 */
-		FORCE_INLINE bool operator!=(SelfT const& other) const
+		FORCE_INLINE bool operator!=(TreeConstIterator const& other) const
 		{
 			return !(*this == other);
 		}
 
 		/**
-		 * @brief Step forward iterator and return
-		 * ref to self.
+		 * @brief Move forward iterator by one step,
+		 * and returns ref to self.
 		 */
-		FORCE_INLINE SelfT& operator++()
+		FORCE_INLINE TreeConstIterator& operator++()
 		{
 			node = node->next;
 			return *this;
 		}
 
 		/**
-		 * @brief Step forward iterator and return
-		 * a new iterator pointing to the previous
-		 * node.
+		 * @brief Move iterator forward by one step,
+		 * and return iterator before increment.
 		 */
-		FORCE_INLINE SelfT operator++(int32)
+		FORCE_INLINE TreeConstIterator operator++(int32)
 		{
-			SelfT other{*this};
-			++(*this);
-			return other;
+			TreeConstIterator copy{*this};
+			operator++();
+			return copy;
 		}
 
 		/**
-		 * @brief Step backward iterator and return
-		 * ref to self.
+		 * @brief Move iterator backward by one step,
+		 * and returns ref to self.
 		 */
-		FORCE_INLINE SelfT& operator--()
+		FORCE_INLINE TreeConstIterator& operator--()
 		{
 			node = node->prev;
 			return *this;
 		}
 
 		/**
-		 * @brief Step backward iterator and return
-		 * a new iterator pointing to the previous
-		 * node.
+		 * @brief Move iterator backward by one step,
+		 * and returns ref to self.
 		 */
-		FORCE_INLINE SelfT operator--(int32)
+		FORCE_INLINE TreeConstIterator operator--(int32)
 		{
-			SelfT other{*this};
-			--(*this);
-			return other;
+			TreeConstIterator copy{*this};
+			operator--();
+			return copy;
 		}
 
-	protected:
-		TreeConstIterator() = delete;
-
-		/// @brief The node pointed by this iterator.
+	private:
+		/* Ptr to the current node. */
 		NodeT* node;
 
-#if !BUILD_RELEASE
-		/// @brief Address of the actual tree instance.
-		void const* tree;
+#if !KORIN_RELEASE
+		/* Address of the tree this iterator belongs to. */
+		void* treeId;
 #endif
 	};
 
-	/**
-	 * @brief A binary tree container implemented
-	 * with a red-black tree, with logarithmic
-	 * time insertion and removal.
-	 * 
-	 * @tparam T type of the node values
-	 * @tparam CompareT the comparison operator
-	 * used to compare node values
-	 */
-	template<typename T, typename CompareT>
-	class Tree
+	template<typename T>
+	struct TreeIterator
 	{
-		template<typename, typename, typename> friend class Map;
-		template<typename, typename>		   friend class Set;
+		template<typename, typename> friend class Tree;
 
 		using NodeT = BinaryNode<T>;
-
-	public:
-		using IteratorT = TreeIterator<T>;
-		using ConstIteratorT = TreeConstIterator<T>;
+		using RefT = T&;
+		using PtrT = T*;
 
 		/**
-		 * @brief Construct an empty tree.
+		 * @brief Cosntruct a new iterator pointing to
+		 * the given node.
+		 *
+		 * @param inNode the node pointed by the iterator
+		 * @param inTreeId the address of the tree (only
+		 * needed for debug checks)
 		 */
-		FORCE_INLINE Tree()
-			: root{nullptr}
-			, numNodes{0ull}
+		FORCE_INLINE TreeIterator(NodeT* inNode = nullptr, [[maybe_unused]] void* inTreeId = nullptr)
+			: node{inNode}
+#if !KORIN_RELEASE
+			, treeId{inTreeId}
+#endif
 		{
 			//
 		}
 
 		/**
-		 * @brief Return the number of nodes in
-		 * the tree.
+		 * @brief Dereference pointer, returns the
+		 * value of the pointed node.
 		 */
-		FORCE_INLINE uint64 getNumNodes() const
+		FORCE_INLINE RefT operator*() const
 		{
-			// TODO: Check against actual number of nodes
+			return node->value;
+		}
+
+		/**
+		 * @brief Returns a ptr to the value of the
+		 * pointed node, for member access.
+		 */
+		FORCE_INLINE PtrT operator->() const
+		{
+			return &(**this);
+		}
+
+		/**
+		 * @brief Compare two iterators, returns true
+		 * if they point to the same node.
+		 *
+		 * Both iterators should belong to the same
+		 * tree.
+		 *
+		 * @param other another tree iterator
+		 * @return true if the point to the same node
+		 * @return false otherwise
+		 */
+		FORCE_INLINE bool operator==(TreeIterator const& other) const
+		{
+			CHECKF(treeId == other.treeId, "Comparing iterators from different trees")
+			return node == other.node;
+		}
+
+		/**
+		 * @brief Compare two iterators, returns true
+		 * if they point to the same node.
+		 *
+		 * Both iterators should belong to the same
+		 * tree.
+		 *
+		 * @param other another tree iterator
+		 * @return true if the point to different nodes
+		 * @return false otherwise
+		 */
+		FORCE_INLINE bool operator!=(TreeIterator const& other) const
+		{
+			return !(*this == other);
+		}
+
+		/**
+		 * @brief Move forward iterator by one step,
+		 * and returns ref to self.
+		 */
+		FORCE_INLINE TreeIterator& operator++()
+		{
+			node = node->next;
+			return *this;
+		}
+
+		/**
+		 * @brief Move iterator forward by one step,
+		 * and return iterator before increment.
+		 */
+		FORCE_INLINE TreeIterator operator++(int32)
+		{
+			TreeIterator copy{*this};
+			operator++();
+			return copy;
+		}
+
+		/**
+		 * @brief Move iterator backward by one step,
+		 * and returns ref to self.
+		 */
+		FORCE_INLINE TreeIterator& operator--()
+		{
+			node = node->prev;
+			return *this;
+		}
+
+		/**
+		 * @brief Move iterator backward by one step,
+		 * and returns ref to self.
+		 */
+		FORCE_INLINE TreeIterator operator--(int32)
+		{
+			TreeIterator copy{*this};
+			operator--();
+			return copy;
+		}
+
+		FORCE_INLINE operator TreeConstIterator<T>() const
+		{
+#if !KORIN_RELEASE
+			return {node, treeId};
+#else
+			return {node};
+#endif
+		}
+
+	private:
+		/* Ptr to the current node. */
+		NodeT* node;
+
+#if !KORIN_RELEASE
+		/* Address of the tree this iterator belongs to. */
+		void* treeId;
+#endif
+	};
+
+	/**
+	 * @brief Implements a fully managed binary
+	 * tree with red and black balancing algo.
+	 *
+	 * A user-provided policy determines the
+	 * order of the node in the tree. The policy
+	 * accepts two values and return a positive
+	 * value if the lhs value is greater, a
+	 * negative value if the lhs is less or zero
+	 * otherwise.
+	 *
+	 * @see GreaterThan.
+	 *
+	 * @tparam T the type of the nodes' value
+	 * @tparam PolicyT the policy used to populate
+	 * and search the tree
+	 */
+	template<typename T, typename PolicyT>
+	class Tree
+	{
+	public:
+		using NodeT = BinaryNode<T>;
+		using IteratorT = TreeIterator<T>;
+		using ConstIteratorT = TreeConstIterator<T>;
+
+		/**
+		 * @brief Construct a new empty tree.
+		 */
+		FORCE_INLINE Tree()
+			: root{nullptr}
+			, numNodes{0}
+		{
+			//
+		}
+
+		/**
+		 * @brief Construct a new tree by copying
+		 * another tree.
+		 *
+		 * @param other tree to copy
+		 */
+		FORCE_INLINE Tree(Tree const& other)
+			: root{nullptr}
+			, numNodes{other.numNodes}
+		{
+			if (other.root)
+			{
+				// Clone tree structure
+				root = createNode(other.root->value);
+				cloneSubtree(root, other.root);
+			}
+		}
+
+		/**
+		 * @brief Construct a new tree by moving
+		 * another tree.
+		 *
+		 * @param other tree to move
+		 */
+		FORCE_INLINE Tree(Tree&& other)
+			: root{other.root}
+			, numNodes{other.numNodes}
+		{
+			other.root = nullptr;
+			other.numNodes = 0;
+		}
+
+		/**
+		 * @brief Copy another tree.
+		 *
+		 * @param other tree to copy
+		 * @return ref to self
+		 */
+		FORCE_INLINE Tree& operator=(Tree const& other)
+		{
+			if (other.root)
+			{
+				if (!root)
+				{
+					// Create root node
+					root = createNode(other.root->value);
+				}
+
+				// Copy over existing tree structure
+				copySubtree(root, other.root);
+			}
+
+			numNodes = other.numNodes;
+		}
+
+		/**
+		 * @brief Move another tree.
+		 *
+		 * @param other tree to move
+		 * @return ref to self
+		 */
+		FORCE_INLINE Tree& operator=(Tree&& other)
+		{
+			// Destroy this tree
+			destroy();
+
+			root = other.root;
+			numNodes = other.numNodes;
+
+			other.root = nullptr;
+			other.numNodes = 0;
+
+			return *this;
+		}
+
+		/**
+		 * @brief Destroy this tree and all the nodes
+		 * it contains.
+		 */
+		FORCE_INLINE ~Tree()
+		{
+			// Destroy tree
+			destroy();
+		}
+
+		/**
+		 * @brief Returns the number of nodes in
+		 * this tree.
+		 */
+		FORCE_INLINE sizet getNumNodes() const
+		{
 			return numNodes;
 		}
 
 		/**
-		 * @brief Return a pointer to the root
-		 * node. The node cannot be modified.
-		 */
-		FORCE_INLINE NodeT const* getRootNode() const
-		{
-			return root;
-		}
-
-		/**
-		 * @brief Return a pointer to the leftmost
-		 * node of the tree (which holds the
-		 * minimum value).
-		 */
-		FORCE_INLINE NodeT const* getMinNode() const
-		{
-			if (!root) return nullptr;
-			
-			NodeT* it = root;
-			while (it->left) it = it->left;
-			return it;
-		}
-
-		/**
-		 * @brief Return a pointer to the rightmost
-		 * node of the tree (which holds the
-		 * maximum value).
-		 */
-		FORCE_INLINE NodeT const* getMaxNode() const
-		{
-			if (!root) return nullptr;
-			
-			NodeT* it = root;
-			while (it->right) it = it->right;
-			return it;
-		}
-
-		/**
-		 * @brief Return the min value of the tree.
-		 * If the tree is empty, the behavior is
-		 * undefined.
-		 */
-		FORCE_INLINE T const& getMin() const
-		{
-			return getMinNode()->value;
-		}
-
-		/**
-		 * @brief Return the max value of the tree.
-		 * If the tree is empty, the behavior is
-		 * undefined.
-		 */
-		FORCE_INLINE T const& getMax() const
-		{
-			return getMaxNode()->value;
-		}
-
-		/**
+		 * @brief Returns an iterator pointing to the
+		 * min/leftmost node of the tree.
 		 * @{
-		 * @brief Return an iterator pointing to
-		 * the leftmost (min) node of the tree.
 		 */
-		FORCE_INLINE ConstIteratorT begin() const
-		{
-			NodeT const* min = getMinNode();
-			return ConstIteratorT{min, this};
-		}
-
 		FORCE_INLINE IteratorT begin()
 		{
-			NodeT* min = const_cast<NodeT*>(getMinNode());
-			return IteratorT{min, this};
+			NodeT* min = TreeNode::getMin(root);
+			return {min, this};
+		}
+
+		FORCE_INLINE ConstIteratorT begin() const
+		{
+			return const_cast<Tree*>(this)->begin();
 		}
 		/** @} */
 
 		/**
+		 * @brief Returns an iterator that points past
+		 * the max/rightmost node of the tree.
 		 * @{
-		 * @brief Return an iterator pointing past
-		 * the rightmost (max) node of the tree.
 		 */
-		FORCE_INLINE ConstIteratorT end() const
-		{
-			return ConstIteratorT{nullptr, this};
-		}
-
 		FORCE_INLINE IteratorT end()
 		{
-			return IteratorT{nullptr, this};
+			return {nullptr, this};
+		}
+
+		FORCE_INLINE ConstIteratorT end() const
+		{
+			return const_cast<Tree*>(this)->end();
 		}
 		/** @} */
 
-		/**
-		 * @{
-		 * @brief Return a reverse iterator pointing
-		 * to the rightmost (max) node of the tree.
-		 */
-		FORCE_INLINE ConstIteratorT rbegin() const
+		// TODO
+		FORCE_INLINE IteratorT begin(auto const& key);
+		FORCE_INLINE ConstIteratorT begin(auto const& key) const
 		{
-			NodeT const* max = getMaxNode();
-			return ConstIteratorT{max, this};
+			return const_cast<Tree*>(this)->begin();
 		}
 
+		FORCE_INLINE IteratorT end(auto const& key);
+		FORCE_INLINE ConstIteratorT end(auto const& key) const
+		{
+			return const_cast<Tree*>(this)->end(key);
+		}
+
+		/**
+		 * @brief Returns an iterator that points to
+		 * the max/rightmost node of the tree.
+		 * @{
+		 */
 		FORCE_INLINE IteratorT rbegin()
 		{
-			NodeT* max = const_cast<NodeT*>(getMaxNode());
-			return IteratorT{max, this};
+			NodeT* max = TreeNode::getMax(root);
+			return {max, this};
+		}
+
+		FORCE_INLINE ConstIteratorT rbegin() const
+		{
+			return const_cast<Tree*>(this)->rbegin();
 		}
 		/** @} */
 
 		/**
+		 * @brief Returns an iterator that points before
+		 * the min/leftmost node of the tree.
 		 * @{
-		 * @brief Return a reverse iterator pointing
-		 * past the leftmost (min) node of the tree.
 		 */
-		FORCE_INLINE ConstIteratorT rend() const
-		{
-			return ConstIteratorT{nullptr, this};
-		}
-
 		FORCE_INLINE IteratorT rend()
 		{
-			return IteratorT{nullptr, this};
+			return {nullptr, this};
+		}
+
+		FORCE_INLINE ConstIteratorT rend() const
+		{
+			return const_cast<Tree*>(this)->rend();
 		}
 		/** @} */
 
 		/**
-		 * @brief Search for a specific node using
-		 * a key.
-		 * 
-		 * @param key any key that can be compared
-		 * with node values
-		 * @return ptr to node, or null
+		 * @brief Returns an iterator that points to
+		 * the first node that matches the search key.
+		 *
+		 * @param key
+		 * @return iter that points to first node found
+		 * @return iter that points to end of tree if
+		 * no node was found
 		 */
-		NodeT const* findNode(auto const& key) const
-		{
-			NodeT* it = root;
-			while (it)
-			{
-				int32 cmp = CompareT{}(key, it->value);
-				if (cmp < 0)
-				{
-					it = it->left;
-				}
-				else if (cmp > 0)
-				{
-					it = it->right;
-				}
-				else
-				{
-					// First node found
-					return it;
-				}
-			}
-			
-			return nullptr;
-		}
-
-		/**
-		 * @{
-		 * @brief Return an iterator pointing to
-		 * the first node found that matches the
-		 * search key.
-		 * 
-		 * @param key any key comparable to the
-		 * node values
-		 * @return an iterator pointing to the
-		 * found node, or an iterator equal to
-		 * the result of end()
-		 */
-		FORCE_INLINE ConstIteratorT find(auto const& key) const
-		{
-			NodeT const* node = findNode(key);
-			return ConstIteratorT{node, this};
-		}
-
 		FORCE_INLINE IteratorT find(auto const& key)
 		{
-			NodeT* node = const_cast<NodeT*>(findNode(key));
-			return IteratorT{node, this};
+			NodeT* node = TreeNode::find(root, [&key](auto const* node) {
+
+				return PolicyT{}(key, node->value);
+			});
+
+			return {node, this};
+		}
+
+		FORCE_INLINE ConstIteratorT find(auto const& key) const
+		{
+			return const_cast<Tree*>(this)->find(key);
 		}
 		/** @} */
 
 		/**
-		 * @brief Insert a new value in the tree.
-		 * 
-		 * @param createArgs arguments passed to
-		 * the constructor of the node
-		 * @return an iterator pointing to the
-		 * created node
+		 * @brief Costruct and insert a new node in the
+		 * tree.
+		 *
+		 * @param createArgs arguments passed to construct
+		 * the node value
+		 * @return iter that points to inserted node
 		 */
-		IteratorT emplace(auto&& ...createArgs)
+		FORCE_INLINE IteratorT emplace(auto&& ...createArgs)
 		{
-			// TODO: Update to use TreeNode::insert
-			NodeT* node = createNode(FORWARD(createArgs)...);
+			NodeT* newNode = createNode(FORWARD(createArgs)...);
+			root = TreeNode::insert(root, newNode, [newNode](auto const* node) {
 
-			if (!root)
-			{
-				root = node;
-			}
-			else
-			{
-				// TODO: Can be moved in a separate function
-				NodeT* it = root;
-				for (;;)
-				{
-					int32 cmp = CompareT{}(node->value, it->value);
-					if (cmp < 0)
-					{
-						if (!it->left)
-						{
-							it->setLeftChild(node);
-							break;
-						}
-						
-						it = it->left;
-					}
-					else
-					{
-						if (!it->right)
-						{
-							it->setRightChild(node);
-							break;
-						}
+				return PolicyT{}(newNode->value, node->value);
+			});
 
-						it = it->right;
-					}
-				}
-			}
-			repairInserted(node);
 			numNodes++;
 
-			return IteratorT{node, this};
+			return {newNode, this};
 		}
 
 		/**
-		 * @{
-		 * @brief Insert a value in the tree.
-		 * @see emplace(auto&&...)
+		 * @brief Insert a new node with the given value
+		 * in the tree.
+		 *
+		 * @param value value to insert
+		 * @return iter that points to inserted node
 		 */
-		IteratorT insert(T const& value)
+		FORCE_INLINE IteratorT insert(T const& value)
 		{
 			return emplace(value);
 		}
 
-		IteratorT insert(T&& value)
+		FORCE_INLINE IteratorT insert(T&& value)
 		{
 			return emplace(move(value));
 		}
 		/** @} */
 
 		/**
-		 * @brief Remove one node from the tree.
-		 * 
-		 * @param node ptr to the node to remove
-		 * @return the next valid node or null if
-		 * tree is empty
+		 * @brief Remove the node pointed by the
+		 * given iterator from the tree.
+		 *
+		 * @param it iter that points to node to
+		 * remove
+		 * @return iter that points to next valid
+		 * node
 		 */
-		NodeT* removeNode(NodeT* node)
+		FORCE_INLINE IteratorT remove(ConstIteratorT it)
 		{
-			// TODO: Check node is in tree
+			// TODO: Move forward and return iterator
+			ASSERT(it->node != nullptr);
 
-			NodeT* repl = nullptr; // The node used to replace the node to remove
-			NodeT* valid = node->parent; // A node which is always valid or null if the tree is empty
-			NodeT* next = node->next; // The next valid node or null if the node to remove was the rightmost
+			NodeT* node = it.node;
+			NodeT* next = node->next;
+			root = TreeNode::remove(node);
 
-			if (node->left && node->right)
+			if (node != it.node)
 			{
-				// Swap value with successor, and set
-				// the successor as the node to remove
-				next = valid = node;
-				node = node->next;
-				swap(node->value, valid->value);
+				// We removed the successor
+				next = it.node;
 			}
 
-			if (node->left)
-			{
-				// Replace with left child
-				valid = repl = node->left;
-				if ((repl->next = node->next))
-				{
-					repl->next->prev = repl;
-				}
-			}
-			else if (node->right)
-			{
-				// Replace with right child
-				valid = repl = node->right;
-				if ((repl->prev = node->prev))
-				{
-					repl->prev->next = repl;
-				}
-			}
-			else
-			{
-				if (node->prev)
-				{
-					node->prev->next = node->next;
-				}
-				if (node->next)
-				{
-					node->next->prev = node->prev;
-				}
-			}
-
-			if (node->parent)
-			{
-				if (node->parent->left == node)
-				{
-					node->parent->left = repl;
-				}
-				else
-				{
-					node->parent->right = repl;
-				}
-				
-				if (repl)
-				{
-					repl->parent = node->parent;
-				}
-			}
-			else if (repl)
-			{
-				repl->parent = nullptr;
-			}
-			
-			// Repair tree
-			repairRemoved(node, repl, node->parent, valid);
+			destroyNode(node);
 			numNodes--;
 
-			// Finally destroy removed node
-			destroyNode(node);
-
-			return next;
-		}
-
-		/**
-		 * @brief Remove the node pointed by the
-		 * iterator from the tree, and return an
-		 * iterator pointing to the next valid
-		 * node.
-		 * 
-		 * @param it an iterator pointing to a
-		 * valid node of the tree
-		 * @return an iterator pointing to the next
-		 * valid node
-		 */
-		FORCE_INLINE IteratorT remove(ConstIteratorT const& it)
-		{
-			NodeT* next = removeNode(const_cast<NodeT*>(it.node));
-			return IteratorT{next, this};
+			return {next, this};
 		}
 
 	protected:
+		/* The root node of the tree. */
+		NodeT* root;
+
+		/* The number of nodes in the tree. */
+		sizet numNodes;
+
+	private:
 		/**
-		 * @brief Create a new node for the tree.
-		 * 
-		 * @param createArgs arguments passed to
-		 * the value constructor
-		 * @return ptr to the created node
+		 * @brief Create a new node.
+		 *
+		 * @param createArgs arguments used to create
+		 * the node
+		 * @return ptr to created node
 		 */
 		FORCE_INLINE NodeT* createNode(auto&& ...createArgs)
 		{
-			// TODO: Replace with allocator
-			return new (::malloc(sizeof(NodeT))) NodeT{FORWARD(createArgs)...};
+			// TODO: Use allocator
+			return new(gMalloc->malloc(sizeof(NodeT))) NodeT{FORWARD(createArgs)...};
 		}
 
 		/**
-		 * @brief Destroy a node created for this
-		 * tree.
+		 * @brief Destroy a node of the tree.
 		 * 
 		 * @param node ptr to node to destroy
 		 */
 		FORCE_INLINE void destroyNode(NodeT* node)
 		{
+			// TODO: Use allocator
+			ASSERT(node != nullptr)
 			node->~NodeT();
-			::free(node);
+			gMalloc->free(node);
 		}
 
 		/**
-		 * @brief Destroy the subtree spawning from
-		 * the given node.
+		 * @brief Recursively clone a subtree.
 		 * 
-		 * @param node root node of the subtree
+		 * @param dst root of new subtree
+		 * @param src root of the source subtree
 		 */
-		void destroySubtree(NodeT* node)
+		FORCE_INLINE void cloneSubtree(NodeT* dst, NodeT* src)
 		{
-			// TODO: Check node is not null
+			ASSERT(src != nullptr)
 
-			// Destroy sub-subtrees
-			if (node->left) destroySubtree(node->left);
-			if (node->right) destroySubtree(node->right);
+			if (src->left)
+			{
+				// Create node
+				auto* left = createNode(src->left->value);
+				left->color = src->left->color;
+				TreeNode::Impl::insertLeft(dst, left);
 
-			destroyNode(node);
+				// Clone left subtree
+				cloneSubtree(left, src->left);
+			}
 
-			// TODO: Not tail-recursive, we could do
-			// better, but it's very simple and elegant
+			if (src->right)
+			{
+				// Create node
+				auto* right = createNode(src->right->value);
+				right->color = src->right->color;
+				TreeNode::Impl::insertRight(dst, right);
+
+				// Clone right subtree
+				cloneSubtree(right, src->right);
+			}
 		}
 
 		/**
-		 * @brief Destroy the tree and all the nodes
-		 * in it.
+		 * @brief Recursively copy a subtree over the
+		 * existing subtree.
+		 * 
+		 * @param dst root of existing subtree
+		 * @param src root of subtree to copy
+		 */
+		FORCE_INLINE void copySubtree(NodeT* dst, NodeT* src)
+		{
+			ASSERT(src != nullptr)
+
+			if (src->left)
+			{
+				auto* left = dst->left;
+
+				if (left)
+				{
+					// Copy value
+					left->value = src->left->value;
+					left->color = src->left->color;
+				}
+				else
+				{
+					// Create node and insert it
+					left = createNode(src->left->value);
+					left->color = src->left->color;
+					TreeNode::Impl::insertLeft(dst, left);
+				}
+
+				copySubtree(dst->left, src->left);
+			}
+			// FIXME: if dst->left remove it
+
+			if (src->right)
+			{
+				auto* right = dst->right;
+
+				if (right)
+				{
+					// Copy value
+					right->value = src->right->value;
+					right->color = src->right->color;
+				}
+				else
+				{
+					// Create node and insert it
+					right = createNode(src->right->value);
+					right->color = src->right->color;
+					TreeNode::Impl::insertRight(dst, right);
+				}
+
+				copySubtree(dst->right, src->right);
+			}
+			// FIXME: if dst->right remove it
+		}
+
+		/**
+		 * @brief Recursively destroy all the nodes in
+		 * the subtree.
+		 * 
+		 * @param root root node of the subtree
+		 */
+		FORCE_INLINE void destroySubtree(NodeT* root)
+		{
+			// Recursion is fine, tree height is log2(n)
+			ASSERT(root != nullptr)
+
+			if (root->left)
+			{
+				destroySubtree(root->left);
+			}
+
+			if (root->right)
+			{
+				destroySubtree(root->right);
+			}
+
+			destroyNode(root);
+		}
+
+		/**
+		 * @brief Destroy this tree.
 		 */
 		FORCE_INLINE void destroy()
 		{
@@ -762,74 +813,7 @@ namespace Korin
 				root = nullptr;
 			}
 
-			numNodes = 0ull;
+			numNodes = 0;
 		}
-
-		/**
-		 * @brief Return true if the tree contains
-		 * the given node.
-		 * 
-		 * @param node ptr to node to test
-		 * @return true if node is inside tree
-		 */
-		FORCE_INLINE bool containsNode(NodeT* node)
-		{
-			// We can bisect on the value, and then check the pointers
-			NodeT* it = root;
-			while (it)
-			{
-				if (node == it) return true;
-
-				int32 cmp = CompareT{}(node->value, it->value);
-				if (cmp < 0)
-				{
-					it = it->left;
-				}
-				else
-				{
-					it = it->right;
-				}
-			}
-			
-			return false;
-		}
-
-		/**
-		 * @brief Repair tree after node insertion.
-		 * 
-		 * @param node ptr to inserted node
-		 */
-		FORCE_INLINE void repairInserted(NodeT* node)
-		{
-			TreeNode::Impl::repairInserted(node);
-			root = TreeNode::getRoot(node);
-		}
-
-		/**
-		 * @brief Repair tree after node removal.
-		 * 
-		 * @param node ptr to remove node
-		 * @param repl ptr to replaced node
-		 * @param parent ptr to parent of repl, in
-		 * case repl is null
-		 * @param valid ptr to a valid node in
-		 * the tree, null only if tree is empty
-		 */
-		FORCE_INLINE void repairRemoved(NodeT* node, NodeT* repl, NodeT* parent, NodeT* valid)
-		{
-			if (TreeNode::isBlack(node))
-			{
-				TreeNode::Impl::repairRemoved(repl, parent);
-			}
-
-			root = valid ? TreeNode::getRoot(valid) : nullptr;
-		}
-
-		/// @brief Root node of the tree.
-		NodeT* root;
-
-		/// @brief Number of nodes in the tree.
-		uint64 numNodes;
 	};
 } // namespace Korin
-

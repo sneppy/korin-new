@@ -15,26 +15,51 @@ using namespace Korin;
 
 struct Object
 {
-	Object()
+	struct Find
 	{
-		mem = ::malloc(100);
+		int32 operator()(Object const& lhs, Object const& rhs) const
+		{
+			return GreaterThan{}(lhs.size, rhs.size);
+		}
+	};
+
+	Object(sizet inSize)
+		: size{inSize}
+	{
+		mem = ::malloc(size);
+	}
+
+	Object()
+		: Object(100)
+	{
+		//
 	}
 
 	Object(Object const& other)
+		: size{other.size}
 	{
-		mem = ::malloc(100);
-		::memcpy(mem, other.mem, 100);
+		mem = ::malloc(size);
+		::memcpy(mem, other.mem, size);
 	}
 
 	Object(Object&& other)
+		: mem{other.mem}
+		, size{other.size}
 	{
-		mem = other.mem;
 		other.mem = nullptr;
+		other.size = 0;
 	}
 
 	Object& operator=(Object const& other)
 	{
-		::memcpy(mem, other.mem, 100);
+		if (other.size != size)
+		{
+			mem = ::realloc(mem, other.size);
+			size = other.size;
+		}
+		
+		::memcpy(mem, other.mem, size);
+
 		return *this;
 	}
 
@@ -42,7 +67,9 @@ struct Object
 	{
 		::free(mem);
 		mem = other.mem;
+		size = other.size;
 		other.mem = nullptr;
+		other.size;
 		return *this;
 	}
 
@@ -52,19 +79,27 @@ struct Object
 		{
 			::free(mem);
 		}
+
+		size = 0;
+	}
+
+	sizet getSize() const
+	{
+		return size;
 	}
 
 	void test()
 	{
 		char* it = reinterpret_cast<char*>(mem);
-		for (char i = 0; i < 100; ++i)
+		for (int32 i = 0; i < size; ++i)
 		{
-			*it = i;
+			*it = i & 0xff;
 		}
 	}
 
 protected:
 	void* mem;
+	sizet size;
 };
 
 TEST(containers, Optional)
@@ -305,24 +340,22 @@ TEST(containers, List)
 
 TEST(containers, TreeNode)
 {
-	struct Node : public BinaryNodeBase<Node>
+	struct NodeData
 	{
-		// Node value
 		int32 value;
 	};
 
+	using Node = BinaryNodeBase<NodeData>;
+
 	constexpr uint32 numNodes = 1024;
 	Node* nodes[numNodes] = {};
-	Node* root = new Node{};
-	root->color = BinaryNodeColor::Color_BLACK;
-	root->value = 0;
-	nodes[0] = root;
+	Node* root = nullptr;
 
-	for (uint32 i = 1; i < numNodes; ++i)
+	for (int32 i = 0; i < numNodes; ++i)
 	{
-		nodes[i] = new Node{};
-		nodes[i]->value = i;
-		root = TreeNode::insert(root, nodes[i], [](auto* node, auto* other) {
+		auto* node = new Node{};
+		node->value = i;
+		root = TreeNode::insert(root, node, [node](auto const* other) {
 
 			return GreaterThan{}(node->value, other->value);
 		});
@@ -334,15 +367,66 @@ TEST(containers, TreeNode)
 
 			return GreaterThan{}(i, node->value);
 		});
+		ASSERT_EQ(node->value, i);
 	}
 
-	// Shuffle nodes
-	shuffle(nodes, nodes + numNodes);
-
-	for (int32 i = 1; i < numNodes; ++i)
+	for (int32 i = 0; i < numNodes; ++i)
 	{
-		root = TreeNode::remove(nodes[i]);
-		delete nodes[i];
+		auto* node = TreeNode::find(root, [i](auto const* node) {
+
+			return GreaterThan{}(i, node->value);
+		});
+		root = TreeNode::remove(node);
+		delete node;
+	}
+
+	int32 values[numNodes] = {};
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		// Generate some collisions
+		values[i] = rand() % (numNodes << 4);
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto* node = new Node{};
+		node->value = values[i];
+		root = TreeNode::insert(root, node, [node](auto const* other) {
+
+			return GreaterThan{}(node->value, other->value);
+		});
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto const value = values[i];
+		auto* node = TreeNode::find(root, [value](auto const* node) {
+
+			return GreaterThan{}(value, node->value);
+		});
+		ASSERT_NE(node, nullptr);
+		ASSERT_EQ(node->value, value);
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto const value = values[i];
+		auto* node = TreeNode::find(root, [value](auto const* node) {
+
+			return GreaterThan{}(value, node->value);
+		});
+		root = TreeNode::remove(node);
+		delete node;
+	}
+
+	for (int32 i = 0; i < numNodes; ++i)
+	{
+		auto const value = values[i];
+		auto* node = TreeNode::find(root, [value](auto const* node) {
+
+			return GreaterThan{}(value, node->value);
+		});
+		ASSERT_EQ(node, nullptr);
 	}
 
 	SUCCEED();
@@ -350,61 +434,105 @@ TEST(containers, TreeNode)
 
 TEST(containers, Tree)
 {
-	Tree<int32> x, y, z;
+	Tree<Object, Object::Find> x, y, z;
 
-	ASSERT_EQ(x.getNumNodes(), 0ull);
-	ASSERT_EQ(x.getRootNode(), nullptr);
-	ASSERT_EQ(x.getMinNode(), nullptr);
-	ASSERT_EQ(x.getMaxNode(), nullptr);
-
-	x.insert(1);
-
-	ASSERT_EQ(x.getNumNodes(), 1ull);
-	ASSERT_NE(x.getRootNode(), nullptr);
-	ASSERT_EQ(x.getRootNode(), x.getMinNode());
-	ASSERT_EQ(x.getRootNode(), x.getMaxNode());
-	ASSERT_EQ(x.getRootNode()->value, 1);
-
-	x.insert(2);
-	x.insert(3);
-
-	ASSERT_EQ(x.getRootNode()->value, 2);
-	ASSERT_EQ(x.getMinNode()->value, 1);
-	ASSERT_EQ(x.getMaxNode()->value, 3);
-
-	for (auto value : x)
+	static constexpr int32 numValues = 1 << 10;
+	int32 values[numValues] = {};
+	for (int32 i = 0; i < numValues; ++i)
 	{
-		ASSERT_EQ(x.findNode(value)->value, value);
+		values[i] = 1 + (rand() & 0xf);
+	}
+	
+	for (int32 i = 0; i < numValues; ++i)
+	{
+		auto it = x.emplace(values[i]);
+		ASSERT_NE(it, x.end());
+		ASSERT_EQ(it->getSize(), values[i]);
 	}
 
-	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(2)));
-	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(3)));
+	ASSERT_EQ(x.getNumNodes(), numValues);
 
-	ASSERT_EQ(x.getNumNodes(), 1ull);
-	ASSERT_NE(x.getRootNode(), nullptr);
-	ASSERT_EQ(x.getRootNode(), x.getMinNode());
-	ASSERT_EQ(x.getRootNode(), x.getMaxNode());
-	ASSERT_EQ(x.getRootNode()->value, 1);
-
-	x.removeNode(const_cast<BinaryNode<int32>*>(x.findNode(1)));
-
-	ASSERT_EQ(x.getNumNodes(), 0ull);
-	ASSERT_EQ(x.getRootNode(), nullptr);
-	ASSERT_EQ(x.getMinNode(), nullptr);
-	ASSERT_EQ(x.getMaxNode(), nullptr);
-
-	for (int32 i = 0; i < 100; ++i)
+	for (int32 i = 0; i < numValues; ++i)
 	{
-		x.insert(rand() % 20);
+		auto it = x.find(values[i]);
+		ASSERT_NE(it, x.end());
+		ASSERT_EQ(it->getSize(), values[i]);
 	}
 
-	ASSERT_EQ(x.getNumNodes(), 100ull);
-	ASSERT_NE(x.getRootNode(), nullptr);
+	{
+		sizet prev = 0;
+		for (auto const& obj : x)
+		{
+			ASSERT_GE(obj.getSize(), prev);
+			prev = obj.getSize();
+		}
+	}
+	
+	y = x;
 
-	for (auto it = x.begin(); it != x.end(); it = x.remove(it));
+	{
+		auto it = x.begin();
+		auto jt = y.begin();
+		ASSERT_EQ(y.getNumNodes(), numValues);
+		for (; it != x.end() && jt != y.end(); ++it, ++jt)
+		{
+			ASSERT_EQ(it->getSize(), jt->getSize());
+		}
+		ASSERT_EQ(it, x.end());
+		ASSERT_EQ(jt, y.end());
+	}
 
-	ASSERT_EQ(x.getNumNodes(), 0ull);
-	ASSERT_EQ(x.getRootNode(), nullptr);
+	z = move(x);
+
+	ASSERT_EQ(z.getNumNodes(), numValues);
+	ASSERT_EQ(x.getNumNodes(), 0);
+
+	{
+		auto kt = z.begin();
+		auto jt = y.begin();
+		ASSERT_EQ(y.getNumNodes(), numValues);
+		for (; kt != z.end() && jt != y.end(); ++kt, ++jt)
+		{
+			ASSERT_EQ(kt->getSize(), jt->getSize());
+		}
+		ASSERT_EQ(kt, z.end());
+		ASSERT_EQ(jt, y.end());
+	}
+
+	for (auto it = y.begin(); it != y.end();)
+	{
+		if (it->getSize() & 0x1)
+		{
+			it = y.remove(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	for (auto it = z.begin(); it != z.end();)
+	{
+		it = z.remove(it);
+	}
+	
+	for (int32 i = 0; i < numValues; ++i)
+	{
+		auto it = z.insert(values[i]);
+		ASSERT_NE(it, z.end());
+		ASSERT_EQ(it->getSize(), values[i]);
+	}
+
+	for (int32 i = 0; i < numValues; ++i)
+	{
+		auto it = z.find(values[i]);
+		ASSERT_NE(it, z.end());
+		ASSERT_EQ(it->getSize(), values[i]);
+		z.remove(it);
+	}
+
+	y.~Tree();
+	z.~Tree();
 
 	SUCCEED();
 }
