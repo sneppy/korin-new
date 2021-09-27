@@ -74,7 +74,7 @@ namespace Korin
 
 	/**
 	 * @brief The node of a red and black tree.
-	 * 
+	 *
 	 * @tparam T the type of the node's value
 	 */
 	template<typename T>
@@ -356,16 +356,16 @@ namespace Korin
 	/**
 	 * @brief Implements a fully managed binary
 	 * tree with red and black balancing algo.
-	 * 
+	 *
 	 * A user-provided policy determines the
 	 * order of the node in the tree. The policy
 	 * accepts two values and return a positive
 	 * value if the lhs value is greater, a
 	 * negative value if the lhs is less or zero
 	 * otherwise.
-	 * 
+	 *
 	 * @see GreaterThan.
-	 * 
+	 *
 	 * @tparam T the type of the nodes' value
 	 * @tparam PolicyT the policy used to populate
 	 * and search the tree
@@ -378,6 +378,9 @@ namespace Korin
 		using IteratorT = TreeIterator<T>;
 		using ConstIteratorT = TreeConstIterator<T>;
 
+		/**
+		 * @brief Construct a new empty tree.
+		 */
 		FORCE_INLINE Tree()
 			: root{nullptr}
 			, numNodes{0}
@@ -385,6 +388,12 @@ namespace Korin
 			//
 		}
 
+		/**
+		 * @brief Construct a new tree by copying
+		 * another tree.
+		 *
+		 * @param other tree to copy
+		 */
 		FORCE_INLINE Tree(Tree const& other)
 			: root{nullptr}
 			, numNodes{other.numNodes}
@@ -392,10 +401,17 @@ namespace Korin
 			if (other.root)
 			{
 				// Clone tree structure
-				root = cloneSubtree(other.root);
+				root = createNode(other.root->value);
+				cloneSubtree(root, other.root);
 			}
 		}
 
+		/**
+		 * @brief Construct a new tree by moving
+		 * another tree.
+		 *
+		 * @param other tree to move
+		 */
 		FORCE_INLINE Tree(Tree&& other)
 			: root{other.root}
 			, numNodes{other.numNodes}
@@ -404,6 +420,12 @@ namespace Korin
 			other.numNodes = 0;
 		}
 
+		/**
+		 * @brief Copy another tree.
+		 *
+		 * @param other tree to copy
+		 * @return ref to self
+		 */
 		FORCE_INLINE Tree& operator=(Tree const& other)
 		{
 			if (other.root)
@@ -421,6 +443,12 @@ namespace Korin
 			numNodes = other.numNodes;
 		}
 
+		/**
+		 * @brief Move another tree.
+		 *
+		 * @param other tree to move
+		 * @return ref to self
+		 */
 		FORCE_INLINE Tree& operator=(Tree&& other)
 		{
 			// Destroy this tree
@@ -435,17 +463,30 @@ namespace Korin
 			return *this;
 		}
 
+		/**
+		 * @brief Destroy this tree and all the nodes
+		 * it contains.
+		 */
 		FORCE_INLINE ~Tree()
 		{
 			// Destroy tree
 			destroy();
 		}
 
+		/**
+		 * @brief Returns the number of nodes in
+		 * this tree.
+		 */
 		FORCE_INLINE sizet getNumNodes() const
 		{
 			return numNodes;
 		}
 
+		/**
+		 * @brief Returns an iterator pointing to the
+		 * min/leftmost node of the tree.
+		 * @{
+		 */
 		FORCE_INLINE IteratorT begin()
 		{
 			NodeT* min = TreeNode::getMin(root);
@@ -456,7 +497,13 @@ namespace Korin
 		{
 			return const_cast<Tree*>(this)->begin();
 		}
+		/** @} */
 
+		/**
+		 * @brief Returns an iterator that points past
+		 * the max/rightmost node of the tree.
+		 * @{
+		 */
 		FORCE_INLINE IteratorT end()
 		{
 			return {nullptr, this};
@@ -466,7 +513,9 @@ namespace Korin
 		{
 			return const_cast<Tree*>(this)->end();
 		}
+		/** @} */
 
+		// TODO
 		FORCE_INLINE IteratorT begin(auto const& key);
 		FORCE_INLINE ConstIteratorT begin(auto const& key) const
 		{
@@ -479,6 +528,11 @@ namespace Korin
 			return const_cast<Tree*>(this)->end(key);
 		}
 
+		/**
+		 * @brief Returns an iterator that points to
+		 * the max/rightmost node of the tree.
+		 * @{
+		 */
 		FORCE_INLINE IteratorT rbegin()
 		{
 			NodeT* max = TreeNode::getMax(root);
@@ -489,7 +543,13 @@ namespace Korin
 		{
 			return const_cast<Tree*>(this)->rbegin();
 		}
+		/** @} */
 
+		/**
+		 * @brief Returns an iterator that points before
+		 * the min/leftmost node of the tree.
+		 * @{
+		 */
 		FORCE_INLINE IteratorT rend()
 		{
 			return {nullptr, this};
@@ -499,7 +559,17 @@ namespace Korin
 		{
 			return const_cast<Tree*>(this)->rend();
 		}
+		/** @} */
 
+		/**
+		 * @brief Returns an iterator that points to
+		 * the first node that matches the search key.
+		 *
+		 * @param key
+		 * @return iter that points to first node found
+		 * @return iter that points to end of tree if
+		 * no node was found
+		 */
 		FORCE_INLINE IteratorT find(auto const& key)
 		{
 			NodeT* node = TreeNode::find(root, [&key](auto const* node) {
@@ -514,7 +584,16 @@ namespace Korin
 		{
 			return const_cast<Tree*>(this)->find(key);
 		}
+		/** @} */
 
+		/**
+		 * @brief Costruct and insert a new node in the
+		 * tree.
+		 *
+		 * @param createArgs arguments passed to construct
+		 * the node value
+		 * @return iter that points to inserted node
+		 */
 		FORCE_INLINE IteratorT emplace(auto&& ...createArgs)
 		{
 			NodeT* newNode = createNode(FORWARD(createArgs)...);
@@ -528,6 +607,13 @@ namespace Korin
 			return {newNode, this};
 		}
 
+		/**
+		 * @brief Insert a new node with the given value
+		 * in the tree.
+		 *
+		 * @param value value to insert
+		 * @return iter that points to inserted node
+		 */
 		FORCE_INLINE IteratorT insert(T const& value)
 		{
 			return emplace(value);
@@ -537,7 +623,17 @@ namespace Korin
 		{
 			return emplace(move(value));
 		}
+		/** @} */
 
+		/**
+		 * @brief Remove the node pointed by the
+		 * given iterator from the tree.
+		 *
+		 * @param it iter that points to node to
+		 * remove
+		 * @return iter that points to next valid
+		 * node
+		 */
 		FORCE_INLINE IteratorT remove(ConstIteratorT it)
 		{
 			// TODO: Move forward and return iterator
@@ -560,26 +656,31 @@ namespace Korin
 		}
 
 	protected:
-		NodeT const* getRoot() const
-		{
-			return root;
-		}
-
-		NodeT* getRoot()
-		{
-			return root;
-		}
-
+		/* The root node of the tree. */
 		NodeT* root;
+
+		/* The number of nodes in the tree. */
 		sizet numNodes;
 
 	private:
+		/**
+		 * @brief Create a new node.
+		 *
+		 * @param createArgs arguments used to create
+		 * the node
+		 * @return ptr to created node
+		 */
 		FORCE_INLINE NodeT* createNode(auto&& ...createArgs)
 		{
 			// TODO: Use allocator
 			return new(gMalloc->malloc(sizeof(NodeT))) NodeT{FORWARD(createArgs)...};
 		}
 
+		/**
+		 * @brief Destroy a node of the tree.
+		 * 
+		 * @param node ptr to node to destroy
+		 */
 		FORCE_INLINE void destroyNode(NodeT* node)
 		{
 			// TODO: Use allocator
@@ -588,37 +689,50 @@ namespace Korin
 			gMalloc->free(node);
 		}
 
-		FORCE_INLINE void cloneSubtree(NodeT* src)
+		/**
+		 * @brief Recursively clone a subtree.
+		 * 
+		 * @param dst root of new subtree
+		 * @param src root of the source subtree
+		 */
+		FORCE_INLINE void cloneSubtree(NodeT* dst, NodeT* src)
 		{
 			ASSERT(src != nullptr)
-			
+
 			if (src->left)
 			{
 				// Create node
 				auto* left = createNode(src->left->value);
 				left->color = src->left->color;
-				TreeNode::Impl::insertLeft(left);
+				TreeNode::Impl::insertLeft(dst, left);
 
 				// Clone left subtree
 				cloneSubtree(left, src->left);
 			}
-			
+
 			if (src->right)
 			{
 				// Create node
 				auto* right = createNode(src->right->value);
 				right->color = src->right->color;
-				TreeNode::Impl::insertRight(right);
+				TreeNode::Impl::insertRight(dst, right);
 
 				// Clone right subtree
 				cloneSubtree(right, src->right);
 			}
 		}
 
+		/**
+		 * @brief Recursively copy a subtree over the
+		 * existing subtree.
+		 * 
+		 * @param dst root of existing subtree
+		 * @param src root of subtree to copy
+		 */
 		FORCE_INLINE void copySubtree(NodeT* dst, NodeT* src)
 		{
 			ASSERT(src != nullptr)
-			
+
 			if (src->left)
 			{
 				auto* left = dst->left;
@@ -639,7 +753,8 @@ namespace Korin
 
 				copySubtree(dst->left, src->left);
 			}
-			
+			// FIXME: if dst->left remove it
+
 			if (src->right)
 			{
 				auto* right = dst->right;
@@ -660,8 +775,15 @@ namespace Korin
 
 				copySubtree(dst->right, src->right);
 			}
+			// FIXME: if dst->right remove it
 		}
 
+		/**
+		 * @brief Recursively destroy all the nodes in
+		 * the subtree.
+		 * 
+		 * @param root root node of the subtree
+		 */
 		FORCE_INLINE void destroySubtree(NodeT* root)
 		{
 			// Recursion is fine, tree height is log2(n)
@@ -680,6 +802,9 @@ namespace Korin
 			destroyNode(root);
 		}
 
+		/**
+		 * @brief Destroy this tree.
+		 */
 		FORCE_INLINE void destroy()
 		{
 			if (root)
