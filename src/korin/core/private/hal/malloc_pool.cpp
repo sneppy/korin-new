@@ -2,234 +2,307 @@
 #include "hal/malloc_pool.h"
 #include "hal/malloc_ansi.h"
 
-#ifndef MATH
-namespace Math
-{
-	static FORCE_INLINE bool isPowerOfTwo(uint64 n)
-	{
-		return (n & (n - 1)) == 0;
-	}
-
-	static FORCE_INLINE uint64 align2Up(uint64 n, uint64 m)
-	{
-		CHECK(isPowerOfTwo(m))
-		const uint64 p = m - 1;
-		return (n + p) & ~p;
-	}
-} // namespace Math
-#endif
-
-#define NEXT(block, blockSize) (reinterpret_cast<void**>(reinterpret_cast<byte*>(block) + blockSize))
-
 namespace
 {
-	/**
-	 * @brief Retrieve a block of memory from pool.
-	 * 
-	 * Make sure the pool is not exhausted
-	 * before calling this function.
-	 * 
-	 * @param pool the pool to allocate from
-	 * @return ptr to allocated memory if free block
-	 */
-	static FORCE_INLINE void* memoryPoolMalloc(MemoryPool* pool)
-	{
-		ASSERT(pool->blocks != nullptr)
+#define NEXT_BLOCK(block, logSize) (*reinterpret_cast<void**>(reinterpret_cast<uintp>(block) + logSize))
 
-		void* out = pool->blocks;
-		pool->blocks = *NEXT(pool->blocks, pool->config.blockSize);
-		return out;
+	// TODO: Replace with PlatformMath or Math call
+	FORCE_INLINE sizet align2Up(sizet n, sizet m)
+	{
+		ASSERT(m > 0)
+		sizet p = m - 1;
+		return (n + p) & ~p;
 	}
 
-	/**
-	 * @brief Free a previously allocated block of
-	 * memory.
-	 * 
-	 * @param pool the pool this memory belongs to
-	 * @param mem ptr to the memory to deallocate
-	 */
-	static FORCE_INLINE void memoryPoolFree(MemoryPool* pool, void* mem)
-	{
-		CHECK(pool->isInRange(mem))
-
-		*NEXT(mem, pool->config.blockSize) = pool->blocks;
-		pool->blocks = mem;
-	}
-
-	/**
-	 * @brief Initialize a memory pool.
-	 * 
-	 * @param pool pool to initialize
-	 */
-	static FORCE_INLINE void initMemoryPool(MemoryPool* pool)
+	/* Initialize the block list of a memory pool. */
+	FORCE_INLINE void initMemoryPool(MemoryPool* pool)
 	{
 		ASSERT(pool != nullptr)
-		CHECK(pool->numBlocks > 0)
+		ASSERT(pool->buffer != nullptr)
 
-		const auto& config = pool->config;
-		const sizet actualBlockSize = Math::align2Up(config.blockSize + sizeof(void*), config.blockAlignment);
-		auto* block = pool->buffer;
-		pool->blocks = block;
+		const uint32 numBlocks = pool->createInfo.numBlocks;
+		const sizet blockLogSize = pool->createInfo.blockSize;
+		const sizet blockPhySize = align2Up(blockLogSize + sizeof(void*), pool->createInfo.blockAlignment);
 
-		for (uint64 blockIdx = 0; blockIdx < config.numBlocks - 1; ++blockIdx)
+		void* block = pool->blocks = pool->buffer;
+		for (uint32 blockIdx = 0; blockIdx < numBlocks - 1; ++blockIdx)
 		{
-			// Link with adjacent block
-			void* nextBlock = (reinterpret_cast<byte*>(block) + actualBlockSize);
-			block = *NEXT(block, config.blockSize) = nextBlock;
+			void* next = reinterpret_cast<void*>(reinterpret_cast<uintp>(block) + blockPhySize);
+			block = NEXT_BLOCK(block, blockLogSize) = next;
 		}
-
-		// Final next block should be null
-		*NEXT(block, config.blockSize) = nullptr;
+		NEXT_BLOCK(block, blockLogSize) = nullptr;
 	}
-} // namespace
 
-#undef NEXT
-
-FORCE_INLINE MallocPooled::Pool* MallocPooled::createPool()
-{
-	ASSERTF(gMalloc, "Invalid global allocator @%p", gMalloc);
-
-	// TODO: This can be made class const
-	// Allocate the buffer for the pool
-	const sizet actualBlockSize = Math::align2Up(config.blockSize + sizeof(void*), config.blockAlignment);
-	const sizet poolSize = actualBlockSize * config.numBlocks;
-	const sizet bufferSize = poolSize + sizeof(Pool);
-	void* buffer = gMalloc->malloc(bufferSize, config.blockAlignment);
-
-	// Create the pool
-	Pool* pool = new (reinterpret_cast<byte*>(buffer) + poolSize) Pool{};
-	pool->buffer = buffer;
-	pool->next = nullptr;
-	pool->bufferSize = bufferSize;
-	pool->config = config;
-
-	// Create the pool structure
-	initMemoryPool(pool);
-
-	// Update root
-	root = Korin::TreeNode::insert(root, pool, [](Pool* pool, Pool* other) {
-
-		return GreaterThan{}(pool->buffer, other->buffer);
-	});
-
-	return pool;
-}
-
-FORCE_INLINE void MallocPooled::destroyPool(Pool* pool)
-{
-	// TODO: Remove from tree and deallocate
-	root = Korin::TreeNode::remove(pool);
-
-	// Dealloc pool
-	gMalloc->free(pool->buffer);
-}
-
-MallocPooled::~MallocPooled()
-{
-	while (root)
+	/* Returns true if there are not free blocks in pool. */
+	FORCE_INLINE bool isExhausted(MemoryPool const* pool)
 	{
-		// Destroy all pools
-		destroyPool(root);
+		return pool->blocks == nullptr;
 	}
-}
 
-void* MallocPooled::malloc(sizet size, sizet alignment)
-{
-	CHECK(alignment <= config.blockAlignment);
-
-	// Make sure a free pool exists
-	if (UNLIKELY(!pool))
+	/* Returns true if block belongs to the pool. */
+	FORCE_INLINE bool isInPoolRange(MemoryPool const* pool, void const* block)
 	{
-		// Create a new pool
-		pool = createPool();
-		
-		if (UNLIKELY(!pool))
+		void const* begin = pool->buffer;
+		void const* end = reinterpret_cast<void*>(reinterpret_cast<uintp>(begin) + pool->bufferSize);
+		return block >= begin && block < end;
+	}
+
+	/* Pop a free block from the pool. Return nullptr if there are no free blocks. */
+	FORCE_INLINE void* acquireBlock(MemoryPool* pool)
+	{
+		ASSERT(pool != nullptr)
+
+		if (!pool->blocks)
 		{
-			CHECKF(false, "Could not allocate new pool for allocator @ %p", this);
+			// Pool is exhausted
 			return nullptr;
 		}
-	}
-	CHECKF(pool->blocks, "pool @ %p has no free blocks", pool)
-	
-	// Take head and move to next free block
-	void* out = memoryPoolMalloc(pool);
-	pool->numUsedBlocks++;
-	CHECK(out != nullptr)
 
-	if (!pool->hasFreeBlocks())
-	{
-		// Pool is exhausted, pop from queue
-		pool = pool->pools;
+		// Pop block
+		void* block = pool->blocks;
+		pool->blocks = NEXT_BLOCK(block, pool->createInfo.blockSize);
+		pool->numBlocksInUse++;
+
+		return block;
 	}
-	
-	return out;
+
+	/* Release a block to the pool. The block MUST belong to the pool. */
+	FORCE_INLINE void releaseBlock(MemoryPool* pool, void* block)
+	{
+		ASSERT(pool != nullptr)
+		ASSERT(block != nullptr)
+		ASSERT(isInPoolRange(pool, block))
+
+		NEXT_BLOCK(block, pool->createInfo.blockSize) = pool->blocks;
+		pool->blocks = block;
+		pool->numBlocksInUse--;
+	}
+
+	/* Checks that all the blocks in the pool have been released. */
+	void debugPoolAllBlocksReleased(MemoryPool* pool)
+	{
+		ASSERT(pool != nullptr)
+
+		const uint32 numBlocks = pool->createInfo.numBlocks;
+		const sizet blockLogSize = pool->createInfo.blockSize;
+		const sizet blockPhySize = align2Up(blockLogSize + sizeof(void*), pool->createInfo.blockAlignment);
+		
+		void** blocks = new void*[numBlocks];
+		memset(blocks, 0, numBlocks * sizeof(void*));
+		
+		// Traverse blocks list
+		for (void* block = pool->blocks; block; NEXT_BLOCK(block, blockLogSize))
+		{
+			uint32 blockIdx = (reinterpret_cast<uintp>(block) - reinterpret_cast<uintp>(pool->buffer)) / blockPhySize;
+			blocks[blockIdx] = block;
+		}
+
+		// Check none is null
+		for (int32 i = 0; i < numBlocks; ++i)
+		{
+			ASSERT(blocks[i] != nullptr)
+		}
+
+		delete[] blocks;
+	}
+
+#undef NEXT_BLOCK
+} // namespace
+
+MallocPool::MallocPool(MemoryPool::CreateInfo const& inCreateInfo)
+	: root{nullptr}
+	, pools{nullptr}
+	, numPools{0}
+	, createInfo{inCreateInfo}
+{
+	//
 }
 
-void MallocPooled::free(void* mem)
+MallocPool::~MallocPool()
 {
-	CHECK(mem != nullptr)
+	CHECKF(numPools == 0, "MallocPool @ %p has %u dangling pools", this, numPools)
 
-	// Find pool this memory was allocated from
-	auto* it = root;
-	while (it)
+	// Destroy all pools
+	destroy();
+}
+
+void* MallocPool::malloc(sizet size, sizet alignment)
+{
+	CHECKF(size <= createInfo.blockSize,
+	       "Requested allocation of size %llu, but block size is %llu",
+		   size, createInfo.blockSize)
+	CHECKF(alignment <= createInfo.blockAlignment,
+	       "Requested allocation with alignment %llu, but block alignment is %llu",
+		   alignment, createInfo.blockAlignment)
+
+	if (!pools)
 	{
-		if (it->isInRange(mem))
+		// Create a new pool in none available
+		auto* pool = createPool();
+
+		// Insert node in tree
+		root = TreeNode::insert(root, pool, [pool](auto const* node) {
+
+			// Order by buffer address
+			return GreaterThan{}(pool->buffer, node->buffer);
+		});
+		numPools++;
+
+		// Append to pools list
+		pools = pool;
+	}
+
+	if (!pools)
+	{
+		// Unable to create a new pool
+		return nullptr;
+	}
+
+	ASSERT(pools->blocks != nullptr)
+
+	// Get free block from pool
+	void* block = acquireBlock(pools);
+
+	if (isExhausted(pools))
+	{
+		// Pool is exhausted, pop from list
+		pools = pools->next;
+	}
+
+	return block;
+}
+
+void MallocPool::free(void* mem)
+{
+	// Locate pool
+	auto* pool = TreeNode::find(root, [mem](auto const* node) {
+
+		if (mem < node->buffer)
 		{
-			break;
+			// Go left
+			return -1;
 		}
-		else if (mem < it->buffer)
+		else if (mem == node->buffer || isInPoolRange(node, mem))
 		{
-			it = it->left;
+			// Found pool
+			return 0;
 		}
 		else
 		{
-			it = it->right;
+			// Go right
+			return 1;
 		}
-	}
+	});
 
-	if (!it)
+	CHECKF(pool != nullptr, "Block (%p) not found in MallocPool @ %p", mem, this)
+	if (!pool) return;
+
+	// Release block
+	bool const moveToFront = pool->numBlocksInUse == pool->createInfo.numBlocks;
+	releaseBlock(pool, mem);
+
+	if (moveToFront)
 	{
-		// Could not find the memory pool this
-		// block belongs to
-		CHECKF(false, "Memory @ %p was not allocated by this allocator @ %p", mem, this);
-		return;
+		// Push pool back to front
+		pool->MemoryPoolHandle::prev = nullptr;
+		pool->MemoryPoolHandle::next = pools;
+		pools = pool;
 	}
-
-	if (it->numUsedBlocks == it->config.numBlocks)
+	else if (pool->numBlocksInUse == 0)
 	{
-		// Pool was exhausted, move back to list of free pools
-		it->pools = pool;
-		pool = it;
-	}
-
-	// Relase block
-	memoryPoolFree(it, mem);
-	it->numUsedBlocks--;
-
-	if (it->numUsedBlocks == 0)
-	{
-		// If pool is empty destroy it
-		if (pool == it)
+		// Remove from list
+		if (pool == pools)
 		{
-			pool = it->pools;
+			// Pool is head
+			pools = pools->next;
 		}
 		else
 		{
-			// Find pool
-			for (auto* jt = pool; jt; jt = jt->pools)
+			// Must have prev
+			pool->MemoryPoolHandle::prev->next = pool->MemoryPoolHandle::next;
+
+			if (pool->MemoryPoolHandle::next)
 			{
-				if (jt->pools == it)
-				{
-					jt->pools = it->pools;
-					break;
-				}
+				// Unlink also from next
+				pool->MemoryPoolHandle::next->prev = pool->MemoryPoolHandle::prev;
 			}
 		}
-		destroyPool(it);
+
+		// Destroy pool and remove from tree
+		numPools--;
+		root = TreeNode::remove(pool);
+		destroyPool(pool);
 	}
 }
 
-sizet MallocPooled::getUsedMemory() const
+sizet MallocPool::getUsedMemory() const
 {
-	return {};
+	sizet usedMemory = 0;
+#if !KORIN_RELEASE
+	if (!root)
+	{
+		return usedMemory;
+	}
+
+	for (auto* pool = TreeNode::getMin(root); pool; pool = pool->next)
+	{
+		// Return logical size
+		usedMemory += pool->numBlocksInUse * pool->createInfo.blockSize;
+	}
+#endif
+	return usedMemory;
+}
+
+FORCE_INLINE MallocPool::NodeT* MallocPool::createPool()
+{
+	// Compute size needed
+	const sizet blockLogSize = createInfo.blockSize;
+	const sizet blockPhySize = align2Up(blockLogSize + sizeof(void*), createInfo.blockAlignment);
+	const sizet bufferLogSize = createInfo.numBlocks * blockPhySize;
+	const sizet poolHandleOffset = align2Up(bufferLogSize, alignof(*root));
+	const sizet bufferPhySize = poolHandleOffset + sizeof(*root);
+
+	// Allocate buffer using global allocator
+	void* buffer = gMalloc->malloc(align2Up(bufferLogSize, alignof(*root)) + sizeof(*root), createInfo.blockAlignment);
+
+	// Create node and init memory pool
+	NodeT* node = new (reinterpret_cast<void*>(reinterpret_cast<uintp>(buffer) + poolHandleOffset)) NodeT{};
+	node->buffer = buffer;
+	node->bufferSize = bufferPhySize;
+	node->createInfo = createInfo;
+	initMemoryPool(node);
+
+	return node;
+}
+
+FORCE_INLINE void MallocPool::destroyPool(NodeT* pool)
+{
+	ASSERT(pool != nullptr)
+	ASSERT(pool->buffer != nullptr)
+	ASSERT(pool->numBlocksInUse == 0)
+	ASSERT(debugPoolAllBlocksReleased(pool)) // Check all blocks have been released
+
+	// Dealloc buffer
+	void* buffer = pool->buffer;
+	pool->buffer = nullptr;
+	gMalloc->free(buffer);
+}
+
+FORCE_INLINE void MallocPool::destroy()
+{
+	if (root)
+	{
+		// Destroy all pools
+		for (auto* it = TreeNode::getMin(root); it;)
+		{
+			// Don't care about removing from tree
+			auto* next = it->next;
+			destroyPool(it);
+			it = next;
+		}
+	}
+
+	root = nullptr;
+	pools = nullptr;
+	numPools = 0;
 }
