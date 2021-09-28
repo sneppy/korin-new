@@ -1,6 +1,9 @@
 #pragma once
 
 #include "gtest/gtest.h"
+#include "testing.h"
+
+using namespace Korin;
 
 #include "hal/platform_crt.h"
 #include "containers/containers.h"
@@ -10,97 +13,6 @@ static void shuffle(ItT begin, ItT end)
 {
 	// Shuffle
 }
-
-using namespace Korin;
-
-struct Object
-{
-	struct Find
-	{
-		int32 operator()(Object const& lhs, Object const& rhs) const
-		{
-			return GreaterThan{}(lhs.size, rhs.size);
-		}
-	};
-
-	Object(sizet inSize)
-		: size{inSize}
-	{
-		mem = ::malloc(size);
-	}
-
-	Object()
-		: Object(100)
-	{
-		//
-	}
-
-	Object(Object const& other)
-		: size{other.size}
-	{
-		mem = ::malloc(size);
-		::memcpy(mem, other.mem, size);
-	}
-
-	Object(Object&& other)
-		: mem{other.mem}
-		, size{other.size}
-	{
-		other.mem = nullptr;
-		other.size = 0;
-	}
-
-	Object& operator=(Object const& other)
-	{
-		if (other.size != size)
-		{
-			mem = ::realloc(mem, other.size);
-			size = other.size;
-		}
-		
-		::memcpy(mem, other.mem, size);
-
-		return *this;
-	}
-
-	Object& operator=(Object&& other)
-	{
-		::free(mem);
-		mem = other.mem;
-		size = other.size;
-		other.mem = nullptr;
-		other.size;
-		return *this;
-	}
-
-	~Object()
-	{
-		if (mem)
-		{
-			::free(mem);
-		}
-
-		size = 0;
-	}
-
-	sizet getSize() const
-	{
-		return size;
-	}
-
-	void test()
-	{
-		char* it = reinterpret_cast<char*>(mem);
-		for (int32 i = 0; i < size; ++i)
-		{
-			*it = i & 0xff;
-		}
-	}
-
-protected:
-	void* mem;
-	sizet size;
-};
 
 TEST(containers, Optional)
 {
@@ -124,12 +36,12 @@ TEST(containers, Optional)
 	ASSERT_FALSE(x.hasValue());
 	ASSERT_FALSE(y.hasValue());
 
-	Optional<Object> z{{}}, w;
+	Optional<Testing::Object> z{{}}, w;
 
 	ASSERT_TRUE(z.hasValue());
 	ASSERT_FALSE(w.hasValue());
 
-	w = Object{};
+	w = Testing::Object{};
 
 	ASSERT_TRUE(w.hasValue());
 
@@ -434,7 +346,15 @@ TEST(containers, TreeNode)
 
 TEST(containers, Tree)
 {
-	Tree<Object, Object::Find> x, y, z;
+	struct FindObject
+	{
+		int32 operator()(Testing::Object const& lhs, Testing::Object const& rhs) const
+		{
+			return GreaterThan{}(lhs.getSize(), rhs.getSize());
+		}
+	};
+	
+	Tree<Testing::Object, FindObject> x, y, z;
 
 	static constexpr int32 numValues = 1 << 10;
 	int32 values[numValues] = {};

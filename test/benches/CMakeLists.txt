@@ -29,4 +29,11 @@ foreach(BENCH_NAME ${KORIN_BENCHES})
 		${PROJECT_NAME}
 		benchmark::benchmark
 	)
+
+	# Include common testing headers
+	target_include_directories(${UNIT_TARGET_NAME}
+
+		PUBLIC
+			"../include"
+	)
 endforeach(BENCH_NAME in ${KORIN_BENCHES})

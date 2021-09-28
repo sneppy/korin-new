@@ -34,4 +34,11 @@ foreach(UNIT_NAME ${KORIN_UNITS})
 		gtest
 		${CMAKE_THREAD_LIBS_INIT}
 	)
+
+	# Include common testing headers
+	target_include_directories(${UNIT_TARGET_NAME}
+
+		PUBLIC
+			"../include"
+	)
 endforeach(UNIT_NAME ${KORIN_UNITS})

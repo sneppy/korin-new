@@ -1,6 +1,9 @@
 #pragma once
 
 #include "gtest/gtest.h"
+#include "testing.h"
+
+using namespace Korin;
 
 TEST(@UNIT_NAME@, @UNIT_NAME@)
 {
