@@ -2,6 +2,7 @@
 
 #include "core_types.h"
 #include "templates/ordering.h"
+#include "templates/sequence.h"
 
 namespace Korin
 {
@@ -73,5 +74,18 @@ namespace Korin
 	template<typename ItT, typename PolicyT>
 	constexpr ItT findIf(ItT begin, ItT end, PolicyT&& policy);
 } // namespace Korin
+
+// TODO: Definition for rangeFor does not live
+// under a namespace for the moment
+/**
+ * @brief Returns an index sequence to iterate
+ * over the given tuple
+ * 
+ * @tparam ItemsT the types of the items
+ * @return index sequence to iterate over the
+ * tuple
+ */
+template<typename ...ItemsT>
+constexpr auto rangeFor(Korin::Tuple<ItemsT...> const&);
 
 #include "containers_types.inl"
