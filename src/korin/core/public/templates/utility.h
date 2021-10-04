@@ -28,13 +28,13 @@ constexpr FORCE_INLINE auto move(T&& x)
  * 	value type
  */
 template<typename T>
-constexpr FORCE_INLINE auto forward(typename RemoveReference<T>::Type& x)
+constexpr FORCE_INLINE T&& forward(typename RemoveReference<T>::Type& x)
 {
 	return static_cast<T&&>(x);
 }
 
 template<typename T>
-constexpr FORCE_INLINE auto forward(typename RemoveReference<T>::Type&& x)
+constexpr FORCE_INLINE T&& forward(typename RemoveReference<T>::Type&& x)
 {
 	return static_cast<T&&>(x);
 }
