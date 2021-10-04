@@ -1,5 +1,28 @@
 #pragma once
 
+#include "core_types.h"
+
+/**
+ * @brief Check if type is an integral type.
+ * 
+ * @tparam T type to test
+ */
+template<typename T>
+struct IsIntegral
+{
+	enum { value = false };
+};
+
+template<> struct IsIntegral<uint8>  { enum { value = true }; };
+template<> struct IsIntegral<uint16> { enum { value = true }; };
+template<> struct IsIntegral<uint32> { enum { value = true }; };
+template<> struct IsIntegral<uint64> { enum { value = true }; };
+template<> struct IsIntegral<int8>   { enum { value = true }; };
+template<> struct IsIntegral<int16>  { enum { value = true }; };
+template<> struct IsIntegral<int32>  { enum { value = true }; };
+template<> struct IsIntegral<int64>  { enum { value = true }; };
+template<> struct IsIntegral<char>   { enum { value = true }; };
+
 /**
  * @brief Check if a type is a base for
  * another type.

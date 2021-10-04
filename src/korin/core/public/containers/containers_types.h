@@ -18,6 +18,12 @@ namespace Korin
 	template<typename, typename = GreaterThan>	class Set;
 	template<typename>							class HashMap;
 	template<typename>							class HashSet;
+	template<typename>                          class StringBase;
+	
+	/**
+	 * @brief String type with 8-bit wide characters.
+	 */
+	using String = StringBase<ansichar>;
 
 	/**
 	 * @brief Returns the size of a given container.

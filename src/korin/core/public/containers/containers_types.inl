@@ -19,6 +19,12 @@ namespace Korin
 	{
 		return set.getNumItems();
 	}
+
+	template<typename CharT>
+	constexpr FORCE_INLINE sizet len(StringBase<CharT> const& str)
+	{
+		return str.getLen();
+	}
 	/** @} */
 
 	/**
