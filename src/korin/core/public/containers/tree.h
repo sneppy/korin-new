@@ -441,6 +441,8 @@ namespace Korin
 			}
 
 			numNodes = other.numNodes;
+
+			return *this;
 		}
 
 		/**
