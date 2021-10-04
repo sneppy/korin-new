@@ -6,9 +6,9 @@
 namespace Korin
 {
 	template<typename> struct Pair;
-	template<typename> struct Tuple;
 	template<typename> struct Optional;
 
+	template<typename...>                       class Tuple;
 	template<typename>							class Stack;
 	template<typename>							class Queue;
 	template<typename>							class List;

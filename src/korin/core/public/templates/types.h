@@ -3,6 +3,20 @@
 #include "core_types.h"
 
 /**
+ * @brief Check if two types are the same
+ * type.
+ * 
+ * @param T,U types to test
+ */
+template<typename T, typename U>
+struct SameType
+{
+	enum { value = false };
+};
+
+template<typename T> struct SameType<T, T> { enum { value = true}; };
+
+/**
  * @brief Check if type is an integral type.
  * 
  * @tparam T type to test
@@ -89,3 +103,35 @@ struct RemoveReference
 
 template<typename T> struct RemoveReference<T&> { using Type = T; };
 template<typename T> struct RemoveReference<T&&> { using Type = T; };
+
+/**
+ * @brief Remove the const and volatile
+ * qualifier from a type.
+ * 
+ * @tparam T type to modify
+ */
+template<typename T>
+struct RemoveCV
+{
+	using Type = T;
+};
+
+template<typename T> struct RemoveCV<T const>          { using Type = T; };
+template<typename T> struct RemoveCV<T volatile>       { using Type = T; };
+template<typename T> struct RemoveCV<T const volatile> { using Type = T; };
+
+/**
+ * @brief Strip type from references and
+ * qualifiers.
+ * 
+ * @tparam T type to decay
+ */
+template<typename T>
+class Decay
+{
+	using RemoveRefT = typename RemoveReference<T>::Type;
+
+public:
+	using Type = typename RemoveCV<RemoveRefT>::Type;
+	// TODO: See std::__decay for arrays and functions
+};

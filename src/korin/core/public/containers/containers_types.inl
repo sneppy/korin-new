@@ -8,20 +8,26 @@ namespace Korin
 	 * @return number of items in the container
 	 * @{
 	 */
+	template<typename ...ItemsT>
+	constexpr sizet len(Tuple<ItemsT...> const& tup)
+	{
+		return tup.getNumItems();
+	}
+
 	template<typename T>
-	constexpr FORCE_INLINE sizet len(Array<T> const& arr)
+	constexpr sizet len(Array<T> const& arr)
 	{
 		return arr.getNumItems();
 	}
 
 	template<typename T, typename CompareT>
-	constexpr FORCE_INLINE sizet len(Set<T, CompareT> const& set)
+	constexpr sizet len(Set<T, CompareT> const& set)
 	{
 		return set.getNumItems();
 	}
 
 	template<typename CharT>
-	constexpr FORCE_INLINE sizet len(StringBase<CharT> const& str)
+	constexpr sizet len(StringBase<CharT> const& str)
 	{
 		return str.getLen();
 	}
