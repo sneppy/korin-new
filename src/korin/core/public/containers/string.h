@@ -4,10 +4,8 @@
 #include "hal/platform_memory.h"
 #include "hal/platform_string.h"
 #include "containers_types.h"
+#include "tuple.h"
 #include "array.h"
-
-// TODO: Just to see how it's done, replace with Korin::Tuple
-#include <tuple>
 
 namespace Korin
 {
@@ -20,8 +18,6 @@ namespace Korin
 	class StringBase
 	{
 		static_assert(IsIntegral<CharT>::value, "Char type must be an integral value");
-
-		static constexpr CharT termChar{0};
 		
 		/**
 		 * @brief Helper class that computes the source
@@ -43,7 +39,7 @@ namespace Korin
 			 * @param inSrc pointer to string source
 			 * @param inLen length of the string
 			 */
-			constexpr FORCE_INLINE StringSource(CharT const* const inSrc, sizet inLen)
+			constexpr StringSource(CharT const* const inSrc, sizet inLen)
 				: src{inSrc}
 				, len{inLen}
 			{
@@ -56,7 +52,7 @@ namespace Korin
 			 * @param cstr pointer to a null-terminated
 			 * string
 			 */
-			constexpr FORCE_INLINE StringSource(CharT const* const cstr)
+			constexpr StringSource(CharT const* const cstr)
 				: src{cstr}
 				, len{PlatformString::len(cstr)}
 			{
@@ -71,7 +67,7 @@ namespace Korin
 			 * @return constexpr FORCE_INLINE 
 			 */
 			template<sizet len>
-			constexpr FORCE_INLINE StringSource(CharT const str[len])
+			constexpr StringSource(CharT const str[len])
 				: StringSource{str, len}
 			{
 				//
@@ -82,7 +78,7 @@ namespace Korin
 			 * 
 			 * @param other a managed string 
 			 */
-			constexpr FORCE_INLINE StringSource(StringBase const& other)
+			constexpr StringSource(StringBase const& other)
 				: StringSource{*other, other.getLen()}
 			{
 				//
@@ -91,6 +87,12 @@ namespace Korin
 		private:
 			StringSource() = delete;
 		};
+
+		template<typename ...FormatArgsT>
+		friend StringBase operator%(StringSource const&, Tuple<FormatArgsT...> const&);
+
+		/* Null character used to terminate strings of this type. */
+		static constexpr CharT termChar{0};
 
 	public:
 		/**
@@ -337,24 +339,16 @@ namespace Korin
 		}
 
 		/**
-		 * @brief Format a string source with the
-		 * given format arguments.
+		 * @brief Create a new string from format.
 		 * 
-		 * The format string uses the usual C
-		 * format placeholders.
-		 * 
-		 * TODO: Replace @c std::tuple with @c Korin::Tuple
-		 * 
-		 * @tparam FormatArgsT the type of the
-		 * format arguments
-		 * @param fmt format string source
-		 * @param args tuple of format arguments
+		 * @param fmt any string source used as
+		 * format
+		 * @param args format arguments
 		 * @return new formatted string
 		 */
-		template<typename ...FormatArgsT>
-		friend FORCE_INLINE StringBase operator%(StringSource const& fmt, std::tuple<FormatArgsT...> const& args)
+		static FORCE_INLINE StringBase format(StringSource const& fmt, auto&& ...args)
 		{
-			return StringBase::format_Impl(fmt, args, std::index_sequence_for<FormatArgsT...>{});
+			return format_Impl(fmt, tie(FORWARD(args)...), rangeFor<decltype(args)...>());
 		}
 
 	protected:
@@ -394,18 +388,19 @@ namespace Korin
 		 * @param args tuple of format arguments
 		 * @return new string
 		 */
-		template<typename std::size_t ...idxs>
-		static StringBase format_Impl(StringSource const& fmt, auto const& args, std::index_sequence<idxs...>)
+		template<sizet ...idxs>
+		static StringBase format_Impl(StringSource const& fmt, auto const& args, IndexSequence<idxs...>)
 		{
 			// We don't know a priori the length of the
 			// formatted string.
-			const sizet newLen = ::snprintf(nullptr, 0, fmt.src, prepareFormatArg(std::get<idxs>(args))...);
+			const sizet newLen = ::snprintf(nullptr, 0, fmt.src, prepareFormatArg(args.template get<idxs>())...);
 			
 			// Create new string
 			StringBase newString{newLen};
 
 			// Format string
-			[[maybe_unused]] sizet printLen = ::snprintf(*newString, newLen + 1, fmt.src, prepareFormatArg(std::get<idxs>(args))...);
+			[[maybe_unused]] sizet printLen = ::snprintf(*newString, newLen + 1, fmt.src,
+			                                             prepareFormatArg(args.template get<idxs>())...);
 			KORIN_ASSERT(printLen == newLen)
 			
 			return newString;
@@ -437,4 +432,25 @@ namespace Korin
 		}
 		/** @} */
 	};
+
+	/**
+	 * @brief Format a string source with the
+	 * given format arguments.
+	 * 
+	 * The format string uses the usual C
+	 * format placeholders.
+	 * 
+	 * TODO: Replace @c std::tuple with @c Korin::Tuple
+	 * 
+	 * @tparam FormatArgsT the type of the
+	 * format arguments
+	 * @param fmt format string source
+	 * @param args tuple of format arguments
+	 * @return new formatted string
+	 */
+	template<typename ...FormatArgsT>
+	FORCE_INLINE StringBase<char> operator%(StringBase<char>::StringSource const& fmt, Tuple<FormatArgsT...> const& args)
+	{
+		return StringBase<char>::format_Impl(fmt, args, rangeFor(args));
+	}
 } // namespace Korin
