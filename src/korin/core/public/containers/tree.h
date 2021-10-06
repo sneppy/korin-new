@@ -491,7 +491,7 @@ namespace Korin
 		 */
 		FORCE_INLINE IteratorT begin()
 		{
-			NodeT* min = TreeNode::getMin(root);
+			NodeT* min = root ? TreeNode::getMin(root) : root;
 			return {min, this};
 		}
 
@@ -537,7 +537,7 @@ namespace Korin
 		 */
 		FORCE_INLINE IteratorT rbegin()
 		{
-			NodeT* max = TreeNode::getMax(root);
+			NodeT* max = root ? TreeNode::getMax(root) : root;
 			return {max, this};
 		}
 
