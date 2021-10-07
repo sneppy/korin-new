@@ -1,5 +1,8 @@
 # Declare all benchmarks
-set(KORIN_BENCHES)
+set(KORIN_BENCHES
+
+	"containers"
+)
 
 foreach(BENCH_NAME ${KORIN_BENCHES})
 	get_filename_component(PUBLIC_FILE "./bench_${BENCH_NAME}.h" ABSOLUTE)
@@ -31,7 +34,7 @@ foreach(BENCH_NAME ${KORIN_BENCHES})
 	)
 
 	# Include common testing headers
-	target_include_directories(${UNIT_TARGET_NAME}
+	target_include_directories(${BENCH_TARGET_NAME}
 
 		PUBLIC
 			"../include"
