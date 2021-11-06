@@ -628,6 +628,144 @@ namespace Korin
 		/** @} */
 
 		/**
+		 * @brief Construct a new node with the given
+		 * arguments. If a similar node already exists
+		 * (i.e. matching keys), it replaces its value.
+		 *
+		 * @param createArgs arguments used to construct
+		 * the node
+		 * @return iterator pointing to new node or to
+		 * existing node
+		 */
+		IteratorT emplaceUnique(auto&& ...createArgs)
+		{
+			// TODO: Could this function be a TreeNode function?
+
+			// We need to instantiate the value first
+			T value{FORWARD(createArgs)...};
+
+			auto* parent = root;
+			auto* node = TreeNode::find(root, [&value, &parent](auto const* node) {
+
+				parent = const_cast<NodeT*>(node);
+				return PolicyT{}(value, node->value);
+			});
+
+			if (node)
+			{
+				// Node exists, replace its value
+				node->value = move(value);
+			}
+			else
+			{
+				// Create new node
+				node = createNode(move(value));
+				numNodes++;
+
+				if (parent)
+				{
+					// Set as child
+					if (PolicyT{}(node->value, parent->value) < 0)
+					{
+						TreeNode::Impl::insertLeft(parent, node);
+					}
+					else
+					{
+						TreeNode::Impl::insertRight(parent, node);
+					}
+				}
+
+				// Repair the tree
+				TreeNode::Impl::repair(node);
+
+				// Get new root
+				root = TreeNode::getRoot(node);
+			}
+
+			return {node, this};
+		}
+
+		/**
+		 * @brief Insert a new node with the given
+		 * value if not duplicate exists.
+		 *
+		 * @param value the value to insert
+		 * @return iterator pointing to new node
+		 * or to existing node
+		 * @{
+		 */
+		FORCE_INLINE IteratorT insertUnique(T const& value)
+		{
+			return emplaceUnique(value);
+		}
+
+		FORCE_INLINE IteratorT insertUnique(T&& value)
+		{
+			return emplaceUnique(move(value));
+		}
+		/** @} */
+
+		/**
+		 * @brief Similar to @c insertUnique, but doesn't
+		 * replace the value if node is duplicate. If node
+		 * already exists, the node is not inserted and
+		 * the existing node is not modified.
+		 *
+		 * The function also used a factory lambda, to avoid
+		 * allocating the new node prematurely.
+		 *
+		 * @tparam FactoryT the factory function to generate
+		 * the value to insert
+		 * @param key key used to find existing node
+		 * @param factory factory function that reutrns the
+		 * new value
+		 * @return iterator pointing to new node or to
+		 * existing node
+		 */
+		template<typename FactoryT>
+		FORCE_INLINE IteratorT findOrInsert(auto const& key, FactoryT&& factory)
+		{
+			// TODO: Could this function be a TreeNode function?
+
+			// Find node and closest parent
+			auto* parent = root;
+			auto* node = TreeNode::find(root, [&key, &parent](auto const* node) {
+
+				parent = const_cast<NodeT*>(node);
+				return PolicyT{}(key, node->value);
+			});
+
+			// Much like insert unique, but only inserts if node not found
+			if (!node)
+			{
+				// Create new node
+				node = createNode(factory());
+				numNodes++;
+
+				if (parent)
+				{
+					// Set as child
+					if (PolicyT{}(node->value, parent->value) < 0)
+					{
+						TreeNode::Impl::insertLeft(parent, node);
+					}
+					else
+					{
+						TreeNode::Impl::insertRight(parent, node);
+					}
+				}
+
+				// Repair the tree
+				TreeNode::Impl::repair(node);
+
+				// Get new root
+				root = TreeNode::getRoot(node);
+			}
+
+			return {node, this};
+		}
+
+		/**
 		 * @brief Remove the node pointed by the
 		 * given iterator from the tree.
 		 *
@@ -680,7 +818,7 @@ namespace Korin
 
 		/**
 		 * @brief Destroy a node of the tree.
-		 * 
+		 *
 		 * @param node ptr to node to destroy
 		 */
 		FORCE_INLINE void destroyNode(NodeT* node)
@@ -693,11 +831,11 @@ namespace Korin
 
 		/**
 		 * @brief Recursively clone a subtree.
-		 * 
+		 *
 		 * @param dst root of new subtree
 		 * @param src root of the source subtree
 		 */
-		FORCE_INLINE void cloneSubtree(NodeT* dst, NodeT* src)
+		void cloneSubtree(NodeT* dst, NodeT* src)
 		{
 			ASSERT(src != nullptr)
 
@@ -727,11 +865,11 @@ namespace Korin
 		/**
 		 * @brief Recursively copy a subtree over the
 		 * existing subtree.
-		 * 
+		 *
 		 * @param dst root of existing subtree
 		 * @param src root of subtree to copy
 		 */
-		FORCE_INLINE void copySubtree(NodeT* dst, NodeT* src)
+		void copySubtree(NodeT* dst, NodeT* src)
 		{
 			ASSERT(src != nullptr)
 
@@ -783,10 +921,10 @@ namespace Korin
 		/**
 		 * @brief Recursively destroy all the nodes in
 		 * the subtree.
-		 * 
+		 *
 		 * @param root root node of the subtree
 		 */
-		FORCE_INLINE void destroySubtree(NodeT* root)
+		void destroySubtree(NodeT* root)
 		{
 			// Recursion is fine, tree height is log2(n)
 			ASSERT(root != nullptr)

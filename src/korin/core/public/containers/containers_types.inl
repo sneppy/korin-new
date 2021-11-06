@@ -12,10 +12,16 @@ namespace Korin
 		return arr.getNumItems();
 	}
 
-	template<typename T, typename CompareT>
-	constexpr sizet len(Set<T, CompareT> const& set)
+	template<typename T, typename PolicyT>
+	constexpr sizet len(Set<T, PolicyT> const& set)
 	{
-		return set.getNumItems();
+		return set.getSize();
+	}
+
+	template<typename KeyT, typename ValT, typename PolicyT>
+	constexpr sizet len(Map<KeyT, ValT, PolicyT> const& map)
+	{
+		return map.getSize();
 	}
 
 	template<typename CharT>

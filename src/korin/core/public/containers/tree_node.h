@@ -597,6 +597,8 @@ namespace Korin
 		template<typename BaseT, typename PolicyT>
 		FORCE_INLINE BinaryNodeBase<BaseT>* find(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
 		{
+			// TODO: Consider the other way around?
+			// Like this, the node passed to the policy is const
 			return const_cast<BinaryNodeBase<BaseT>*>(find(const_cast<BinaryNodeBase<BaseT> const*>(root), FORWARD(policy)));
 		}
 		/** @} */
