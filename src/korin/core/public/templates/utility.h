@@ -12,7 +12,7 @@
  * @return value cast to r-value reference
  */
 template<typename T>
-constexpr FORCE_INLINE auto move(T&& x)
+constexpr FORCE_INLINE typename RemoveReference<T>::Type&& move(T&& x)
 {
 	return reinterpret_cast<typename RemoveReference<T>::Type&&>(x);
 }
