@@ -5,7 +5,7 @@
 /**
  * @brief Check if two types are the same
  * type.
- * 
+ *
  * @param T,U types to test
  */
 template<typename T, typename U>
@@ -18,7 +18,7 @@ template<typename T> struct SameType<T, T> { enum { value = true}; };
 
 /**
  * @brief Check if type is an integral type.
- * 
+ *
  * @tparam T type to test
  */
 template<typename T>
@@ -38,9 +38,20 @@ template<> struct IsIntegral<int64>  { enum { value = true }; };
 template<> struct IsIntegral<char>   { enum { value = true }; };
 
 /**
+ * @brief Return true if type is a cv POD type.
+ *
+ * @tparam T the type to test
+ */
+template<typename T>
+struct IsPOD
+{
+	enum { value = __is_pod(T) };
+};
+
+/**
  * @brief Check if a type is a base for
  * another type.
- * 
+ *
  * @tparam BaseT the base type
  * @tparam DerivedT the derived type
  */
@@ -52,7 +63,7 @@ struct IsBaseOf
 
 /**
  * @brief Check if type has trivial constructor.
- * 
+ *
  * @tparam T the type to test
  */
 template<typename T>
@@ -64,9 +75,9 @@ struct IsTriviallyConstructible
 /**
  * @brief Check if a type has a trivial
  * copy assignment operator.
- * 
+ *
  * See @c __has_trivial_assign intrinsic.
- * 
+ *
  * @tparam T the type to test
  */
 template<typename T>
@@ -78,9 +89,9 @@ struct IsTriviallyCopyable
 /**
  * @brief Check if a type has a trivial
  * destructor.
- * 
+ *
  * See @c __has_trivial_destructor intrinsic.
- * 
+ *
  * @tparam T the type to test
  */
 template<typename T>
@@ -91,7 +102,7 @@ struct IsTriviallyDestructible
 
 /**
  * @brief Strips the reference from a type.
- * 
+ *
  * @tparam T the type to strip the reference
  * 	from
  */
@@ -107,7 +118,7 @@ template<typename T> struct RemoveReference<T&&> { using Type = T; };
 /**
  * @brief Remove the const and volatile
  * qualifier from a type.
- * 
+ *
  * @tparam T type to modify
  */
 template<typename T>
@@ -123,7 +134,7 @@ template<typename T> struct RemoveCV<T const volatile> { using Type = T; };
 /**
  * @brief Strip type from references and
  * qualifiers.
- * 
+ *
  * @tparam T type to decay
  */
 template<typename T>
