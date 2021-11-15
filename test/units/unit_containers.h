@@ -759,3 +759,9 @@ TEST(containers, HashMap)
 
 	SUCCEED();
 }
+
+TEST(containers, HashSet)
+{
+	// TODO
+	SUCCEED();
+}
