@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hal/platform_crt.h"
+
 /**
  * @brief Memory abstraction layer.
  */
@@ -8,7 +10,7 @@ struct GenericPlatformMemory
 	/**
 	 * @brief Copy memory between non-overlapping
 	 * buffers.
-	 * 
+	 *
 	 * @param dst ptr to destination buffer
 	 * @param src ptr to source buffer
 	 * @param size number of Bytes to copy
@@ -21,7 +23,7 @@ struct GenericPlatformMemory
 	/**
 	 * @brief Copy source buffer into destination
 	 * buffer. The buffers may overlap.
-	 * 
+	 *
 	 * @param dst ptr to destination buffer
 	 * @param src ptr to source buffer
 	 * @param size number of Bytes to copy
