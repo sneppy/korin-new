@@ -8,13 +8,30 @@ using namespace Korin;
 #include "hal/platform_crt.h"
 #include "containers/containers.h"
 
-#define ARRAY_COUNT(x) (sizeof(x) / sizeof(*x))
+#define ARRAY_LEN(x) (sizeof(x) / sizeof(*x))
 
 template<typename ItT>
 static void shuffle(ItT begin, ItT end)
 {
 	// Shuffle
 }
+
+/* Set of names to use for testing. */
+static constexpr char const* names[] = {
+	"sneppy",
+	"lpraat",
+	"nondecibile",
+	"nicofico",
+	"lorecri96",
+	"camram01",
+	"SneppyRulez",
+	"sneppy13",
+	"korin",
+	"ZerryBlack95",
+	"sgherry",
+	"SamN884",
+	"set"
+};
 
 TEST(containers, Optional)
 {
@@ -547,16 +564,16 @@ TEST(containers, Map)
 		"fryscan",
 		"ananasso"
 	};
-	static sizet values[ARRAY_COUNT(names)] = {};
+	static sizet values[ARRAY_LEN(names)] = {};
 	static sizet removeIdxs[] = {2, 5, 7, 9, 11, 13};
 
-	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		x.insert(names[i], 0x1ull << (i & 0xf));
 	}
 
-	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names));
-	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	ASSERT_EQ(x.getSize(), ARRAY_LEN(names));
+	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		auto it = x.find(names[i]);
 		ASSERT_NE(it, x.end());
@@ -567,19 +584,19 @@ TEST(containers, Map)
 		ASSERT_EQ(obj.getSize(), it->second.getSize());
 	}
 
-	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		values[i] = rand() & 0xff;
 		x.insert(names[i], values[i]);
 	}
 
-	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names));
-	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	ASSERT_EQ(x.getSize(), ARRAY_LEN(names));
+	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		ASSERT_EQ(x[names[i]].getSize(), values[i]);
 	}
 
-	for (int32 i = 0; i < ARRAY_COUNT(removeIdxs); ++i)
+	for (int32 i = 0; i < ARRAY_LEN(removeIdxs); ++i)
 	{
 		Testing::Object obj;
 		x.removeAt(names[removeIdxs[i]], obj);
@@ -587,8 +604,8 @@ TEST(containers, Map)
 		ASSERT_EQ(obj.getSize(), values[removeIdxs[i]]);
 	}
 
-	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names) - ARRAY_COUNT(removeIdxs));
-	for (int32 i = 0; i < ARRAY_COUNT(removeIdxs); ++i)
+	ASSERT_EQ(x.getSize(), ARRAY_LEN(names) - ARRAY_LEN(removeIdxs));
+	for (int32 i = 0; i < ARRAY_LEN(removeIdxs); ++i)
 	{
 		auto it = x.find(names[removeIdxs[i]]);
 		ASSERT_EQ(it, x.end());
@@ -597,6 +614,136 @@ TEST(containers, Map)
 	// TODO: Test assignment and copy/move constructors
 
 	for (auto it = x.begin(); it != x.end(); it = x.remove(it));
+
+	SUCCEED();
+}
+
+TEST(containers, HashMap)
+{
+	HashMap<String, Testing::Object> m;
+
+	ASSERT_EQ(m.getSize(), 0);
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.emplace(names[i], i);
+		ASSERT_EQ(it->first, names[i]);
+		ASSERT_EQ(it->second.getSize(), i);
+	}
+	ASSERT_EQ(m.getSize(), ARRAY_LEN(names));
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.find(names[i]);
+		ASSERT_NE(it, m.end());
+		ASSERT_EQ(it->first, names[i]);
+		ASSERT_EQ(it->second.getSize(), i);
+	}
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.find(names[i]);
+		ASSERT_EQ(m.emplace(names[i], i), it);
+	}
+	ASSERT_EQ(m.getSize(), ARRAY_LEN(names));
+
+	m.clear();
+
+	ASSERT_EQ(m.getSize(), 0);
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.insert({names[i], i});
+		ASSERT_EQ(it->first, names[i]);
+		ASSERT_EQ(it->second.getSize(), i);
+	}
+	ASSERT_EQ(m.getSize(), ARRAY_LEN(names));
+
+	for (int i = 0; i < ARRAY_LEN(names); i += 2)
+	{
+		auto it = m.find(names[i]);
+		m.remove(it);
+	}
+
+	ASSERT_EQ(m.getSize(), ARRAY_LEN(names) / 2);
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.find(names[i]);
+		if (i & 0x1)
+		{
+			ASSERT_NE(it, m.end());
+			m.remove(it);
+		}
+		else
+		{
+			ASSERT_EQ(it, m.end());
+		}
+	}
+	ASSERT_EQ(m.getSize(), 0);
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.emplace(names[i], i);
+	}
+
+	{
+		int i = 0;
+		for (auto it = m.begin(); it != m.end(); it = m.remove(it)) i++;
+		ASSERT_EQ(i, ARRAY_LEN(names));
+	}
+	ASSERT_EQ(m.getSize(), 0);
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.emplace(names[i], i);
+	}
+	auto n{m};
+
+	ASSERT_EQ(n.getSize(), m.getSize());
+	for (auto const& v : m)
+	{
+		auto it = n.find(v.first);
+		ASSERT_NE(it, n.end());
+		ASSERT_EQ(it->first, v.first);
+		ASSERT_EQ(it->second.getSize(), v.second.getSize());
+	}
+
+	auto o{move(n)};
+
+	ASSERT_EQ(o.getSize(), m.getSize());
+	for (auto const& v : m)
+	{
+		auto it = o.find(v.first);
+		ASSERT_NE(it, o.end());
+		ASSERT_EQ(it->first, v.first);
+		ASSERT_EQ(it->second.getSize(), v.second.getSize());
+	}
+
+	new (&n) decltype(m){m};
+	n = o;
+
+	ASSERT_EQ(n.getSize(), o.getSize());
+	for (auto const& v : o)
+	{
+		auto it = n.find(v.first);
+		ASSERT_NE(it, n.end());
+		ASSERT_EQ(it->first, v.first);
+		ASSERT_EQ(it->second.getSize(), v.second.getSize());
+	}
+
+	for (int i = 0; i < ARRAY_LEN(names); i += 2)
+	{
+		auto it = n.find(names[i]);
+		n.remove(it);
+	}
+
+	o = move(n);
+
+	ASSERT_EQ(o.getSize(), ARRAY_LEN(names) / 2);
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = o.find(names[i]);
+		ASSERT_TRUE((i & 0x1 && it != o.end()) || (!(i & 0x1) && it == o.end()));
+	}
 
 	SUCCEED();
 }
