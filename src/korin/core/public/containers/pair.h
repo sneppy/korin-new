@@ -32,7 +32,7 @@ namespace Korin
 		 * @param inFirst value of the first item
 		 * @param inSecond value of the second item
 		 */
-		constexpr Pair(T const& inFirst, U const& inSecond)
+		constexpr FORCE_INLINE Pair(T const& inFirst, U const& inSecond)
 			: first{inFirst}
 			, second{inSecond}
 		{
@@ -46,12 +46,34 @@ namespace Korin
 		 * @param inFirst value of the first item
 		 * @param inSecond value of the second item
 		 */
-		constexpr Pair(auto&& inFirst, auto&& inSecond)
+		constexpr FORCE_INLINE Pair(auto&& inFirst, auto&& inSecond)
 			: first{FORWARD(inFirst)}
 			, second{FORWARD(inSecond)}
 		{
 			//
 		}
+
+		/**
+		 * @brief Construct a new pair with the given
+		 * key and default value.
+		 *
+		 * @param inFirst key value
+		 * @{
+		 */
+		constexpr FORCE_INLINE Pair(T const& inFirst)
+			: first{inFirst}
+			, second{}
+		{
+			//
+		}
+
+		constexpr FORCE_INLINE Pair(T&& inFirst)
+			: first{move(inFirst)}
+			, second{}
+		{
+			//
+		}
+		/** @} */
 
 		/**
 		 * @brief Return a ref to the key item

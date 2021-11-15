@@ -328,7 +328,7 @@ namespace Korin
 		IteratorT emplace(auto&& ...createArgs)
 		{
 			// FIXME: this should be changed allow duplicates
-			return emplaceUnique(FORWARD(createArgs)...);
+			return findOrEmplace(FORWARD(createArgs)...);
 		}
 
 		/**
@@ -366,7 +366,7 @@ namespace Korin
 		 * @return iterator pointing to inserted item,
 		 * or to existing item if duplicate
 		 */
-		IteratorT emplaceUnique(auto&& ...createArgs)
+		IteratorT findOrEmplace(auto&& ...createArgs)
 		{
 			// We need to create the bucket to comput the key.
 			// If the key already exists the bucket will be destroyed
@@ -394,21 +394,21 @@ namespace Korin
 		/**
 		 * @brief Inserts a new item if no duplicate
 		 * exists.
-		 * @see emplaceUnique
+		 * @see findOrEmplace
 		 *
 		 * @param item item to insert
 		 * @return iterator pointing to inserted item,
 		 * or to existing item if duplicate
 		 * @{
 		 */
-		FORCE_INLINE IteratorT insertUnique(T const& item)
+		FORCE_INLINE IteratorT findOrInsert(T const& item)
 		{
-			return insertUnique_Impl(item);
+			return findOrInsert_Impl(item);
 		}
 
-		FORCE_INLINE IteratorT insertUnique(T&& item)
+		FORCE_INLINE IteratorT findOrInsert(T&& item)
 		{
-			return insertUnique_Impl(move(item));
+			return findOrInsert_Impl(move(item));
 		}
 		/** @} */
 
@@ -738,14 +738,14 @@ namespace Korin
 		/** @} */
 
 		/**
-		 * @brief Implementation for @c insertUnique()
+		 * @brief Implementation for @c findOrInsert()
 		 * method.
 		 *
 		 * @param item item to insert
 		 * @return iterator pointing to inserted item,
 		 * or first existing item if duplicate
 		 */
-		IteratorT insertUnique_Impl(auto&& item)
+		IteratorT findOrInsert_Impl(auto&& item)
 		{
 			// Compute hkey and try to locate item
 			HashKey const hkey = HashBucket_Impl::computeHash(item, HashPolicyT{});

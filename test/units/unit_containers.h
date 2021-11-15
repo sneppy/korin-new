@@ -649,6 +649,18 @@ TEST(containers, HashMap)
 	m.clear();
 
 	ASSERT_EQ(m.getSize(), 0);
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.find(names[i]);
+		ASSERT_EQ(it, m.end());
+	}
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		ASSERT_EQ(m[names[i]].getSize(), Testing::Object{}.getSize());
+	}
+
+	m.clear();
 
 	for (int i = 0; i < ARRAY_LEN(names); ++i)
 	{

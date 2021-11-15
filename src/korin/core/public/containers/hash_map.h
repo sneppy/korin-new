@@ -68,7 +68,12 @@ namespace Korin
 		 * @return the existing value corresponding
 		 * to the key or a new default value
 		 */
-		ValT& operator[](auto const& key); // TODO
+		FORCE_INLINE ValT& operator[](auto const& key)
+		{
+			IteratorT it = SuperT::findOrEmplace(key);
+			return it->second;
+		}
+
 		/**
 		 * @brief Construct a new pair in place and inserts
 		 * it in the map if no duplicate key exists.
@@ -83,7 +88,7 @@ namespace Korin
 		 */
 		FORCE_INLINE IteratorT emplace(auto&& ...createArgs)
 		{
-			return SuperT::emplaceUnique(FORWARD(createArgs)...);
+			return SuperT::findOrEmplace(FORWARD(createArgs)...);
 		}
 
 		/**
@@ -101,12 +106,12 @@ namespace Korin
 		 */
 		FORCE_INLINE IteratorT insert(PairT const& pair)
 		{
-			return SuperT::insertUnique(pair);
+			return SuperT::findOrInsert(pair);
 		}
 
 		FORCE_INLINE IteratorT insert(PairT&& pair)
 		{
-			return SuperT::insertUnique(move(pair));
+			return SuperT::findOrInsert(move(pair));
 		}
 		/** @} */
 
