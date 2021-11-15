@@ -388,6 +388,15 @@ namespace Korin
 		}
 
 		/**
+		 * @brief Returns the number of Bytes required
+		 * to store array items.
+		 */
+		FORCE_INLINE sizet getNumBytes() const
+		{
+			return count * sizeof(T);
+		}
+
+		/**
 		 * @brief Returns a pointer that points
 		 * to the array buffer.
 		 * @{ 

@@ -154,8 +154,29 @@ namespace Korin
 		/** @} */
 	};
 
-	// TODO
-	template<typename PairT, typename HashT>
-	class HashPair;
+	/**
+	 * @brief Utility class to hash a pair using
+	 * the pair's key.
+	 *
+	 * @tparam PairT the type of the pair
+	 * @tparam HashPolicyT the has policy used to
+	 * hash the key
+	 */
+	template<typename PairT, typename HashPolicyT>
+	struct HashPair : private HashPolicyT
+	{
+		using HashPolicyT::operator();
+
+		/**
+		 * @brief Returns the hash key of the pair.
+		 *
+		 * @param pair a key-value pair
+		 * @return the corresponding hash key
+		 */
+		constexpr HashKey operator()(PairT const& pair) const
+		{
+			return HashPolicyT::operator()(pair.getKey());
+		}
+	};
 } // namespace Korin
 

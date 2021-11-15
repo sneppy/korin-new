@@ -13,7 +13,7 @@ namespace Korin
 {
 	/**
 	 * @brief Base class for string types.
-	 * 
+	 *
 	 * @tparam CharT the type of the characters
 	 */
 	template<typename CharT>
@@ -22,7 +22,7 @@ namespace Korin
 		static_assert(IsIntegral<CharT>::value, "Char type must be an integral value");
 
 		static constexpr CharT termChar{0};
-		
+
 		/**
 		 * @brief Helper class that computes the source
 		 * and length of any string source (e.g. C strings,
@@ -39,7 +39,7 @@ namespace Korin
 
 			/**
 			 * @brief Accept a buffer with length.
-			 * 
+			 *
 			 * @param inSrc pointer to string source
 			 * @param inLen length of the string
 			 */
@@ -52,7 +52,7 @@ namespace Korin
 
 			/**
 			 * @brief Accept a C string.
-			 * 
+			 *
 			 * @param cstr pointer to a null-terminated
 			 * string
 			 */
@@ -65,10 +65,10 @@ namespace Korin
 
 			/**
 			 * @brief Accept a static array.
-			 * 
+			 *
 			 * @tparam len length of the string
 			 * @param str pointer to the array
-			 * @return constexpr FORCE_INLINE 
+			 * @return constexpr FORCE_INLINE
 			 */
 			template<sizet len>
 			constexpr FORCE_INLINE StringSource(CharT const str[len])
@@ -79,8 +79,8 @@ namespace Korin
 
 			/**
 			 * @brief Accept a managed string.
-			 * 
-			 * @param other a managed string 
+			 *
+			 * @param other a managed string
 			 */
 			constexpr FORCE_INLINE StringSource(StringBase const& other)
 				: StringSource{*other, other.getLen()}
@@ -105,7 +105,7 @@ namespace Korin
 		/**
 		 * @brief Construct an empty string from
 		 * any string source.
-		 * 
+		 *
 		 * @param src string source
 		 */
 		FORCE_INLINE StringBase(StringSource const& src)
@@ -118,7 +118,7 @@ namespace Korin
 		/**
 		 * @brief Construct a new string from a
 		 * null-terminated string.
-		 * 
+		 *
 		 * @param cstr pointer to C string
 		 */
 		FORCE_INLINE StringBase(CharT const* cstr)
@@ -130,7 +130,7 @@ namespace Korin
 		/**
 		 * @brief Construct a new string by reading
 		 * @c len characters from source.
-		 * 
+		 *
 		 * @param src pointer to buffer to read from
 		 * @param len number of characters to read
 		 */
@@ -143,7 +143,7 @@ namespace Korin
 		/**
 		 * @brief Construct a new string from a
 		 * static array.
-		 * 
+		 *
 		 * @tparam len length of the string
 		 * @param src pointer to array
 		 */
@@ -157,7 +157,7 @@ namespace Korin
 		/**
 		 * @brief Cosntruct a string by repeating
 		 * the given character @c n times.
-		 * 
+		 *
 		 * @param c character to repeat
 		 * @param n number of repeats
 		 */
@@ -170,6 +170,7 @@ namespace Korin
 
 		/**
 		 * @brief Returns the length of the string.
+		 * @deprecated Use @c getLength() instead
 		 */
 		FORCE_INLINE sizet getLen() const
 		{
@@ -178,9 +179,28 @@ namespace Korin
 		}
 
 		/**
+		 * @brief Returns the length of the string
+		 * (excluding the terminating character).
+		 */
+		FORCE_INLINE sizet getLength() const
+		{
+			// Subtract terminating character
+			return array.getNumItems() - 1;
+		}
+
+		/**
+		 * @brief Helper that returns the number of bytes
+		 * required to store the string.
+		 */
+		FORCE_INLINE sizet getNumBytes() const
+		{
+			return array.getNumBytes();
+		}
+
+		/**
 		 * @brief Returns a ref to the i-th
 		 * character of the string.
-		 * 
+		 *
 		 * @param idx index of the character
 		 * @return ref to character
 		 * @{
@@ -216,7 +236,7 @@ namespace Korin
 
 		/**
 		 * @brief Compare two strings.
-		 * 
+		 *
 		 * @param other another string
 		 * @return true if strings are equal
 		 * @return false otherwise
@@ -228,7 +248,7 @@ namespace Korin
 
 		/**
 		 * @brief Compare two strings.
-		 * 
+		 *
 		 * @param other another string
 		 * @return true if strings are not equal
 		 * @return false otherwise
@@ -241,7 +261,7 @@ namespace Korin
 		/**
 		 * @brief Returns true if this string precedes
 		 * the other string in alphabetical order.
-		 * 
+		 *
 		 * @param other another string
 		 * @return true if this string precedes other
 		 * @return false otherwise
@@ -254,7 +274,7 @@ namespace Korin
 		/**
 		 * @brief Returns true if this string succeeds
 		 * the other string in alphabetical order.
-		 * 
+		 *
 		 * @param other another string
 		 * @return true if this string succeeds other
 		 * @return false otherwise
@@ -267,7 +287,7 @@ namespace Korin
 		/**
 		 * @brief Returns true if this string is
 		 * equal or preceds the other string.
-		 * 
+		 *
 		 * @param other another string
 		 * @return true if equal or precedes other
 		 * string
@@ -281,7 +301,7 @@ namespace Korin
 		/**
 		 * @brief Returns true if this string is
 		 * equal or succeeds the other string.
-		 * 
+		 *
 		 * @param other another string
 		 * @return true if equal or succeeds other
 		 * string
@@ -295,7 +315,7 @@ namespace Korin
 		/**
 		 * @brief Append another string source to this
 		 * string.
-		 * 
+		 *
 		 * @param other any string source
 		 * @return ref to self
 		 */
@@ -317,7 +337,7 @@ namespace Korin
 		/**
 		 * @brief Return a new string equal to the
 		 * result of concatenating two string sources.
-		 * 
+		 *
 		 * @param lhs,rhs any two string sources
 		 * @return new string
 		 */
@@ -339,12 +359,12 @@ namespace Korin
 		/**
 		 * @brief Format a string source with the
 		 * given format arguments.
-		 * 
+		 *
 		 * The format string uses the usual C
 		 * format placeholders.
-		 * 
+		 *
 		 * TODO: Replace @c std::tuple with @c Korin::Tuple
-		 * 
+		 *
 		 * @tparam FormatArgsT the type of the
 		 * format arguments
 		 * @param fmt format string source
@@ -362,7 +382,7 @@ namespace Korin
 		 * @brief Create an empty string, with an
 		 * initial array size equal to the given
 		 * string length.
-		 * 
+		 *
 		 * @param len future length of the string
 		 */
 		FORCE_INLINE StringBase(sizet len)
@@ -382,14 +402,14 @@ namespace Korin
 
 		/* The array that holds the string characters. */
 		Array<CharT> array;
-	
+
 	private:
 		/**
 		 * @brief Private implementation to format
 		 * a string.
-		 * 
+		 *
 		 * @tparam idxs index sequence used to iterate
-		 * over arguments tuple 
+		 * over arguments tuple
 		 * @param fmt format string
 		 * @param args tuple of format arguments
 		 * @return new string
@@ -400,28 +420,28 @@ namespace Korin
 			// We don't know a priori the length of the
 			// formatted string.
 			const sizet newLen = ::snprintf(nullptr, 0, fmt.src, prepareFormatArg(std::get<idxs>(args))...);
-			
+
 			// Create new string
 			StringBase newString{newLen};
 
 			// Format string
 			[[maybe_unused]] sizet printLen = ::snprintf(*newString, newLen + 1, fmt.src, prepareFormatArg(std::get<idxs>(args))...);
 			KORIN_ASSERT(printLen == newLen)
-			
+
 			return newString;
 		}
 
 		/**
 		 * @brief Prepares format argument.
-		 * 
+		 *
 		 * For most argument types returns the
 		 * argument as-is.
-		 * 
+		 *
 		 * For string arguments return pointer
 		 * to the null-terminated string.
-		 * 
+		 *
 		 * @param arg format argument
-		 * @return argument ready for format 
+		 * @return argument ready for format
 		 * @{
 		 */
 		static constexpr FORCE_INLINE auto const& prepareFormatArg(auto const& arg)
@@ -436,5 +456,31 @@ namespace Korin
 			return *arg;
 		}
 		/** @} */
+	};
+
+	/**
+	 * @brief Specialization for hashing string keys.
+	 *
+	 * @tparam CharT the type of a sring character
+	 */
+	template<typename CharT>
+	struct ChooseHashPolicy<StringBase<CharT>>
+	{
+		using Type = struct HashString
+		{
+			using StringT = StringBase<CharT>;
+
+			/**
+			 * @brief Returns the hash key for the given
+			 * string.
+			 *
+			 * @param key the key string to hash
+			 * @return the corresponding hash key
+			 */
+			FORCE_INLINE HashKey operator()(StringT const& key) const
+			{
+				return murmur(*key, key.getNumBytes());
+			}
+		};
 	};
 } // namespace Korin
