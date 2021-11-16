@@ -1,0 +1,32 @@
+name: Unit Test
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - src/**
+      - test/**
+jobs:
+  test-korin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v2
+        with:
+          ref: master
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y valgrind
+          valgrind --version
+      - name: Build with CMake
+        uses: ./.github/actions/build-cmake
+        with:
+          build-type: Debug
+          build-tests: true
+      - name: Run unit tests
+        run: |
+          pushd ./build/test/units
+          ctest --overwrite MemoryCheckCommand=$(which valgrind)\
+                --overwrite MemoryCheckCommandOptions="--show-error-list=yes --leak-check=full"\
+                -D ExperimentalMemCheck
+          popd

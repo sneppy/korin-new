@@ -11,7 +11,8 @@ using namespace Korin;
 #if __has_include(<valgrind/valgrind.h>)
 # include <valgrind/valgrind.h>
 #else
-# define RUNNING_ON_VALGRIND (false)
+# define RUNNING_ON_VALGRIND (0)
+# define VALGRIND_COUNT_ERRORS (0)
 #endif
 
 TEST(memory, MallocPool)

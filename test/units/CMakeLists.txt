@@ -5,6 +5,9 @@ set(KORIN_UNITS
 	"memory"
 )
 
+# Enable testing
+enable_testing()
+
 foreach(UNIT_NAME ${KORIN_UNITS})
 	get_filename_component(PUBLIC_FILE "./unit_${UNIT_NAME}.h" ABSOLUTE)
 	get_filename_component(PRIVATE_FILE "./unit_${UNIT_NAME}.cpp" ABSOLUTE)
@@ -40,5 +43,11 @@ foreach(UNIT_NAME ${KORIN_UNITS})
 
 		PUBLIC
 			"../include"
+	)
+
+	# Add test
+	add_test(NAME ${UNIT_TARGET_NAME}
+
+		COMMAND ${UNIT_TARGET_NAME}
 	)
 endforeach(UNIT_NAME ${KORIN_UNITS})

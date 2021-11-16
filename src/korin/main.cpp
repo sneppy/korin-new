@@ -4,6 +4,5 @@
 
 int32 main()
 {
-	using namespace Containers;
 	return 0;
 }

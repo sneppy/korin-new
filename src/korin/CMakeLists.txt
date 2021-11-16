@@ -37,7 +37,7 @@ if(NOT KORIN_BUILD_MODULES_ONLY)
 endif(NOT KORIN_BUILD_MODULES_ONLY)
 
 # Build main
-option(KORIN_BUILD_MAIN "If true build main executable" ON)
+option(KORIN_BUILD_MAIN "If true build main executable" OFF)
 if(KORIN_BUILD_MAIN)
 	# Create main executable
 	add_executable(${PROJECT_NAME}_main "./main.cpp")
