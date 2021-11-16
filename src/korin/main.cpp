@@ -4,5 +4,7 @@
 
 int32 main()
 {
+	using namespace Korin;
+
 	return 0;
 }

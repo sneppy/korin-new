@@ -8,6 +8,8 @@ using namespace Korin;
 #include "hal/platform_crt.h"
 #include "containers/containers.h"
 
+#define ARRAY_COUNT(x) (sizeof(x) / sizeof(*x))
+
 template<typename ItT>
 static void shuffle(ItT begin, ItT end)
 {
@@ -50,6 +52,8 @@ TEST(containers, Optional)
 
 	SUCCEED();
 }
+
+// TODO: Test tuples
 
 TEST(containers, Array)
 {
@@ -353,7 +357,7 @@ TEST(containers, Tree)
 			return GreaterThan{}(lhs.getSize(), rhs.getSize());
 		}
 	};
-	
+
 	Tree<Testing::Object, FindObject> x, y, z;
 
 	static constexpr int32 numValues = 1 << 10;
@@ -362,7 +366,7 @@ TEST(containers, Tree)
 	{
 		values[i] = 1 + (rand() & 0xf);
 	}
-	
+
 	for (int32 i = 0; i < numValues; ++i)
 	{
 		auto it = x.emplace(values[i]);
@@ -387,7 +391,7 @@ TEST(containers, Tree)
 			prev = obj.getSize();
 		}
 	}
-	
+
 	y = x;
 
 	{
@@ -435,7 +439,7 @@ TEST(containers, Tree)
 	{
 		it = z.remove(it);
 	}
-	
+
 	for (int32 i = 0; i < numValues; ++i)
 	{
 		auto it = z.insert(values[i]);
@@ -461,13 +465,13 @@ TEST(containers, Set)
 {
 	Set<int32> x, y, z;
 
-	ASSERT_EQ(x.getNumItems(), 0ull);
+	ASSERT_EQ(x.getSize(), 0ull);
 
 	x.insert(10);
 	x.insert(1);
 	x.insert(3);
 
-	ASSERT_EQ(x.getNumItems(), 3ull);
+	ASSERT_EQ(x.getSize(), 3ull);
 	ASSERT_NE(x.get(1), x.end());
 	ASSERT_EQ(x.get(0), x.end());
 	ASSERT_EQ(*x.get(1), 1);
@@ -485,14 +489,14 @@ TEST(containers, Set)
 	y.insert(3);
 	x |= y;
 
-	ASSERT_EQ(x.getNumItems(), 6ull);
+	ASSERT_EQ(x.getSize(), 6ull);
 	ASSERT_TRUE(x.has(3));
 	ASSERT_TRUE(x.has(10));
 	ASSERT_TRUE(x.has(2));
 
 	x &= y;
 
-	ASSERT_EQ(x.getNumItems(), y.getNumItems());
+	ASSERT_EQ(x.getSize(), y.getSize());
 	for (auto v : y)
 	{
 		ASSERT_TRUE(x.has(v));
@@ -505,11 +509,94 @@ TEST(containers, Set)
 	z.insert(10);
 	x ^= z;
 
-	ASSERT_EQ(x.getNumItems(), 2ull);
+	ASSERT_EQ(x.getSize(), 2ull);
 	ASSERT_TRUE(x.has(2));
 	ASSERT_TRUE(x.has(3));
 	ASSERT_FALSE(x.has(0));
 	ASSERT_FALSE(x.has(9));
+
+	SUCCEED();
+}
+
+TEST(containers, Map)
+{
+	Map<String, Testing::Object> x, y, z;
+
+	ASSERT_EQ(x.getSize(), 0);
+	ASSERT_EQ(x.begin(), x.end());
+	ASSERT_EQ(x.rbegin(), x.rend());
+	ASSERT_EQ(x.find("sneppy"), x.end());
+
+	static char const* names[] = {
+		"sneppy",
+		"fmonz",
+		"lorecri96",
+		"lpraat",
+		"nondecidibile",
+		"cam",
+		"nicofico",
+		"nonswiss",
+		"turingcomplete",
+		"nov4chip",
+		"samn844",
+		"zerry",
+		"sgherry",
+		"frabellazio",
+		"gu",
+		"xxx",
+		"fryscan",
+		"ananasso"
+	};
+	static sizet values[ARRAY_COUNT(names)] = {};
+	static sizet removeIdxs[] = {2, 5, 7, 9, 11, 13};
+
+	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	{
+		x.insert(names[i], 0x1ull << (i & 0xf));
+	}
+
+	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names));
+	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	{
+		auto it = x.find(names[i]);
+		ASSERT_NE(it, x.end());
+		ASSERT_EQ(it->first, names[i]); // Uses String::operator==
+		ASSERT_EQ(it->second.getSize(), 0x1ull << (i & 0xf));
+
+		const auto& obj = x[names[i]];
+		ASSERT_EQ(obj.getSize(), it->second.getSize());
+	}
+
+	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	{
+		values[i] = rand() & 0xff;
+		x.insert(names[i], values[i]);
+	}
+
+	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names));
+	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	{
+		ASSERT_EQ(x[names[i]].getSize(), values[i]);
+	}
+
+	for (int32 i = 0; i < ARRAY_COUNT(removeIdxs); ++i)
+	{
+		Testing::Object obj;
+		x.removeAt(names[removeIdxs[i]], obj);
+
+		ASSERT_EQ(obj.getSize(), values[removeIdxs[i]]);
+	}
+
+	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names) - ARRAY_COUNT(removeIdxs));
+	for (int32 i = 0; i < ARRAY_COUNT(removeIdxs); ++i)
+	{
+		auto it = x.find(names[removeIdxs[i]]);
+		ASSERT_EQ(it, x.end());
+	}
+
+	// TODO: Test assignment and copy/move constructors
+
+	for (auto it = x.begin(); it != x.end(); it = x.remove(it));
 
 	SUCCEED();
 }

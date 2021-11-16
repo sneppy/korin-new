@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core_types.h"
+#include "hal/platform_memory.h"
 #include "types.h"
 #include "enable_if.h"
 
@@ -57,6 +58,42 @@ FORCE_INLINE void swap(T& x, T& y)
 }
 
 /**
+ * @brief Initialize items with the given
+ * value.
+ * 
+ * @tparam T the type of the items
+ * @param dst pointer to the items
+ * @param src value to initialize to
+ * @param n number of items
+ * @{
+ */
+template<typename T>
+FORCE_INLINE typename EnableIf<IsTriviallyConstructible<T>::value>::Type constructItems(T* dst, T const& src, sizet n)
+{
+	ASSERT(dst != nullptr)
+	CHECK(n != 0)
+
+	for (sizet i = 0; i < n; ++i)
+	{
+		dst[i] = src;
+	}
+}
+
+template<typename T>
+FORCE_INLINE typename EnableIf<!IsTriviallyConstructible<T>::value>::Type constructItems(T* dst, T const& src, sizet n)
+{
+	ASSERT(dst != nullptr)
+	CHECK(n != 0)
+
+	for (sizet i = 0; i < n; ++i)
+	{
+		// Construct items
+		new (dst + i) T{src};
+	}
+}
+/** @} */
+
+/**
  * @brief Initialize a buffer of items by
  * copying another buffer.
  * 
@@ -70,17 +107,21 @@ FORCE_INLINE void swap(T& x, T& y)
 template<typename T>
 FORCE_INLINE typename EnableIf<IsTriviallyConstructible<T>::value>::Type copyConstructItems(T* RESTRICT dst, T const* RESTRICT src, sizet n)
 {
+	ASSERT(dst != nullptr)
+	ASSERT(src != nullptr)
 	CHECK(dst != src)
-	CHECK(n > 0)
+	CHECK(n != 0)
 
-	memcpy(dst, src, n * sizeof(T));
+	PlatformMemory::memcpy(dst, src, n * sizeof(T));
 }
 
 template<typename T>
 FORCE_INLINE typename EnableIf<!IsTriviallyConstructible<T>::value>::Type copyConstructItems(T* RESTRICT dst, T const* RESTRICT src, sizet n)
 {
+	ASSERT(dst != nullptr)
+	ASSERT(src != nullptr)
 	CHECK(dst != src)
-	CHECK(n > 0)
+	CHECK(n != 0)
 
 	for (sizet i = 0; i < n; ++i)
 	{
@@ -102,17 +143,21 @@ FORCE_INLINE typename EnableIf<!IsTriviallyConstructible<T>::value>::Type copyCo
 template<typename T>
 FORCE_INLINE typename EnableIf<IsTriviallyConstructible<T>::value>::Type moveConstructItems(T* dst, T* src, sizet n)
 {
+	ASSERT(dst != nullptr)
+	ASSERT(src != nullptr)
 	CHECK(dst != src)
-	CHECK(n > 0)
+	CHECK(n != 0)
 
-	memmove(dst, src, n * sizeof(T));
+	PlatformMemory::memmove(dst, src, n * sizeof(T));
 }
 
 template<typename T>
 FORCE_INLINE typename EnableIf<!IsTriviallyConstructible<T>::value>::Type moveConstructItems(T* dst, T* src, sizet n)
 {
+	ASSERT(dst != nullptr)
+	ASSERT(src != nullptr)
 	CHECK(dst != src)
-	CHECK(n > 0)
+	CHECK(n != 0)
 
 	for (sizet i = 0; i < n; ++i)
 	{
@@ -146,17 +191,21 @@ FORCE_INLINE typename EnableIf<!IsTriviallyConstructible<T>::value>::Type moveCo
 template<typename T>
 FORCE_INLINE typename EnableIf<IsTriviallyCopyable<T>::value>::Type copyItems(T* RESTRICT dst, T const* RESTRICT src, sizet n)
 {
+	ASSERT(dst != nullptr)
+	ASSERT(src != nullptr)
 	CHECK(dst != src)
-	CHECK(n > 0)
+	CHECK(n != 0)
 
-	memcpy(dst, src, n * sizeof(T));
+	PlatformMemory::memcpy(dst, src, n * sizeof(T));
 }
 
 template<typename T>
 FORCE_INLINE typename EnableIf<!IsTriviallyCopyable<T>::value>::Type copyItems(T* RESTRICT dst, T const* RESTRICT src, sizet n)
 {
+	ASSERT(dst != nullptr)
+	ASSERT(src != nullptr)
 	CHECK(dst != src)
-	CHECK(n > 0)
+	CHECK(n != 0)
 
 	for (sizet i = 0; i < n; ++i)
 	{
@@ -180,17 +229,21 @@ FORCE_INLINE typename EnableIf<!IsTriviallyCopyable<T>::value>::Type copyItems(T
 template<typename T>
 FORCE_INLINE typename EnableIf<IsTriviallyCopyable<T>::value>::Type moveItems(T* dst, T* src, sizet n)
 {
+	ASSERT(dst != nullptr)
+	ASSERT(src != nullptr)
 	CHECK(dst != src)
-	CHECK(n > 0)
+	CHECK(n != 0)
 
-	memmove(dst, src, n * sizeof(T));
+	PlatformMemory::memmove(dst, src, n * sizeof(T));
 }
 
 template<typename T>
 FORCE_INLINE typename EnableIf<!IsTriviallyCopyable<T>::value>::Type moveItems(T* dst, T* src, sizet n)
 {
+	ASSERT(dst != nullptr)
+	ASSERT(src != nullptr)
 	CHECK(dst != src)
-	CHECK(n > 0)
+	CHECK(n != 0)
 
 	if (dst > src)
 	{
@@ -227,6 +280,9 @@ FORCE_INLINE typename EnableIf<IsTriviallyDestructible<T>::value>::Type destroyI
 template<typename T>
 FORCE_INLINE typename EnableIf<!IsTriviallyDestructible<T>::value>::Type destroyItems(T* items, sizet n)
 {
+	ASSERT(items != nullptr)
+	CHECK(n != 0)
+
 	for (sizet i = 0; i < n; ++i)
 	{
 		// Destroy all items

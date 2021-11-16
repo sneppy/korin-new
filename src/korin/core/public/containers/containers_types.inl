@@ -1,37 +1,35 @@
 namespace Korin
 {
-	/**
-	 * @brief Return the length of the container.
-	 * 
-	 * @tparam T the type of the container
-	 * @param param0 the container instance 
-	 * @return number of items in the container
-	 * @{
-	 */
+	template<typename ...ItemsT>
+	constexpr sizet len(Tuple<ItemsT...> const& tup)
+	{
+		return tup.getNumItems();
+	}
+
 	template<typename T>
-	constexpr FORCE_INLINE sizet len(Array<T> const& arr)
+	constexpr sizet len(Array<T> const& arr)
 	{
 		return arr.getNumItems();
 	}
 
-	template<typename T, typename CompareT>
-	constexpr FORCE_INLINE sizet len(Set<T, CompareT> const& set)
+	template<typename T, typename PolicyT>
+	constexpr sizet len(Set<T, PolicyT> const& set)
 	{
-		return set.getNumItems();
+		return set.getSize();
 	}
-	/** @} */
 
-	/**
-	 * @brief Find the first occurance of a value
-	 * between two iterators.
-	 * 
-	 * @tparam ItT a fwd iterator type
-	 * @param begin iterator from where to start
-	 * @param end iterator that points to the end
-	 * @param value value to find
-	 * @return iterator pointing to first occurance
-	 * or to end if no occurance was found
-	 */
+	template<typename KeyT, typename ValT, typename PolicyT>
+	constexpr sizet len(Map<KeyT, ValT, PolicyT> const& map)
+	{
+		return map.getSize();
+	}
+
+	template<typename CharT>
+	constexpr sizet len(StringBase<CharT> const& str)
+	{
+		return str.getLen();
+	}
+
 	template<typename ItT>
 	constexpr ItT find(ItT begin, ItT end, auto const& value)
 	{
@@ -45,19 +43,7 @@ namespace Korin
 
 		return end;
 	}
-	
-	/**
-	 * @brief Like find but returns the first value
-	 * that satisfies the given policy.
-	 * 
-	 * @tparam ItT a fwd iterator type
-	 * @tparam PolicyT the type of the policy
-	 * @param begin iter that points to the start
-	 * @param end iter that points to the end
-	 * @param policy policy used to evaluate items
-	 * @return iterator thet points to the first
-	 * occurance or to the end if none found
-	 */
+
 	template<typename ItT, typename PolicyT>
 	constexpr ItT findIf(ItT begin, ItT end, PolicyT&& policy)
 	{
@@ -71,4 +57,10 @@ namespace Korin
 
 		return end;
 	}
+}
+
+template<typename ...ItemsT>
+constexpr auto rangeFor(Korin::Tuple<ItemsT...> const&)
+{
+	return rangeFor<ItemsT...>();
 }

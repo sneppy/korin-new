@@ -38,7 +38,17 @@ namespace Korin
 		 * @brief Returns the number of items in
 		 * the set.
 		 */
+		/// DEPRECATED
 		FORCE_INLINE uint64 getNumItems() const
+		{
+			return tree.getNumNodes();
+		}
+
+		/**
+		 * @brief Returns the number of items in
+		 * the set.
+		 */
+		FORCE_INLINE sizet getSize() const
 		{
 			return tree.getNumNodes();
 		}

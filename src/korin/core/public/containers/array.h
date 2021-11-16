@@ -4,16 +4,15 @@
 #include "templates/utility.h"
 #include "hal/platform_memory.h"
 
-#ifndef PLATFORM_MATH
-// TODO: PlatformMath
-struct PlatformMath
+// TODO: Replace with platform math
+template<typename T>
+static constexpr FORCE_INLINE T max(T const& a, auto const& b)
 {
-	template<typename T>
-	static constexpr FORCE_INLINE T max(T const& a, auto const& b)
-	{
-		return a > b ? a : b;
-	}
-};
+	return a > b ? a : b;
+}
+
+#ifndef KORIN_ARRAY_MIN_SIZE
+# define KORIN_ARRAY_MIN_SIZE 4
 #endif
 
 namespace Korin
@@ -28,6 +27,8 @@ namespace Korin
 	template<typename T>
 	class Array
 	{
+		template<typename> friend class StringBase;
+
 		using Iterator = T*;
 		using ConstIterator = T const*;
 
@@ -63,7 +64,7 @@ namespace Korin
 			CHECKF(newSize >= count, "Cannot fit array data (%llu items) in new buffer (%llu items)", count, newSize)
 
 			// The alignment is known at compile time
-			constexpr sizet alignment = PlatformMath::max(alignof(T), MIN_ALIGNMENT);
+			constexpr sizet alignment = max(alignof(T), MIN_ALIGNMENT);
 
 			// Alloc new buffer
 			T* newData = reinterpret_cast<T*>(gMalloc->malloc(newSize * sizeof(T), alignment));
@@ -95,7 +96,7 @@ namespace Korin
 			if (size < requiredSize)
 			{
 				// Find appropriate size
-				sizet newSize = PlatformMath::max(size, 2);
+				sizet newSize = max(size, KORIN_ARRAY_MIN_SIZE);
 				for (; newSize < requiredSize; newSize = newSize << 1);
 
 				// Resize buffer
@@ -142,7 +143,7 @@ namespace Korin
 		 * @param item current item
 		 * @param items rest of items
 		 */
-		FORCE_INLINE void constructItems(uint64 idx, auto&& item, auto&& ...items)
+		FORCE_INLINE void initItems(uint64 idx, auto&& item, auto&& ...items)
 		{
 			// Construct current item
 			new (data + idx) T{FORWARD(item)};
@@ -150,7 +151,7 @@ namespace Korin
 			if constexpr (sizeof...(items) > 0)
 			{
 				// If there are items left, call again
-				constructItems(idx + 1, FORWARD(items)...);
+				initItems(idx + 1, FORWARD(items)...);
 			}
 		}
 		
@@ -220,6 +221,57 @@ namespace Korin
 			, count{0}
 		{
 			//
+		}
+
+		/**
+		 * @brief Construct an array with an
+		 * initial size (but no items).
+		 * 
+		 * @param reservedSize size to reserve
+		 */
+		FORCE_INLINE Array(sizet reservedSize)
+			: Array{}
+		{
+			// Create buffer if necessary
+			growToFit(reservedSize);
+		}
+
+		/**
+		 * @brief Construct a new array and insert
+		 * @c numItems copies of @c item in it.
+		 * 
+		 * @param numItems number of copies to insert
+		 * @param item item to copy
+		 * @param extraSlack extra size reserved
+		 */
+		FORCE_INLINE Array(sizet numItems, T const& item, sizet extraSlack = 0)
+			: Array{}
+		{
+			// Create buffer if necessary
+			growToFit(numItems + extraSlack);
+			count = numItems;
+
+			// Initialize items
+			constructItems(data, item, count);
+		}
+
+		/**
+		 * @brief Construct a new array to fit the
+		 * given content, and copy the items.
+		 * 
+		 * @param items pointer to items to copy
+		 * @param numItems number of items to copy
+		 * @param extraSlack extra space to reserve
+		 */
+		FORCE_INLINE Array(T const* items, sizet numItems, sizet extraSlack = 0)
+			: Array{}
+		{
+			// Create buffer
+			growToFit(numItems + extraSlack);
+			count = numItems;
+
+			// Copy items
+			copyConstructItems(data, items, numItems);
 		}
 
 		/**
@@ -446,7 +498,7 @@ namespace Korin
 
 			// Grow data buffer to accomodate for items
 			growToFit(count + numItems);
-			constructItems(count, FORWARD(items)...);
+			initItems(count, FORWARD(items)...);
 			count += numItems;
 		}
 
@@ -478,7 +530,7 @@ namespace Korin
 			}
 
 			// Construct the items
-			constructItems(idx, FORWARD(items)...);
+			initItems(idx, FORWARD(items)...);
 		}
 
 		/**
