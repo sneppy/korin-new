@@ -18,6 +18,13 @@ namespace Korin
 	 * parameters or by specilazing the struct
 	 * @c ChooseHashPolicy for the given type.
 	 *
+	 * The HashSet class defines operators for
+	 * computing the union, intersection and
+	 * difference of two sets.
+	 *
+	 * Partial ordering is defined between subsets
+	 * and supersets.
+	 *
 	 * In the documentation, the term "hash key"
 	 * refers to the computed hash key, whereas
 	 * the term key is used is used to refer to
@@ -43,8 +50,129 @@ namespace Korin
 		using SuperT::end;
 		using SuperT::find;
 		using SuperT::remove;
+		using SuperT::clear;
 
-		// TODO: Add compare operators
+		/**
+		 * @brief Returns true if set contains an
+		 * item that matches the given key.
+		 *
+		 * @param key the key to test
+		 * @return true if item with given key exists
+		 * @return false otherwise
+		 */
+		FORCE_INLINE bool contains(auto const& key) const
+		{
+			return find(key) != end();
+		}
+
+		/**
+		 * @brief Return true if set is subset or equal
+		 * to another set.
+		 *
+		 * @param other another set
+		 * @return true if subset or equal
+		 * @return false otherwise
+		 */
+		bool operator<=(HashSet const& other) const
+		{
+			for (auto const& item : *this)
+			{
+				if (!other.contains(item))
+				{
+					// Extra item found, not a subset
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/**
+		 * @brief Returns true if set is subset of
+		 * another set.
+		 *
+		 * @param other another hash set
+		 * @return true if subset
+		 * @return false otherwise
+		 */
+		FORCE_INLINE bool operator<(HashSet const& other) const
+		{
+			return (*this <= other) && other.getSize() != getSize();
+		}
+
+		/**
+		 * @brief Returns true if set is superset or
+		 * equal to another set.
+		 *
+		 * @param other another hash set
+		 * @return true if superset or equal
+		 * @return false otherwise
+		 */
+		bool operator>=(HashSet const& other) const
+		{
+			return other <= *this;
+		}
+
+		/**
+		 * @brief Returns true if this set is a
+		 * superset of another set.
+		 *
+		 * @param other another hash set
+		 * @return true if superset
+		 * @return false otherwise
+		 */
+		FORCE_INLINE bool operator>(HashSet const& other) const
+		{
+			return other < *this;
+		}
+
+		/**
+		 * @brief Returns true if this set and another
+		 * set contain the same items.
+		 *
+		 * @param other another hash set
+		 * @return true if sets are equal
+		 * @return false otherwise
+		 */
+		FORCE_INLINE bool operator==(HashSet const& other) const
+		{
+			return (getSize() == other.getSize()) && *this <= other;
+		}
+
+		/**
+		 * @brief Returns true if two sets are not
+		 * equal.
+		 *
+		 * @param other another hash set
+		 * @return true if sets are not equal
+		 * @return false otherwise
+		 */
+		FORCE_INLINE bool operator!=(HashSet const& other) const
+		{
+			return !(*this == other);
+		}
+
+		/**
+		 * @brief Returns true if two sets are disjoint.
+		 *
+		 * @param other another hash set
+		 * @return true true if sets have no item in
+		 * common
+		 * @return false otherwise
+		 */
+		bool isDisjoint(HashSet const& other) const
+		{
+			for (auto const& item : other)
+			{
+				if (contains(item))
+				{
+					// Common item found
+					return false;
+				}
+			}
+
+			return true;
+		}
 
 		/**
 		 * @brief Construct a new item and insert
