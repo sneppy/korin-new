@@ -569,7 +569,7 @@ TEST(containers, Map)
 
 	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
-		x.insert(names[i], 0x1ull << (i & 0xf));
+		x.emplace(names[i], 0x1ull << (i & 0xf));
 	}
 
 	ASSERT_EQ(x.getSize(), ARRAY_LEN(names));
@@ -577,7 +577,7 @@ TEST(containers, Map)
 	{
 		auto it = x.find(names[i]);
 		ASSERT_NE(it, x.end());
-		ASSERT_EQ(it->first, names[i]); // Uses String::operator==
+		ASSERT_EQ(it->first, names[i]);
 		ASSERT_EQ(it->second.getSize(), 0x1ull << (i & 0xf));
 
 		const auto& obj = x[names[i]];
@@ -587,7 +587,7 @@ TEST(containers, Map)
 	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		values[i] = rand() & 0xff;
-		x.insert(names[i], values[i]);
+		x.emplace(names[i], values[i]);
 	}
 
 	ASSERT_EQ(x.getSize(), ARRAY_LEN(names));
