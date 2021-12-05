@@ -65,6 +65,21 @@ namespace Math
 		}
 
 		/**
+		 * @brief Construct a new matrix and set the
+		 * upper left values equal to the given 3 by
+		 * 3 matrix.
+		 * 
+		 * @param other a 3 by 3 matrix
+		 */
+		constexpr FORCE_INLINE Mat4(Mat3<T> const& other)
+			: data{{other.data[0][0], other.data[0][1], other.data[0][2]},
+			       {other.data[1][0], other.data[1][1], other.data[1][2]},
+			       {other.data[2][0], other.data[2][1], other.data[2][2]}}
+		{
+			//
+		}
+
+		/**
 		 * @brief Returns a pointer to the matrix
 		 * data.
 		 * @{
@@ -294,6 +309,16 @@ namespace Math
 		constexpr FORCE_INLINE Mat4& invert()
 		{
 			return *this = !*this;
+		}
+
+		/**
+		 * @brief Returns the upper left 3 by 3 matrix.
+		 */
+		constexpr FORCE_INLINE operator Mat3<T>() const
+		{
+			return Mat3{data[0][0], data[0][1], data[0][2],
+			            data[1][0], data[1][1], data[1][2],
+			            data[2][0], data[2][1], data[2][2]};
 		}
 
 		/**

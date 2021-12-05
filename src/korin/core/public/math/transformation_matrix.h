@@ -404,4 +404,142 @@ namespace Math
 		TransformationMatrix& setScale(Vec3<float32> const&) = delete;
 		Vec3<float32> getScale() const = delete;
 	};
+
+	/**
+	 * @brief A 3 by 3 matrix used to describe
+	 * 3D rotations.
+	 */
+	struct RotationMatrix : public Mat3<float32>
+	{
+		/**
+		 * @brief Construct a new matrix with zero-rotation.
+		 */
+		constexpr FORCE_INLINE RotationMatrix()
+			: Mat3{1.f, 0.f, 0.f,
+			       0.f, 1.f, 0.f,
+				   0.f, 0.f, 1.f}
+		{
+			//
+		}
+
+		/**
+		 * @brief Contruct a rotation matrix with the given
+		 * rotation.
+		 * 
+		 * @param inRotation rotation quaternion
+		 */
+		constexpr FORCE_INLINE RotationMatrix(Quat<float32> const& inRotation)
+			: Mat3{}
+		{
+			setRotation(inRotation);
+		}
+
+		/**
+		 * @brief Returns the rotation component as a
+		 * quaternion.
+		 */
+		constexpr Quat<float32> getRotation() const
+		{
+			// https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+			float32 const quatW = PlatformMath::sqrt(1.f + data[0][0] + data[1][1] + data[2][2]) * 0.5f;
+			float32 const invQuatW = 1.f / (quatW / 4.f);
+			float32 const quatX = (data[2][1] - data[1][2]) * invQuatW;
+			float32 const quatY = (data[0][2] - data[2][0]) * invQuatW;
+			float32 const quatZ = (data[1][0] - data[0][1]) * invQuatW;
+
+			return Quat<float32>{quatX, quatY, quatZ, quatW};
+		}
+
+		/**
+		 * @brief Update the rotation component.
+		 * 
+		 * @param newRotation new rotation quaternion
+		 * @return ref to self
+		 */
+		constexpr RotationMatrix& setRotation(Quat<float32> const& newRotation)
+		{
+			const float32 rotX2 = newRotation.x * newRotation.x,
+			              rotXY = newRotation.x * newRotation.y,
+						  rotXZ = newRotation.x * newRotation.z,
+						  rotXW = newRotation.x * newRotation.w,
+						  rotY2 = newRotation.y * newRotation.y,
+						  rotYZ = newRotation.y * newRotation.z,
+						  rotYW = newRotation.y * newRotation.w,
+						  rotZ2 = newRotation.z * newRotation.z,
+						  rotZW = newRotation.z * newRotation.w,
+						  rotW2 = newRotation.w * newRotation.w;
+			
+			data[0][0] = 1.f - 2.f * (rotY2 + rotZ2);
+			data[0][1] = 2.f * (rotXY - rotZW);
+			data[0][2] = 2.f * (rotXZ + rotYW);
+			data[1][0] = 2.f * (rotXY + rotZW);
+			data[1][1] = 1.f - 2.f * (rotX2 + rotZ2);
+			data[1][2] = 2.f * (rotYZ - rotXW);
+			data[2][0] = 2.f * (rotXZ - rotYW);
+			data[2][1] = 2.f * (rotYZ + rotXW);
+			data[2][2] = 1.f - 2.f * (rotX2 + rotY2);
+
+			return *this;
+		}
+
+		/**
+		 * @brief Overload the dot product to return
+		 * a rotation matrix.
+		 * 
+		 * The resulting matrix will describe a
+		 * rotation equal to applying the original
+		 * rotations.
+		 * 
+		 * (R * Q) * v = (R * (Q * v))
+		 * 
+		 * @param other another rotation matrix
+		 * @return new rotation matrix
+		 */
+		constexpr FORCE_INLINE RotationMatrix dot(RotationMatrix const& other) const
+		{
+			return reinterpret_cast<RotationMatrix&&>(Mat3::dot(other));
+		}
+
+		/**
+		 * @brief Rotate a 3D vector.
+		 * 
+		 * @param v vector to rotate
+		 * @return transformed vector 
+		 */
+		constexpr FORCE_INLINE Vec3<float32> rotateVector(Vec3<float32> const& v) const
+		{
+			return Mat3::dot(v);
+		}
+
+		/**
+		 * @brief Invert this rotation matrix in place.
+		 */
+		constexpr FORCE_INLINE RotationMatrix& invert()
+		{
+			// Simply transpose rotation matrix
+			transpose();
+			return *this;
+		}
+
+		/**
+		 * @brief Returns a copy of the inverse matrix.
+		 * 
+		 * The inverted matrix describes the opposite
+		 * rotation.
+		 */
+		constexpr FORCE_INLINE RotationMatrix operator!() const
+		{
+			return RotationMatrix{*this}.invert();
+		}
+
+		/**
+		 * @brief Returns a transformation matrix with
+		 * zero-translation and rotation equal to the
+		 * rotation of this matrix.
+		 */
+		constexpr FORCE_INLINE operator TranslationAndRotationMatrix() const
+		{
+			return reinterpret_cast<TranslationAndRotationMatrix&&>(static_cast<Mat4<float32>>(*this));
+		}
+	};
 } // namespace Math
