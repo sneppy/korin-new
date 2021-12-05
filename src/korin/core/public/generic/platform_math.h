@@ -12,6 +12,14 @@
 #	define MATH_FN_FLOAT_64(name) ::name
 #endif
 
+#ifndef PI
+# define PI (3.1415926535897932384626433832795)
+#endif
+
+#ifndef PI_F
+# define PI_F (3.1415926535897932f)
+#endif
+
 /**
  * @brief Platform-independent implementation of
  * common math functions.
@@ -191,4 +199,22 @@ struct GenericPlatformMath
 
 		return m * n;
 	}
+
+	/**
+	 * @brief Transform angle from degrees to radians.
+	 * 
+	 * @param x angle in degrees
+	 * @return value in radians
+	 */
+	static constexpr FORCE_INLINE float32 degToRad(float32 x) { return x * (PI_F / 180.f); }
+	static constexpr FORCE_INLINE float64 degToRad(float64 x) { return x * (PI / 180.); }
+
+	/**
+	 * @brief Transform angle from radians to degrees.
+	 * 
+	 * @param x angle in radians
+	 * @return value in degrees
+	 */
+	static constexpr FORCE_INLINE float32 radToDeg(float32 x) { return x * (180.f / PI_F); }
+	static constexpr FORCE_INLINE float64 radToDeg(float64 x) { return x * (180. / PI); }
 };
