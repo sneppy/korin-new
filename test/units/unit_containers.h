@@ -86,7 +86,6 @@ TEST(containers, Array)
 	ASSERT_NE(*x, nullptr);
 	ASSERT_EQ(*x, x.begin());
 	ASSERT_EQ(*x.begin(), 5);
-	ASSERT_EQ(*x.rbegin(), 76);
 	ASSERT_EQ(x[0], 5);
 	ASSERT_EQ(x[1], 1);
 	ASSERT_EQ(x[2], 76);
@@ -94,7 +93,6 @@ TEST(containers, Array)
 	x.removeAt(0, 2);
 
 	ASSERT_EQ(x.getNumItems(), 1ull);
-	ASSERT_EQ(x.begin(), x.rbegin());
 	ASSERT_EQ(x[0], 76);
 
 	x.insert(0, 5, 6, 2);
@@ -489,16 +487,15 @@ TEST(containers, Set)
 	x.insert(3);
 
 	ASSERT_EQ(x.getSize(), 3ull);
-	ASSERT_NE(x.get(1), x.end());
-	ASSERT_EQ(x.get(0), x.end());
-	ASSERT_EQ(*x.get(1), 1);
-	ASSERT_EQ(*x.get(3), 3);
-	ASSERT_EQ(*x.get(10), 10);
-	ASSERT_EQ(x.begin(), x.get(1));
-	ASSERT_EQ(x.rbegin(), x.get(10));
-	ASSERT_TRUE(x.has(1));
-	ASSERT_TRUE(x.has(10));
-	ASSERT_FALSE(x.has(8));
+	ASSERT_NE(x.find(1), x.end());
+	ASSERT_EQ(x.find(0), x.end());
+	ASSERT_EQ(x.get(1), 1);
+	ASSERT_EQ(x.get(3), 3);
+	ASSERT_EQ(x.get(10), 10);
+	ASSERT_EQ(*x.begin(), x.get(1));
+	ASSERT_TRUE(x.contains(1));
+	ASSERT_TRUE(x.contains(10));
+	ASSERT_FALSE(x.contains(8));
 
 	y.insert(2);
 	y.insert(0);
@@ -507,30 +504,83 @@ TEST(containers, Set)
 	x |= y;
 
 	ASSERT_EQ(x.getSize(), 6ull);
-	ASSERT_TRUE(x.has(3));
-	ASSERT_TRUE(x.has(10));
-	ASSERT_TRUE(x.has(2));
+	ASSERT_TRUE(x.contains(3));
+	ASSERT_TRUE(x.contains(10));
+	ASSERT_TRUE(x.contains(2));
 
 	x &= y;
 
 	ASSERT_EQ(x.getSize(), y.getSize());
 	for (auto v : y)
 	{
-		ASSERT_TRUE(x.has(v));
-		ASSERT_EQ(*x.get(v), v);
+		ASSERT_TRUE(x.contains(v));
+		ASSERT_EQ(x.get(v), v);
 	}
 
 	z.insert(1);
 	z.insert(0);
 	z.insert(9);
 	z.insert(10);
-	x ^= z;
+	x -= z;
 
 	ASSERT_EQ(x.getSize(), 2ull);
-	ASSERT_TRUE(x.has(2));
-	ASSERT_TRUE(x.has(3));
-	ASSERT_FALSE(x.has(0));
-	ASSERT_FALSE(x.has(9));
+	ASSERT_TRUE(x.contains(2));
+	ASSERT_TRUE(x.contains(3));
+	ASSERT_FALSE(x.contains(0));
+	ASSERT_FALSE(x.contains(9));
+
+	// TODO: Test disjoint union operation
+	// TODO: Test non-assign set operations
+
+	Set<int32> i, j, k;
+
+	i.insert(1);
+	i.insert(3);
+	i.insert(5);
+	i.insert(6);
+
+	j.insert(3);
+	j.insert(4);
+	j.insert(6);
+	j.insert(10);
+
+	k.insert(1);
+	k.insert(2);
+	k.insert(3);
+	k.insert(4);
+
+	ASSERT_TRUE(i == i);
+	ASSERT_TRUE(j == j);
+	ASSERT_TRUE(k == k);
+	ASSERT_TRUE(i <= i);
+	ASSERT_TRUE(i >= i);
+	ASSERT_TRUE(j <= j);
+	ASSERT_TRUE(j >= j);
+	ASSERT_TRUE(k <= k);
+	ASSERT_TRUE(k >= k);
+	ASSERT_FALSE(i < i);
+	ASSERT_FALSE(i > i);
+	ASSERT_FALSE(j < j);
+	ASSERT_FALSE(j > j);
+	ASSERT_FALSE(k < k);
+	ASSERT_FALSE(k > k);
+	ASSERT_TRUE(i < (i | j));
+	ASSERT_TRUE(i > (i & j));
+	ASSERT_FALSE(i > (j & k));
+	ASSERT_TRUE(((i | j) - (i & j)) == (i ^ j));
+	ASSERT_TRUE(((i | k) - (i & k)) == (i ^ k));
+	ASSERT_TRUE(((j | k) - (j & k)) == (j ^ k));
+	ASSERT_TRUE(((i ^ j) & i) == (i - j));
+	ASSERT_TRUE(((i ^ k) & i) == (i - k));
+	ASSERT_TRUE(((j ^ k) & j) == (j - k));
+	ASSERT_FALSE(i.isDisjoint(j));
+	ASSERT_FALSE(i.isDisjoint(k));
+	ASSERT_FALSE(j.isDisjoint(k));
+	ASSERT_TRUE(i.isDisjoint(j - i));
+	ASSERT_TRUE(i.isDisjoint(k - i));
+	ASSERT_TRUE((i & j).isDisjoint(i ^ j));
+	ASSERT_TRUE((i & k).isDisjoint(i ^ k));
+	ASSERT_TRUE((j & k).isDisjoint(j ^ k));
 
 	SUCCEED();
 }
@@ -541,7 +591,6 @@ TEST(containers, Map)
 
 	ASSERT_EQ(x.getSize(), 0);
 	ASSERT_EQ(x.begin(), x.end());
-	ASSERT_EQ(x.rbegin(), x.rend());
 	ASSERT_EQ(x.find("sneppy"), x.end());
 
 	static char const* names[] = {

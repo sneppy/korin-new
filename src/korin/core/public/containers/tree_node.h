@@ -95,6 +95,8 @@ namespace Korin
 				ASSERT(parent != nullptr)
 				ASSERT(child != nullptr)
 				CHECK(child->parent == nullptr)
+				CHECK(child->left == nullptr)
+				CHECK(child->right == nullptr)
 
 				auto* const prev = parent->prev;
 

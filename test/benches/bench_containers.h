@@ -40,7 +40,7 @@ static void BM_containers_Korin_Map(benchmark::State& state)
 		for (int32 i = 0; i < numItems; ++i)
 		{
 			int32 r = rand() & 0xff;
-			map.insert(r, 0x1ull << (i & 0xf));
+			map.emplace(r, 0x1ull << (i & 0xf));
 		}
 
 		for (int32 i = 0; i < numItems; ++i)
@@ -86,7 +86,7 @@ static void BM_containers_Korin_Map2(benchmark::State& state)
 		for (int32 i = 0; i < numItems; ++i)
 		{
 			int32 nameIdx = rand() & 0xf;
-			map.insert(names[nameIdx], 0x1ull << (i & 0xf));
+			map.emplace(names[nameIdx], 0x1ull << (i & 0xf));
 		}
 
 		for (int32 i = 0; i < numItems; ++i)
