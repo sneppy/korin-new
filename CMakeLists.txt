@@ -6,12 +6,10 @@ project(korin CXX)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
-# Get project version from git tag
-include(GitUtils)
-get_git_tag(PROJECT_GIT_VERSION)
-
-string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" VERSION ${PROJECT_GIT_VERSION})
-message(STATUS "Project version: ${VERSION}")
+# Get project version from VERSION file
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" VERSION)
+string(REGEX MATCH "v?[0-9]+\\.[0-9]+\\.[0-9]+" KORIN_VERSION ${VERSION})
+message(STATUS "Korin version: ${KORIN_VERSION}")
 
 if(MSVC)
 	set(KORIN_BUILD_32_BITS OFF CACHE BOOL "If true build a 32-bit application - this option is disabled for MSVC")
@@ -51,6 +49,7 @@ else(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
 # Set build macros
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKORIN_VERSION=${KORIN_VERSION}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -DBUILD_DEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O1 -DBUILD_DEVELOPMENT")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -DBUILD_RELEASE")
