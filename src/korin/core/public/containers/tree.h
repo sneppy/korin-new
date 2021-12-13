@@ -853,7 +853,18 @@ namespace Korin
 
 				copySubtree(dst->left, src->left);
 			}
-			// FIXME: if dst->left remove it
+			else if (dst->left)
+			{
+				// We need to remove the left subtree
+				// First udpate prev node
+				dst->prev = TreeNode::getMin(dst->left)->prev;
+				if (dst->prev)
+					dst->prev->next = dst;
+
+				// Then destroy left subtree
+				destroySubtree(dst->left);
+				dst->left = nullptr;
+			}
 
 			if (src->right)
 			{
@@ -875,7 +886,18 @@ namespace Korin
 
 				copySubtree(dst->right, src->right);
 			}
-			// FIXME: if dst->right remove it
+			else if (dst->right)
+			{
+				// We need to remove the right subtree
+				// First udpate next node
+				dst->next = TreeNode::getMax(dst->right)->next;
+				if (dst->next)
+					dst->next->prev = dst;
+
+				// Then destroy left subtree
+				destroySubtree(dst->right);
+				dst->right = nullptr;
+			}
 		}
 
 		/**
