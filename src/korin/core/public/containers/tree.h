@@ -402,6 +402,7 @@ namespace Korin
 			{
 				// Clone tree structure
 				root = createNode(other.root->value);
+				root->color = other.root->color;
 				cloneSubtree(root, other.root);
 			}
 		}
