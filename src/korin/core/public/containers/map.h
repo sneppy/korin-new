@@ -62,13 +62,7 @@ namespace Korin
 		 */
 		FORCE_INLINE ValT& operator[](auto&& key)
 		{
-			auto it = tree.findOrInsert(key, [&key]() {
-
-				// Create pair with default value
-				return PairT{FORWARD(key), {}};
-			});
-
-			// Return the value
+			auto it = tree.findOrEmplace(FORWARD(key));
 			return it->second;
 		}
 
@@ -172,27 +166,25 @@ namespace Korin
 		}
 
 		/**
-		 * @brief Insert a new kv-pair in the map.
+		 * @brief Construct a new pair and insert
+		 * it into the map.
 		 *
-		 * @param key key of the pair
-		 * @param val value of the pair
-		 * @return iterator pointing to the inserted
-		 * kv-pair
-		 * @{
+		 * If a pair with the same key already
+		 * exists, replaces the pair value.
+		 *
+		 * @param createArgs arguments used to
+		 * construct the pair
+		 * @return iterator pointing to the
+		 * contructed pair, or to the existing
+		 * pair if duplicate
 		 */
-		FORCE_INLINE IteratorT insert(KeyT const& key, ValT const& val)
+		FORCE_INLINE IteratorT emplace(auto&& ...createArgs)
 		{
-			return tree.emplaceUnique(key, val);
+			return tree.emplaceUnique(FORWARD(createArgs)...);
 		}
-
-		FORCE_INLINE IteratorT insert(auto&& key, auto&& val)
-		{
-			return tree.emplaceUnique(FORWARD(key), FORWARD(val));
-		}
-		/** @} */
 
 		/**
-		 * @brief Insert a new kv-pair in the map.
+		 * @brief Insert a new pair in the map.
 		 *
 		 * @param pair the kv-pair to insert
 		 * @return iterator pointing to the inserted
@@ -200,12 +192,12 @@ namespace Korin
 		 */
 		FORCE_INLINE IteratorT insert(PairT const& pair)
 		{
-			return tree.insertUnique(pair);
+			return emplace(pair);
 		}
 
 		FORCE_INLINE IteratorT insert(PairT&& pair)
 		{
-			return tree.insertUnique(move(pair));
+			return emplace(move(pair));
 		}
 		/** @} */
 

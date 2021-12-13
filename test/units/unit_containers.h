@@ -8,13 +8,30 @@ using namespace Korin;
 #include "hal/platform_crt.h"
 #include "containers/containers.h"
 
-#define ARRAY_COUNT(x) (sizeof(x) / sizeof(*x))
+#define ARRAY_LEN(x) (sizeof(x) / sizeof(*x))
 
 template<typename ItT>
 static void shuffle(ItT begin, ItT end)
 {
 	// Shuffle
 }
+
+/* Set of names to use for testing. */
+static constexpr char const* names[] = {
+	"sneppy",
+	"lpraat",
+	"nondecibile",
+	"nicofico",
+	"lorecri96",
+	"camram01",
+	"SneppyRulez",
+	"sneppy13",
+	"korin",
+	"ZerryBlack95",
+	"sgherry",
+	"SamN884",
+	"set"
+};
 
 TEST(containers, Optional)
 {
@@ -69,7 +86,6 @@ TEST(containers, Array)
 	ASSERT_NE(*x, nullptr);
 	ASSERT_EQ(*x, x.begin());
 	ASSERT_EQ(*x.begin(), 5);
-	ASSERT_EQ(*x.rbegin(), 76);
 	ASSERT_EQ(x[0], 5);
 	ASSERT_EQ(x[1], 1);
 	ASSERT_EQ(x[2], 76);
@@ -77,7 +93,6 @@ TEST(containers, Array)
 	x.removeAt(0, 2);
 
 	ASSERT_EQ(x.getNumItems(), 1ull);
-	ASSERT_EQ(x.begin(), x.rbegin());
 	ASSERT_EQ(x[0], 76);
 
 	x.insert(0, 5, 6, 2);
@@ -472,16 +487,15 @@ TEST(containers, Set)
 	x.insert(3);
 
 	ASSERT_EQ(x.getSize(), 3ull);
-	ASSERT_NE(x.get(1), x.end());
-	ASSERT_EQ(x.get(0), x.end());
-	ASSERT_EQ(*x.get(1), 1);
-	ASSERT_EQ(*x.get(3), 3);
-	ASSERT_EQ(*x.get(10), 10);
-	ASSERT_EQ(x.begin(), x.get(1));
-	ASSERT_EQ(x.rbegin(), x.get(10));
-	ASSERT_TRUE(x.has(1));
-	ASSERT_TRUE(x.has(10));
-	ASSERT_FALSE(x.has(8));
+	ASSERT_NE(x.find(1), x.end());
+	ASSERT_EQ(x.find(0), x.end());
+	ASSERT_EQ(x.get(1), 1);
+	ASSERT_EQ(x.get(3), 3);
+	ASSERT_EQ(x.get(10), 10);
+	ASSERT_EQ(*x.begin(), x.get(1));
+	ASSERT_TRUE(x.contains(1));
+	ASSERT_TRUE(x.contains(10));
+	ASSERT_FALSE(x.contains(8));
 
 	y.insert(2);
 	y.insert(0);
@@ -490,30 +504,83 @@ TEST(containers, Set)
 	x |= y;
 
 	ASSERT_EQ(x.getSize(), 6ull);
-	ASSERT_TRUE(x.has(3));
-	ASSERT_TRUE(x.has(10));
-	ASSERT_TRUE(x.has(2));
+	ASSERT_TRUE(x.contains(3));
+	ASSERT_TRUE(x.contains(10));
+	ASSERT_TRUE(x.contains(2));
 
 	x &= y;
 
 	ASSERT_EQ(x.getSize(), y.getSize());
 	for (auto v : y)
 	{
-		ASSERT_TRUE(x.has(v));
-		ASSERT_EQ(*x.get(v), v);
+		ASSERT_TRUE(x.contains(v));
+		ASSERT_EQ(x.get(v), v);
 	}
 
 	z.insert(1);
 	z.insert(0);
 	z.insert(9);
 	z.insert(10);
-	x ^= z;
+	x -= z;
 
 	ASSERT_EQ(x.getSize(), 2ull);
-	ASSERT_TRUE(x.has(2));
-	ASSERT_TRUE(x.has(3));
-	ASSERT_FALSE(x.has(0));
-	ASSERT_FALSE(x.has(9));
+	ASSERT_TRUE(x.contains(2));
+	ASSERT_TRUE(x.contains(3));
+	ASSERT_FALSE(x.contains(0));
+	ASSERT_FALSE(x.contains(9));
+
+	// TODO: Test disjoint union operation
+	// TODO: Test non-assign set operations
+
+	Set<int32> i, j, k;
+
+	i.insert(1);
+	i.insert(3);
+	i.insert(5);
+	i.insert(6);
+
+	j.insert(3);
+	j.insert(4);
+	j.insert(6);
+	j.insert(10);
+
+	k.insert(1);
+	k.insert(2);
+	k.insert(3);
+	k.insert(4);
+
+	ASSERT_TRUE(i == i);
+	ASSERT_TRUE(j == j);
+	ASSERT_TRUE(k == k);
+	ASSERT_TRUE(i <= i);
+	ASSERT_TRUE(i >= i);
+	ASSERT_TRUE(j <= j);
+	ASSERT_TRUE(j >= j);
+	ASSERT_TRUE(k <= k);
+	ASSERT_TRUE(k >= k);
+	ASSERT_FALSE(i < i);
+	ASSERT_FALSE(i > i);
+	ASSERT_FALSE(j < j);
+	ASSERT_FALSE(j > j);
+	ASSERT_FALSE(k < k);
+	ASSERT_FALSE(k > k);
+	ASSERT_TRUE(i < (i | j));
+	ASSERT_TRUE(i > (i & j));
+	ASSERT_FALSE(i > (j & k));
+	ASSERT_TRUE(((i | j) - (i & j)) == (i ^ j));
+	ASSERT_TRUE(((i | k) - (i & k)) == (i ^ k));
+	ASSERT_TRUE(((j | k) - (j & k)) == (j ^ k));
+	ASSERT_TRUE(((i ^ j) & i) == (i - j));
+	ASSERT_TRUE(((i ^ k) & i) == (i - k));
+	ASSERT_TRUE(((j ^ k) & j) == (j - k));
+	ASSERT_FALSE(i.isDisjoint(j));
+	ASSERT_FALSE(i.isDisjoint(k));
+	ASSERT_FALSE(j.isDisjoint(k));
+	ASSERT_TRUE(i.isDisjoint(j - i));
+	ASSERT_TRUE(i.isDisjoint(k - i));
+	ASSERT_TRUE((i & j).isDisjoint(i ^ j));
+	ASSERT_TRUE((i & k).isDisjoint(i ^ k));
+	ASSERT_TRUE((j & k).isDisjoint(j ^ k));
 
 	SUCCEED();
 }
@@ -524,7 +591,6 @@ TEST(containers, Map)
 
 	ASSERT_EQ(x.getSize(), 0);
 	ASSERT_EQ(x.begin(), x.end());
-	ASSERT_EQ(x.rbegin(), x.rend());
 	ASSERT_EQ(x.find("sneppy"), x.end());
 
 	static char const* names[] = {
@@ -547,39 +613,39 @@ TEST(containers, Map)
 		"fryscan",
 		"ananasso"
 	};
-	static sizet values[ARRAY_COUNT(names)] = {};
+	static sizet values[ARRAY_LEN(names)] = {};
 	static sizet removeIdxs[] = {2, 5, 7, 9, 11, 13};
 
-	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
-		x.insert(names[i], 0x1ull << (i & 0xf));
+		x.emplace(names[i], 0x1ull << (i & 0xf));
 	}
 
-	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names));
-	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	ASSERT_EQ(x.getSize(), ARRAY_LEN(names));
+	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		auto it = x.find(names[i]);
 		ASSERT_NE(it, x.end());
-		ASSERT_EQ(it->first, names[i]); // Uses String::operator==
+		ASSERT_EQ(it->first, names[i]);
 		ASSERT_EQ(it->second.getSize(), 0x1ull << (i & 0xf));
 
 		const auto& obj = x[names[i]];
 		ASSERT_EQ(obj.getSize(), it->second.getSize());
 	}
 
-	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		values[i] = rand() & 0xff;
-		x.insert(names[i], values[i]);
+		x.emplace(names[i], values[i]);
 	}
 
-	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names));
-	for (int32 i = 0; i < ARRAY_COUNT(names); ++i)
+	ASSERT_EQ(x.getSize(), ARRAY_LEN(names));
+	for (int32 i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		ASSERT_EQ(x[names[i]].getSize(), values[i]);
 	}
 
-	for (int32 i = 0; i < ARRAY_COUNT(removeIdxs); ++i)
+	for (int32 i = 0; i < ARRAY_LEN(removeIdxs); ++i)
 	{
 		Testing::Object obj;
 		x.removeAt(names[removeIdxs[i]], obj);
@@ -587,8 +653,8 @@ TEST(containers, Map)
 		ASSERT_EQ(obj.getSize(), values[removeIdxs[i]]);
 	}
 
-	ASSERT_EQ(x.getSize(), ARRAY_COUNT(names) - ARRAY_COUNT(removeIdxs));
-	for (int32 i = 0; i < ARRAY_COUNT(removeIdxs); ++i)
+	ASSERT_EQ(x.getSize(), ARRAY_LEN(names) - ARRAY_LEN(removeIdxs));
+	for (int32 i = 0; i < ARRAY_LEN(removeIdxs); ++i)
 	{
 		auto it = x.find(names[removeIdxs[i]]);
 		ASSERT_EQ(it, x.end());
@@ -598,5 +664,153 @@ TEST(containers, Map)
 
 	for (auto it = x.begin(); it != x.end(); it = x.remove(it));
 
+	SUCCEED();
+}
+
+TEST(containers, HashMap)
+{
+	HashMap<String, Testing::Object> m;
+
+	ASSERT_EQ(m.getSize(), 0);
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.emplace(names[i], i);
+		ASSERT_EQ(it->first, names[i]);
+		ASSERT_EQ(it->second.getSize(), i);
+	}
+	ASSERT_EQ(m.getSize(), ARRAY_LEN(names));
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.find(names[i]);
+		ASSERT_NE(it, m.end());
+		ASSERT_EQ(it->first, names[i]);
+		ASSERT_EQ(it->second.getSize(), i);
+	}
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.find(names[i]);
+		ASSERT_EQ(m.emplace(names[i], i), it);
+	}
+	ASSERT_EQ(m.getSize(), ARRAY_LEN(names));
+
+	m.clear();
+
+	ASSERT_EQ(m.getSize(), 0);
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.find(names[i]);
+		ASSERT_EQ(it, m.end());
+	}
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		ASSERT_EQ(m[names[i]].getSize(), Testing::Object{}.getSize());
+	}
+
+	m.clear();
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.insert({names[i], i});
+		ASSERT_EQ(it->first, names[i]);
+		ASSERT_EQ(it->second.getSize(), i);
+	}
+	ASSERT_EQ(m.getSize(), ARRAY_LEN(names));
+
+	for (int i = 0; i < ARRAY_LEN(names); i += 2)
+	{
+		auto it = m.find(names[i]);
+		m.remove(it);
+	}
+
+	ASSERT_EQ(m.getSize(), ARRAY_LEN(names) / 2);
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.find(names[i]);
+		if (i & 0x1)
+		{
+			ASSERT_NE(it, m.end());
+			m.remove(it);
+		}
+		else
+		{
+			ASSERT_EQ(it, m.end());
+		}
+	}
+	ASSERT_EQ(m.getSize(), 0);
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.emplace(names[i], i);
+	}
+
+	{
+		int i = 0;
+		for (auto it = m.begin(); it != m.end(); it = m.remove(it)) i++;
+		ASSERT_EQ(i, ARRAY_LEN(names));
+	}
+	ASSERT_EQ(m.getSize(), 0);
+
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = m.emplace(names[i], i);
+	}
+	auto n{m};
+
+	ASSERT_EQ(n.getSize(), m.getSize());
+	for (auto const& v : m)
+	{
+		auto it = n.find(v.first);
+		ASSERT_NE(it, n.end());
+		ASSERT_EQ(it->first, v.first);
+		ASSERT_EQ(it->second.getSize(), v.second.getSize());
+	}
+
+	auto o{move(n)};
+
+	ASSERT_EQ(o.getSize(), m.getSize());
+	for (auto const& v : m)
+	{
+		auto it = o.find(v.first);
+		ASSERT_NE(it, o.end());
+		ASSERT_EQ(it->first, v.first);
+		ASSERT_EQ(it->second.getSize(), v.second.getSize());
+	}
+
+	new (&n) decltype(m){m};
+	n = o;
+
+	ASSERT_EQ(n.getSize(), o.getSize());
+	for (auto const& v : o)
+	{
+		auto it = n.find(v.first);
+		ASSERT_NE(it, n.end());
+		ASSERT_EQ(it->first, v.first);
+		ASSERT_EQ(it->second.getSize(), v.second.getSize());
+	}
+
+	for (int i = 0; i < ARRAY_LEN(names); i += 2)
+	{
+		auto it = n.find(names[i]);
+		n.remove(it);
+	}
+
+	o = move(n);
+
+	ASSERT_EQ(o.getSize(), ARRAY_LEN(names) / 2);
+	for (int i = 0; i < ARRAY_LEN(names); ++i)
+	{
+		auto it = o.find(names[i]);
+		ASSERT_TRUE((i & 0x1 && it != o.end()) || (!(i & 0x1) && it == o.end()));
+	}
+
+	SUCCEED();
+}
+
+TEST(containers, HashSet)
+{
+	// TODO
 	SUCCEED();
 }

@@ -95,6 +95,8 @@ namespace Korin
 				ASSERT(parent != nullptr)
 				ASSERT(child != nullptr)
 				CHECK(child->parent == nullptr)
+				CHECK(child->left == nullptr)
+				CHECK(child->right == nullptr)
 
 				auto* const prev = parent->prev;
 
@@ -363,7 +365,7 @@ namespace Korin
 			/**
 			 * @brief Repair RB tree structure after
 			 * removing a node.
-			 * 
+			 *
 			 * @tparam BaseT the base type of the nodes
 			 * @param node the replacement node
 			 * @param parent the parent of the node
@@ -569,7 +571,7 @@ namespace Korin
 		 * @{
 		 */
 		template<typename BaseT, typename PolicyT>
-		BinaryNodeBase<BaseT> const* find(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
+		BinaryNodeBase<BaseT>* find(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
 		{
 			while (root)
 			{
@@ -595,11 +597,9 @@ namespace Korin
 		}
 
 		template<typename BaseT, typename PolicyT>
-		FORCE_INLINE BinaryNodeBase<BaseT>* find(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
+		FORCE_INLINE BinaryNodeBase<BaseT> const* find(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
 		{
-			// TODO: Consider the other way around?
-			// Like this, the node passed to the policy is const
-			return const_cast<BinaryNodeBase<BaseT>*>(find(const_cast<BinaryNodeBase<BaseT> const*>(root), FORWARD(policy)));
+			return find(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
 		}
 		/** @} */
 
@@ -621,9 +621,9 @@ namespace Korin
 		 * @{
 		 */
 		template<typename BaseT, typename PolicyT>
-		BinaryNodeBase<BaseT> const* bisectLeft(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
+		BinaryNodeBase<BaseT>* bisectLeft(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
 		{
-			BinaryNodeBase<BaseT> const* parent = nullptr;
+			BinaryNodeBase<BaseT>* parent = nullptr;
 			while (root)
 			{
 				parent = root;
@@ -641,9 +641,9 @@ namespace Korin
 		}
 
 		template<typename BaseT, typename PolicyT>
-		FORCE_INLINE BinaryNodeBase<BaseT>* bisectLeft(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
+		FORCE_INLINE BinaryNodeBase<BaseT> const* bisectLeft(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
 		{
-			return const_cast<BinaryNodeBase<BaseT>*>(bisectLeft(const_cast<BinaryNodeBase<BaseT> const*>(root), FORWARD(policy)));
+			return bisectLeft(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
 		}
 		/** @} */
 
@@ -665,9 +665,9 @@ namespace Korin
 		 * @{
 		 */
 		template<typename BaseT, typename PolicyT>
-		BinaryNodeBase<BaseT> const* bisectRight(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
+		BinaryNodeBase<BaseT>* bisectRight(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
 		{
-			BinaryNodeBase<BaseT> const* parent = nullptr;
+			BinaryNodeBase<BaseT>* parent = nullptr;
 			while (root)
 			{
 				parent = root;
@@ -685,9 +685,129 @@ namespace Korin
 		}
 
 		template<typename BaseT, typename PolicyT>
-		FORCE_INLINE BinaryNodeBase<BaseT>* bisectRight(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
+		FORCE_INLINE BinaryNodeBase<BaseT> const* bisectRight(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
 		{
-			return const_cast<BinaryNodeBase<BaseT>*>(bisectRight(const_cast<BinaryNodeBase<BaseT> const*>(root), FORWARD(policy)));
+			return bisectRight(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
+		}
+		/** @} */
+
+		/**
+		 * @brief Returns a ptr to the first node
+		 * (from left to right) whose value is
+		 * greater or equal, according to the given
+		 * policy.
+		 *
+		 * @tparam BaseT the base type of the nodes
+		 * @tparam PolicyT the type of the policy
+		 * @param root the root of the tree
+		 * @param policy the policy used for
+		 * branching
+		 * @return ptr to lower bound
+		 * @{
+		 */
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT>* lowerBound(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
+		{
+			BinaryNodeBase<BaseT>* lb = bisectLeft(root, FORWARD(policy));
+			if (policy(lb) > 0)
+			{
+				// Set to next
+				lb = lb->next;
+			}
+
+			return lb;
+		}
+
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT> const* lowerBound(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
+		{
+			return lowerBound(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
+		}
+		/** @} */
+
+		/**
+		 * @brief Much like @c lowerBound() but returns
+		 * the first node whose value is less or equal,
+		 * according to the given policy.
+		 *
+		 * @tparam BaseT the base type of the nodes
+		 * @tparam PolicyT the type of the policy
+		 * @param root the root of the tree
+		 * @param policy the policy used for
+		 * branching
+		 * @return ptr to upper bound
+		 * @{
+		 */
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT>* upperBound(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
+		{
+			BinaryNodeBase<BaseT>* ub = bisectRight(root, FORWARD(policy));
+			if (policy(ub) < 0)
+			{
+				// Set to next
+				ub = ub->prev;
+			}
+
+			return ub;
+		}
+
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT> const* upperBound(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
+		{
+			return upperBound(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
+		}
+		/** @} */
+
+		/**
+		 * @brief Search the tree for a node using the
+		 * given policy.
+		 *
+		 * If the node is found this function returns
+		 * the ptr to the node and to its parent.
+		 *
+		 * Otherwise ti returns null and a ptr to the
+		 * last visited node.
+		 *
+		 * @tparam BaseT the base type of the nodes
+		 * @tparam PolicyT the type of the policy
+		 * @param root the root node of the tree
+		 * @param policy the policy used to branch
+		 * @param parent return a ptr to the parent of
+		 * the node or to the last visited node (could
+		 * be null if tree is empty)
+		 * @return ptr to the node found, null otherwise
+		 * @{
+		 */
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT>* findOrBisect(BinaryNodeBase<BaseT>* root, PolicyT&& policy, BinaryNodeBase<BaseT>*& parent)
+		{
+			while (root)
+			{
+				int32 cmp = policy(root);
+				if (cmp < 0)
+				{
+					parent = root;
+					root = root->left;
+				}
+				else if (cmp > 0)
+				{
+					parent = root;
+					root = root->right;
+				}
+				else
+				{
+					// Node found
+					return root;
+				}
+			}
+
+			return root;
+		}
+
+		template<typename BaseT, typename PolicyT>
+		FORCE_INLINE BinaryNodeBase<BaseT> const* findOrBisect(BinaryNodeBase<BaseT> const* root, PolicyT&& policy, BinaryNodeBase<BaseT> const*& parent)
+		{
+			return findOrBisect(const_cast<BinaryNodeBase<BaseT>>(root), FORWARD(policy), const_cast<BinaryNodeBase<BaseT>*&>(parent));
 		}
 		/** @} */
 
@@ -727,31 +847,139 @@ namespace Korin
 		}
 
 		/**
+		 * @brief Inserts the given node in the tree
+		 * spawning from the root node.
+		 *
+		 * If a node with the same key already exists,
+		 * it replaces its value.
+		 *
+		 * @tparam BaseT the base type of the nodes
+		 * @tparam PolicyT the type of the policy
+		 * @param root the root of the tree
+		 * @param node the node to insert; also return
+		 * the inserted node or the existing node if
+		 * duplicate
+		 * @param policy the policy used for branching
+		 * @return the new root of the tree
+		 */
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT>* insertUnique(BinaryNodeBase<BaseT>* root, BinaryNodeBase<BaseT>*& node, PolicyT&& policy)
+		{
+			ASSERT(node != nullptr)
+
+			BinaryNodeBase<BaseT>* parent = nullptr;
+			if (auto* it = findOrBisect(root, FORWARD(policy), parent))
+			{
+				// Node found, replace value and return
+				it->value = move(node->value);
+				node = it;
+
+				return root;
+			}
+
+			// Node was not found, insert node
+			if (parent)
+			{
+				// Insert in tree, otherwise it's new root.
+				// Latter case is automatically handled by repair mechanism
+				if (policy(parent) < 0)
+				{
+					Impl::insertLeft(parent, node);
+				}
+				else
+				{
+					Impl::insertRight(parent, node);
+				}
+			}
+
+			// Repair insertion
+			Impl::repair(node);
+
+			// Return new root
+			return getRoot(node);
+		}
+
+		/**
+		 * @brief Insert the node in the tree spawning
+		 * from the root node.
+		 *
+		 * If a node with the same key already exists,
+		 * this function does nothing.
+		 *
+		 * @tparam BaseT the base type of the nodes
+		 * @tparam PolicyT the type of the policy
+		 * @param root the root node of the tree
+		 * @param node the node to insert
+		 * @param policy the policy used for branching
+		 * @return the new root of the tree
+		 */
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT>* findOrInsert(BinaryNodeBase<BaseT>* root, BinaryNodeBase<BaseT>*& node, PolicyT&& policy)
+		{
+			ASSERT(node != nullptr)
+
+			int32 cmp = 0;
+			BinaryNodeBase<BaseT>* parent = nullptr;
+			if (auto* it = findOrBisect(root, FORWARD(policy), parent))
+			{
+				// Node exists
+				node = it;
+				return root;
+			}
+
+			// Node was not found, insert node
+			if (parent)
+			{
+				// Insert in tree, otherwise it's new root.
+				// Latter case is automatically handled by repair mechanism
+				if (policy(parent) < 0)
+				{
+					Impl::insertLeft(parent, node);
+				}
+				else
+				{
+					Impl::insertRight(parent, node);
+				}
+			}
+
+			// Repair insertion
+			Impl::repair(node);
+
+			// Return new root
+			return getRoot(node);
+		}
+
+		/**
 		 * @brief Remove the node from the tree.
-		 * 
-		 * The node that is actually evicted from
-		 * the tree is returned in the first
-		 * parameter
-		 * 
+		 *
+		 * The node that is actually evicted from the tree
+		 * is returned in the first parameter
+		 *
 		 * @tparam BaseT the base type of the node
-		 * @param node node to remove; returns ptr
-		 * to node actually evicted
+		 * @param node node to remove; returns ptr to node
+		 * actually evicted
+		 * @param valid if given, returns a ptr to the next
+		 * valid node, if different from node's next
+		 * (node's next may actually be evicted)
 		 * @return ptr to new root
 		 * @return nullptr if empty
+		 * @{
 		 */
 		template<typename BaseT>
-		BinaryNodeBase<BaseT>* remove(BinaryNodeBase<BaseT>*& node)
+		BinaryNodeBase<BaseT>* remove(BinaryNodeBase<BaseT>*& node, BinaryNodeBase<BaseT>*& valid)
 		{
 			ASSERT(node != nullptr)
 
 			auto* next = node->next;
-
 			if (node->right && node->left)
 			{
 				// Swap node with his next
 				Impl::swapNodes(node, next);
 				swap(node, next);
 			}
+
+			// Set next valid node
+			valid = next;
 
 			// Replace node with left or right child
 			// or simply evict from tree
@@ -778,5 +1006,13 @@ namespace Korin
 			// Tree is empty
 			return nullptr;
 		}
+
+		template<typename BaseT>
+		FORCE_INLINE BinaryNodeBase<BaseT>* remove(BinaryNodeBase<BaseT>*& node)
+		{
+			BinaryNodeBase<BaseT>* tmp = nullptr;
+			return remove(node, tmp);
+		}
+		/** @} */
 	} // namespace TreeNode
 } // namespace Korin

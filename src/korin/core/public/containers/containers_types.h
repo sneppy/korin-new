@@ -18,15 +18,20 @@ namespace Korin
 	template<typename, typename>           class Tree;
 	template<typename, typename>           class Set;
 	template<typename, typename, typename> class Map;
-	template<typename>                     class HashMap;
-	template<typename>                     class HashSet;
+	template<typename, typename, typename> class HashMap;
+	template<typename, typename>           class HashSet;
 	template<typename>                     class StringBase;
 
 	/**
 	 * @brief String type with 8-bit wide characters.
 	 */
 	using String = StringBase<ansichar>;
+} // namespace Korin
 
+#include "hash_types.h"
+
+namespace Korin
+{
 	/**
 	 * @brief Choose an appropriate default policy
 	 * for the given type.
@@ -43,6 +48,22 @@ namespace Korin
 	template<typename T, typename PolicyT = typename ChoosePolicy<T>::Type>                      class Tree;
 	template<typename T, typename PolicyT = typename ChoosePolicy<T>::Type>                      class Set;
 	template<typename KeyT, typename ValT, typename PolicyT = typename ChoosePolicy<KeyT>::Type> class Map;
+
+	/**
+	 * @brief Helper to choose an appropriate hash
+	 * policy for the given type.
+	 *
+	 * @tparam T the type for which to choose the
+	 * policy
+	 */
+	template<typename T>
+	struct ChooseHashPolicy
+	{
+		using Type = DefaultHashPolicy;
+	};
+
+	template<typename T, typename HashPolicyT = typename ChooseHashPolicy<T>::Type>                      class HashSet;
+	template<typename KeyT, typename ValT, typename HashPolicyT = typename ChooseHashPolicy<KeyT>::Type> class HashMap;
 
 	/**
 	 * @brief Returns the size of a given container.

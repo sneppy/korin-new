@@ -8,4 +8,6 @@
 #include "tree.h"
 #include "set.h"
 #include "map.h"
+#include "hash_set.h"
+#include "hash_map.h"
 #include "string.h"

@@ -402,6 +402,7 @@ namespace Korin
 			{
 				// Clone tree structure
 				root = createNode(other.root->value);
+				root->color = other.root->color;
 				cloneSubtree(root, other.root);
 			}
 		}
@@ -434,6 +435,7 @@ namespace Korin
 				{
 					// Create root node
 					root = createNode(other.root->value);
+					root->color = other.root->color;
 				}
 
 				// Copy over existing tree structure
@@ -517,49 +519,58 @@ namespace Korin
 		}
 		/** @} */
 
-		// TODO
-		FORCE_INLINE IteratorT begin(auto const& key);
+		/**
+		 * @brief Returns an iterator pointing to
+		 * the first item with the given key.
+		 *
+		 * If no item is found, returns the end
+		 * iterator.
+		 *
+		 * @param key key used to find item
+		 * @return iterator pointing to first item
+		 * or end iterator
+		 * @{
+		 */
+		FORCE_INLINE IteratorT begin(auto const& key)
+		{
+			NodeT* lb = TreeNode::lowerBound(root, [key](const auto* node) {
+
+				return PolicyT{}(key, node->value);
+			});
+			return {lb, this};
+		}
+
 		FORCE_INLINE ConstIteratorT begin(auto const& key) const
 		{
 			return const_cast<Tree*>(this)->begin();
 		}
-
-		FORCE_INLINE IteratorT end(auto const& key);
-		FORCE_INLINE ConstIteratorT end(auto const& key) const
-		{
-			return const_cast<Tree*>(this)->end(key);
-		}
-
-		/**
-		 * @brief Returns an iterator that points to
-		 * the max/rightmost node of the tree.
-		 * @{
-		 */
-		FORCE_INLINE IteratorT rbegin()
-		{
-			NodeT* max = root ? TreeNode::getMax(root) : root;
-			return {max, this};
-		}
-
-		FORCE_INLINE ConstIteratorT rbegin() const
-		{
-			return const_cast<Tree*>(this)->rbegin();
-		}
 		/** @} */
 
 		/**
-		 * @brief Returns an iterator that points before
-		 * the min/leftmost node of the tree.
+		 * @brief Returns an iterator pointing
+		 * beyond the last item with the given
+		 * key.
+		 *
+		 * If not such item exists, returns the
+		 * end iterator.
+		 *
+		 * @param key the key used to search
+		 * @return iterator pointing beyond the
+		 * last item, or end iterator
 		 * @{
 		 */
-		FORCE_INLINE IteratorT rend()
+		FORCE_INLINE IteratorT end(auto const& key)
 		{
-			return {nullptr, this};
+			NodeT* ub = TreeNode::upperBound(root, [key](const auto* node) {
+
+				return PolicyT{}(key, node->value);
+			});
+			return {ub ? ub->next : ub, this};
 		}
 
-		FORCE_INLINE ConstIteratorT rend() const
+		FORCE_INLINE ConstIteratorT end(auto const& key) const
 		{
-			return const_cast<Tree*>(this)->rend();
+			return const_cast<Tree*>(this)->end(key);
 		}
 		/** @} */
 
@@ -629,69 +640,45 @@ namespace Korin
 
 		/**
 		 * @brief Construct a new node with the given
-		 * arguments. If a similar node already exists
-		 * (i.e. matching keys), it replaces its value.
+		 * arguments.
+		 *
+		 * If a node with the same key exists, that
+		 * node is replaced with the new one.
 		 *
 		 * @param createArgs arguments used to construct
 		 * the node
-		 * @return iterator pointing to new node or to
-		 * existing node
+		 * @return iterator pointing to constructed node
 		 */
 		IteratorT emplaceUnique(auto&& ...createArgs)
 		{
-			// TODO: Could this function be a TreeNode function?
+			// Create the new node
+			NodeT* node = createNode(FORWARD(createArgs)...);
+			NodeT* found = node;
+			root = TreeNode::insertUnique(root, found, [node](auto const* other) {
 
-			// We need to instantiate the value first
-			T value{FORWARD(createArgs)...};
-
-			auto* parent = root;
-			auto* node = TreeNode::find(root, [&value, &parent](auto const* node) {
-
-				parent = const_cast<NodeT*>(node);
-				return PolicyT{}(value, node->value);
+				return PolicyT{}(node->value, other->value);
 			});
 
-			if (node)
+			if (found != node)
 			{
-				// Node exists, replace its value
-				node->value = move(value);
+				// Existing node replaced, destroy new node
+				destroyNode(node);
 			}
 			else
-			{
-				// Create new node
-				node = createNode(move(value));
+				// Update number of nodes after insertion
 				numNodes++;
 
-				if (parent)
-				{
-					// Set as child
-					if (PolicyT{}(node->value, parent->value) < 0)
-					{
-						TreeNode::Impl::insertLeft(parent, node);
-					}
-					else
-					{
-						TreeNode::Impl::insertRight(parent, node);
-					}
-				}
-
-				// Repair the tree
-				TreeNode::Impl::repair(node);
-
-				// Get new root
-				root = TreeNode::getRoot(node);
-			}
-
-			return {node, this};
+			return {found, this};
 		}
 
 		/**
-		 * @brief Insert a new node with the given
-		 * value if not duplicate exists.
+		 * @brief Insert a new node with the given value.
+		 *
+		 * If a node with the same key exists, the
+		 * existing node is replaced with the new one.
 		 *
 		 * @param value the value to insert
-		 * @return iterator pointing to new node
-		 * or to existing node
+		 * @return iterator pointing to inserted node
 		 * @{
 		 */
 		FORCE_INLINE IteratorT insertUnique(T const& value)
@@ -706,63 +693,41 @@ namespace Korin
 		/** @} */
 
 		/**
-		 * @brief Similar to @c insertUnique, but doesn't
-		 * replace the value if node is duplicate. If node
-		 * already exists, the node is not inserted and
-		 * the existing node is not modified.
+		 * @brief Construct a new item and inserts it into
+		 * the tree.
 		 *
-		 * The function also used a factory lambda, to avoid
-		 * allocating the new node prematurely.
+		 * If an item with the same key already exists, the
+		 * item is not inserted and an iterator pointing to
+		 * the existing item is returned instead. Note that
+		 * the item is constructed in any case, so it will
+		 * be constructed and destroyed immediately if a
+		 * duplicate exists.
 		 *
-		 * @tparam FactoryT the factory function to generate
-		 * the value to insert
-		 * @param key key used to find existing node
-		 * @param factory factory function that reutrns the
-		 * new value
+		 * @param createArgs the arguments used to contruct
+		 * the item
 		 * @return iterator pointing to new node or to
 		 * existing node
 		 */
-		template<typename FactoryT>
-		FORCE_INLINE IteratorT findOrInsert(auto const& key, FactoryT&& factory)
+		IteratorT findOrEmplace(auto&& ...createArgs)
 		{
-			// TODO: Could this function be a TreeNode function?
+			// Create new node, will de destroyed if key already exists
+			NodeT* node = createNode(FORWARD(createArgs)...);
+			NodeT* found = node;
+			root = TreeNode::findOrInsert(root, found, [node](auto const* other) {
 
-			// Find node and closest parent
-			auto* parent = root;
-			auto* node = TreeNode::find(root, [&key, &parent](auto const* node) {
-
-				parent = const_cast<NodeT*>(node);
-				return PolicyT{}(key, node->value);
+				return PolicyT{}(node->value, other->value);
 			});
 
-			// Much like insert unique, but only inserts if node not found
-			if (!node)
+			if (found != node)
 			{
-				// Create new node
-				node = createNode(factory());
+				// Node already exists, destroy new node
+				destroyNode(node);
+			}
+			else
+				// Update number of nodes
 				numNodes++;
 
-				if (parent)
-				{
-					// Set as child
-					if (PolicyT{}(node->value, parent->value) < 0)
-					{
-						TreeNode::Impl::insertLeft(parent, node);
-					}
-					else
-					{
-						TreeNode::Impl::insertRight(parent, node);
-					}
-				}
-
-				// Repair the tree
-				TreeNode::Impl::repair(node);
-
-				// Get new root
-				root = TreeNode::getRoot(node);
-			}
-
-			return {node, this};
+			return {found, this};
 		}
 
 		/**
@@ -781,13 +746,7 @@ namespace Korin
 
 			NodeT* node = it.node;
 			NodeT* next = node->next;
-			root = TreeNode::remove(node);
-
-			if (node != it.node)
-			{
-				// We removed the successor
-				next = it.node;
-			}
+			root = TreeNode::remove(node, next);
 
 			destroyNode(node);
 			numNodes--;
@@ -813,7 +772,8 @@ namespace Korin
 		FORCE_INLINE NodeT* createNode(auto&& ...createArgs)
 		{
 			// TODO: Use allocator
-			return new(gMalloc->malloc(sizeof(NodeT))) NodeT{FORWARD(createArgs)...};
+			void* mem = gMalloc->malloc(sizeof(NodeT));
+			return new(mem) NodeT{{FORWARD(createArgs)...}};
 		}
 
 		/**
@@ -893,7 +853,18 @@ namespace Korin
 
 				copySubtree(dst->left, src->left);
 			}
-			// FIXME: if dst->left remove it
+			else if (dst->left)
+			{
+				// We need to remove the left subtree
+				// First udpate prev node
+				dst->prev = TreeNode::getMin(dst->left)->prev;
+				if (dst->prev)
+					dst->prev->next = dst;
+
+				// Then destroy left subtree
+				destroySubtree(dst->left);
+				dst->left = nullptr;
+			}
 
 			if (src->right)
 			{
@@ -915,7 +886,18 @@ namespace Korin
 
 				copySubtree(dst->right, src->right);
 			}
-			// FIXME: if dst->right remove it
+			else if (dst->right)
+			{
+				// We need to remove the right subtree
+				// First udpate next node
+				dst->next = TreeNode::getMax(dst->right)->next;
+				if (dst->next)
+					dst->next->prev = dst;
+
+				// Then destroy left subtree
+				destroySubtree(dst->right);
+				dst->right = nullptr;
+			}
 		}
 
 		/**
