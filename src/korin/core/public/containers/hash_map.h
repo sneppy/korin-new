@@ -68,9 +68,9 @@ namespace Korin
 		 * @return the existing value corresponding
 		 * to the key or a new default value
 		 */
-		FORCE_INLINE ValT& operator[](auto const& key)
+		FORCE_INLINE ValT& operator[](auto&& key)
 		{
-			IteratorT it = SuperT::findOrEmplace(key);
+			IteratorT it = SuperT::findOrEmplace(FORWARD(key));
 			return it->second;
 		}
 
