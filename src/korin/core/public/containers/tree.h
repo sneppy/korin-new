@@ -435,6 +435,7 @@ namespace Korin
 				{
 					// Create root node
 					root = createNode(other.root->value);
+					root->color = other.root->color;
 				}
 
 				// Copy over existing tree structure
