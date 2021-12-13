@@ -517,49 +517,58 @@ namespace Korin
 		}
 		/** @} */
 
-		// TODO
-		FORCE_INLINE IteratorT begin(auto const& key);
+		/**
+		 * @brief Returns an iterator pointing to
+		 * the first item with the given key.
+		 *
+		 * If no item is found, returns the end
+		 * iterator.
+		 *
+		 * @param key key used to find item
+		 * @return iterator pointing to first item
+		 * or end iterator
+		 * @{
+		 */
+		FORCE_INLINE IteratorT begin(auto const& key)
+		{
+			NodeT* lb = TreeNode::lowerBound(root, [key](const auto* node) {
+
+				return PolicyT{}(key, node->value);
+			});
+			return {lb, this};
+		}
+
 		FORCE_INLINE ConstIteratorT begin(auto const& key) const
 		{
 			return const_cast<Tree*>(this)->begin();
 		}
-
-		FORCE_INLINE IteratorT end(auto const& key);
-		FORCE_INLINE ConstIteratorT end(auto const& key) const
-		{
-			return const_cast<Tree*>(this)->end(key);
-		}
-
-		/**
-		 * @brief Returns an iterator that points to
-		 * the max/rightmost node of the tree.
-		 * @{
-		 */
-		FORCE_INLINE IteratorT rbegin()
-		{
-			NodeT* max = root ? TreeNode::getMax(root) : root;
-			return {max, this};
-		}
-
-		FORCE_INLINE ConstIteratorT rbegin() const
-		{
-			return const_cast<Tree*>(this)->rbegin();
-		}
 		/** @} */
 
 		/**
-		 * @brief Returns an iterator that points before
-		 * the min/leftmost node of the tree.
+		 * @brief Returns an iterator pointing
+		 * beyond the last item with the given
+		 * key.
+		 *
+		 * If not such item exists, returns the
+		 * end iterator.
+		 *
+		 * @param key the key used to search
+		 * @return iterator pointing beyond the
+		 * last item, or end iterator
 		 * @{
 		 */
-		FORCE_INLINE IteratorT rend()
+		FORCE_INLINE IteratorT end(auto const& key)
 		{
-			return {nullptr, this};
+			NodeT* ub = TreeNode::upperBound(root, [key](const auto* node) {
+
+				return PolicyT{}(key, node->value);
+			});
+			return {ub ? ub->next : ub, this};
 		}
 
-		FORCE_INLINE ConstIteratorT rend() const
+		FORCE_INLINE ConstIteratorT end(auto const& key) const
 		{
-			return const_cast<Tree*>(this)->rend();
+			return const_cast<Tree*>(this)->end(key);
 		}
 		/** @} */
 

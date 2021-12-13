@@ -597,8 +597,6 @@ namespace Korin
 		template<typename BaseT, typename PolicyT>
 		FORCE_INLINE BinaryNodeBase<BaseT> const* find(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
 		{
-			// TODO: Consider the other way around?
-			// Like this, the node passed to the policy is const
 			return find(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
 		}
 		/** @} */
@@ -688,6 +686,73 @@ namespace Korin
 		FORCE_INLINE BinaryNodeBase<BaseT> const* bisectRight(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
 		{
 			return bisectRight(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
+		}
+		/** @} */
+
+		/**
+		 * @brief Returns a ptr to the first node
+		 * (from left to right) whose value is
+		 * greater or equal, according to the given
+		 * policy.
+		 *
+		 * @tparam BaseT the base type of the nodes
+		 * @tparam PolicyT the type of the policy
+		 * @param root the root of the tree
+		 * @param policy the policy used for
+		 * branching
+		 * @return ptr to lower bound
+		 * @{
+		 */
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT>* lowerBound(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
+		{
+			BinaryNodeBase<BaseT>* lb = bisectLeft(root, FORWARD(policy));
+			if (policy(lb) > 0)
+			{
+				// Set to next
+				lb = lb->next;
+			}
+
+			return lb;
+		}
+
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT> const* lowerBound(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
+		{
+			return lowerBound(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
+		}
+		/** @} */
+
+		/**
+		 * @brief Much like @c lowerBound() but returns
+		 * the first node whose value is less or equal,
+		 * according to the given policy.
+		 *
+		 * @tparam BaseT the base type of the nodes
+		 * @tparam PolicyT the type of the policy
+		 * @param root the root of the tree
+		 * @param policy the policy used for
+		 * branching
+		 * @return ptr to upper bound
+		 * @{
+		 */
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT>* upperBound(BinaryNodeBase<BaseT>* root, PolicyT&& policy)
+		{
+			BinaryNodeBase<BaseT>* ub = bisectRight(root, FORWARD(policy));
+			if (policy(ub) < 0)
+			{
+				// Set to next
+				ub = ub->prev;
+			}
+
+			return ub;
+		}
+
+		template<typename BaseT, typename PolicyT>
+		BinaryNodeBase<BaseT> const* upperBound(BinaryNodeBase<BaseT> const* root, PolicyT&& policy)
+		{
+			return upperBound(const_cast<BinaryNodeBase<BaseT>*>(root), FORWARD(policy));
 		}
 		/** @} */
 
