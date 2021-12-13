@@ -950,29 +950,34 @@ namespace Korin
 		/**
 		 * @brief Remove the node from the tree.
 		 *
-		 * The node that is actually evicted from
-		 * the tree is returned in the first
-		 * parameter
+		 * The node that is actually evicted from the tree
+		 * is returned in the first parameter
 		 *
 		 * @tparam BaseT the base type of the node
-		 * @param node node to remove; returns ptr
-		 * to node actually evicted
+		 * @param node node to remove; returns ptr to node
+		 * actually evicted
+		 * @param valid if given, returns a ptr to the next
+		 * valid node, if different from node's next
+		 * (node's next may actually be evicted)
 		 * @return ptr to new root
 		 * @return nullptr if empty
+		 * @{
 		 */
 		template<typename BaseT>
-		BinaryNodeBase<BaseT>* remove(BinaryNodeBase<BaseT>*& node)
+		BinaryNodeBase<BaseT>* remove(BinaryNodeBase<BaseT>*& node, BinaryNodeBase<BaseT>*& valid)
 		{
 			ASSERT(node != nullptr)
 
 			auto* next = node->next;
-
 			if (node->right && node->left)
 			{
 				// Swap node with his next
 				Impl::swapNodes(node, next);
 				swap(node, next);
 			}
+
+			// Set next valid node
+			valid = next;
 
 			// Replace node with left or right child
 			// or simply evict from tree
@@ -999,5 +1004,13 @@ namespace Korin
 			// Tree is empty
 			return nullptr;
 		}
+
+		template<typename BaseT>
+		FORCE_INLINE BinaryNodeBase<BaseT>* remove(BinaryNodeBase<BaseT>*& node)
+		{
+			BinaryNodeBase<BaseT>* tmp = nullptr;
+			return remove(node, tmp);
+		}
+		/** @} */
 	} // namespace TreeNode
 } // namespace Korin

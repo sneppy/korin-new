@@ -744,13 +744,7 @@ namespace Korin
 
 			NodeT* node = it.node;
 			NodeT* next = node->next;
-			root = TreeNode::remove(node);
-
-			if (node != it.node)
-			{
-				// We removed the successor
-				next = it.node;
-			}
+			root = TreeNode::remove(node, next);
 
 			destroyNode(node);
 			numNodes--;
