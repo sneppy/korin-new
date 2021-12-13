@@ -432,7 +432,7 @@ namespace Korin
 			// Get ptr to prev node
 			BucketT* prev = buckets[bucketIdx];
 			for (; prev->next != node; prev = prev->next);
-			KORIN_ASSERTF(prev != nullptr, "Trying to remove an item that belongs to someone else")
+			KORIN_ASSERTF(prev != nullptr, "Trying to remove an item that belongs to another hash table")
 
 			sizet nextBucketIdx = bucketIdx;
 			if (node->next)

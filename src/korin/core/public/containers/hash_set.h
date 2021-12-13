@@ -156,7 +156,7 @@ namespace Korin
 		 * @brief Returns true if two sets are disjoint.
 		 *
 		 * @param other another hash set
-		 * @return true true if sets have no item in
+		 * @return true if sets have no item in
 		 * common
 		 * @return false otherwise
 		 */
@@ -194,7 +194,7 @@ namespace Korin
 		}
 
 		/**
-		 * @brief Insert an item into the set.
+		 * @brief Add an item into the set.
 		 *
 		 * If an item with the same key already
 		 * exists, the item is not inserted.
@@ -266,74 +266,129 @@ namespace Korin
 		 *
 		 * @param other another set
 		 * @return ref to self
+		 * @{
 		 */
-		FORCE_INLINE HashSet operator|=(HashSet const& other)
+		FORCE_INLINE HashSet& operator|=(HashSet const& other)
 		{
 			for (auto const& it : other)
 			{
-				insert(*it);
+				// Insert all items of other if not already present
+				insert(it);
 			}
+
+			return *this;
 		}
+
+		FORCE_INLINE HashSet& operator|=(HashSet&& other)
+		{
+			for (auto& it : other)
+			{
+				// Insert all items of other if not already present
+				insert(move(it));
+			}
+
+			return *this;
+		}
+		/** @} */
 
 		/**
 		 * @brief Computes the union of this set with
 		 * another set.
 		 *
 		 * @param other another set
-		 * @return new set, equal to the union of the
-		 * two sets.
+		 * @return new set, equal to the union of the two
+		 * sets.
+		 * @{
 		 */
 		FORCE_INLINE HashSet operator|(HashSet const& other) const
 		{
 			return HashSet{*this} |= other;
 		}
 
+		FORCE_INLINE HashSet operator|(HashSet&& other) const
+		{
+			return HashSet{*this} |= move(other);
+		}
+		/** @} */
+
 		/**
-		 * @brief Udpate this set by removing all the
-		 * items not present in another set.
+		 * @brief Udpate this set by removing all the items
+		 * not in common with another set.
 		 *
 		 * @param other another set
 		 * @return ref to self
 		 */
-		FORCE_INLINE HashSet operator&=(HashSet const& other)
+		FORCE_INLINE HashSet& operator&=(HashSet const& other)
 		{
 			for (auto it = begin(); it != end();)
 			{
-				if (other.find(*it) == other.end())
+				if (!other.contains(*it))
 				{
 					// Remove element if not in other
 					it = remove(it);
 				}
 				else ++it;
 			}
+
+			return *this;
 		}
 
 		/**
-		 * @brief Computes the intersection between
-		 * this set and another set.
+		 * @brief Computes the intersection between this set
+		 * and another set.
 		 *
 		 * @param other another set
 		 * @return new set, equal to the insersection
 		 * of the two sets
+		 * @{
 		 */
 		FORCE_INLINE HashSet operator&(HashSet const& other) const
 		{
-			return HashSet{*this} &= other;
+			HashSet set{};
+			for (auto const& item : other)
+			{
+				if (contains(item))
+				{
+					// Insert items in common
+					set.insert(item);
+				}
+			}
+
+			return set;
 		}
 
+		FORCE_INLINE HashSet operator&(HashSet&& other) const
+		{
+			HashSet set{};
+			for (auto& item : other)
+			{
+				if (contains(item))
+				{
+					// Insert items in common
+					set.insert(move(item));
+				}
+			}
+
+			return set;
+		}
+		/** @} */
+
 		/**
-		 * @brief Update this set by removing all the
-		 * items present within another set.
+		 * @brief Update this set by removing all the items
+		 * in common with another set.
 		 *
 		 * @param other another set
 		 * @return ref to self
 		 */
-		FORCE_INLINE HashSet operator^=(HashSet const& other)
+		FORCE_INLINE HashSet& operator-=(HashSet const& other)
 		{
-			for (auto const& it : other)
+			for (auto&& item : other)
 			{
-				removeAt(*it);
+				// Remove item in common
+				removeAt(item);
 			}
+
+			return *this;
 		}
 
 		/**
@@ -341,13 +396,118 @@ namespace Korin
 		 * set and another set.
 		 *
 		 * @param other another set
-		 * @return new set, equal to the difference
-		 * between the two sets
+		 * @return new set, equal to the difference between
+		 * the two sets
+		 */
+		FORCE_INLINE HashSet operator-(HashSet const& other) const
+		{
+			HashSet set{};
+			for (auto const& item : *this)
+			{
+				if (!other.contains(item))
+				{
+					set.insert(item);
+				}
+			}
+
+			return set;
+		}
+
+		/**
+		 * @brief Update this set by removing all the items
+		 * in common with another set and adding those not
+		 * in common.
+		 *
+		 * @param other another set
+		 * @return ref to self
+		 * @{
+		 */
+		HashSet& operator^=(HashSet const& other)
+		{
+			for (auto const& it : other)
+			{
+				if (!removeAt(it))
+				{
+					// If not in common, add item
+					insert(it);
+				}
+			}
+
+			return *this;
+		}
+
+		HashSet& operator^=(HashSet&& other)
+		{
+			for (auto& it : other)
+			{
+				if (!removeAt(it))
+				{
+					// If not in common, add item
+					insert(move(it));
+				}
+			}
+		}
+		/** @} */
+
+		/**
+		 * @brief Compute the symmetric difference between
+		 * this set and another set.
+		 *
+		 * In set operations, this is the equivalent of
+		 * subtracting the intersection from the union.
+		 *
+		 * @param other another set
+		 * @return new set, equal to the symmetric
+		 * difference between the two sets
+		 * @{
 		 */
 		FORCE_INLINE HashSet operator^(HashSet const& other) const
 		{
-			return HashSet{*this} ^= other;
+			HashSet set{};
+			for (auto const& item : *this)
+			{
+				if (!other.contains(item))
+				{
+					// Insert item from this set that are not in other set
+					set.insert(item);
+				}
+			}
+			for (auto const& item : other)
+			{
+				if (!contains(item))
+				{
+					// Insert item from the other set that are not in this set
+					set.insert(item);
+				}
+			}
+
+			return set;
 		}
+
+		FORCE_INLINE HashSet operator^(HashSet&& other) const
+		{
+			// A bit of a long repetition here, but it's fine
+			HashSet set{};
+			for (auto const& item : *this)
+			{
+				if (!other.contains(item))
+				{
+					// Insert item from this set that are not in other set
+					set.insert(item);
+				}
+			}
+			for (auto& item : other)
+			{
+				if (!contains(item))
+				{
+					// Insert item from the other set that are not in this set
+					set.insert(move(item));
+				}
+			}
+
+			return set;
+		}
+		/** @} */
 
 	protected:
 		using SuperT::buckets;
