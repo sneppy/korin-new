@@ -34,7 +34,7 @@ namespace Sequence_Private
 	 * @brief Implementation for @c srange.
 	 */
 	template<typename IntT, IntT to, IntT from, IntT ...seq>
-	constexpr auto srange_Impl()
+	constexpr auto seq_Impl()
 	{
 		if constexpr (from == to)
 		{
@@ -42,7 +42,7 @@ namespace Sequence_Private
 		}
 		else
 		{
-			return srange_Impl<IntT, to, from + 1, seq..., from>();
+			return seq_Impl<IntT, to, from + 1, seq..., from>();
 		}
 	}
 } // namespace Sequence_Private
@@ -57,9 +57,9 @@ namespace Sequence_Private
  * @return new integer sequence
  */
 template<typename IntT, IntT to, IntT from = 0>
-constexpr auto range()
+constexpr auto seq()
 {
-	return Sequence_Private::srange_Impl<IntT, to, from>();
+	return Sequence_Private::seq_Impl<IntT, to, from>();
 }
 
 /**
@@ -71,9 +71,9 @@ constexpr auto range()
  * @return new index sequence
  */
 template<sizet to, sizet from = 0>
-constexpr auto irange()
+constexpr auto iseq()
 {
-	return range<sizet, to, from>();
+	return seq<sizet, to, from>();
 }
 
 /**
@@ -84,7 +84,7 @@ constexpr auto irange()
  * @return new index sequence
  */
 template<typename ...ArgsT>
-constexpr auto rangeFor()
+constexpr auto iseqFor()
 {
-	return irange<sizeof...(ArgsT)>();
+	return iseq<sizeof...(ArgsT)>();
 }

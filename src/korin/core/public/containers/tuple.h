@@ -238,14 +238,14 @@ namespace Korin
 		constexpr FORCE_INLINE auto operator+(auto&& other) const&
 		{
 			static_assert(IsTuple<typename Decay<decltype(other)>::Type>::value, "Expected Tuple type");
-			return concat_Impl(*this, FORWARD(other), rangeFor(*this), rangeFor(other));
+			return concat_Impl(*this, FORWARD(other), iseqFor(*this), iseqFor(other));
 		}
 
 		template<typename ...ItemsU>
 		constexpr FORCE_INLINE auto operator+(auto&& other)&&
 		{
 			static_assert(IsTuple<typename Decay<decltype(other)>::Type>::value, "Expected Tuple type");
-			return concat_Impl(move(*this), FORWARD(other), rangeFor(*this), rangeFor(other));
+			return concat_Impl(move(*this), FORWARD(other), iseqFor(*this), iseqFor(other));
 		}
 		/** @} */
 

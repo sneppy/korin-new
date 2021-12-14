@@ -129,7 +129,7 @@ namespace Korin
 	constexpr ItT findIf(ItT begin, ItT end, PolicyT&& policy);
 } // namespace Korin
 
-// TODO: Definition for rangeFor does not live
+// TODO: Definition for iseqFor does not live
 // under a namespace for the moment
 /**
  * @brief Returns an index sequence to iterate
@@ -140,6 +140,6 @@ namespace Korin
  * tuple
  */
 template<typename ...ItemsT>
-constexpr auto rangeFor(Korin::Tuple<ItemsT...> const&);
+constexpr auto iseqFor(Korin::Tuple<ItemsT...> const&);
 
 #include "containers_types.inl"

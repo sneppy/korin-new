@@ -60,7 +60,7 @@ namespace Korin
 }
 
 template<typename ...ItemsT>
-constexpr auto rangeFor(Korin::Tuple<ItemsT...> const&)
+constexpr auto iseqFor(Korin::Tuple<ItemsT...> const&)
 {
-	return rangeFor<ItemsT...>();
+	return iseqFor<ItemsT...>();
 }
