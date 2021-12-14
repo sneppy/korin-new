@@ -29,15 +29,13 @@ namespace Korin
 	{
 		using BaseT = TupleBase<idx + 1, ItemsT...>;
 
-		// TODO: Move and copy semantics?
-
 	public:
 		TupleBase() = default;
 
 		/**
 		 * @brief Construct subtuple by copying the
 		 * given items.
-		 * 
+		 *
 		 * @param head head of the list to copy
 		 * @param items rest of the list
 		 */
@@ -50,7 +48,7 @@ namespace Korin
 
 		/**
 		 * @brief Construct subtuple.
-		 * 
+		 *
 		 * @param head head of the list
 		 * @param items rest of the list
 		 */
@@ -65,21 +63,23 @@ namespace Korin
 		 * @brief Get first item that matches the
 		 * given type. Raises an error at compile
 		 * time if such item does not exist.
-		 * 
+		 *
 		 * @tparam T type to get
 		 * @return ref to first item of the tuple
 		 * with the given type
-		 * @{ 
+		 * @{
 		 */
 		template<typename T>
 		constexpr auto& get()
 		{
 			if constexpr (SameType<T, HeadT>::value)
 			{
+				// Type matches, return this item
 				return item;
 			}
 			else
 			{
+				// Recursively search in rest of the tuple
 				return BaseT::template get<T>();
 			}
 		}
@@ -94,10 +94,10 @@ namespace Korin
 		/**
 		 * @brief Returns the i-th item of the
 		 * tuple.
-		 * 
+		 *
 		 * Raises a compile-time error if the
 		 * index is out of bounds.
-		 * 
+		 *
 		 * @tparam jdx item index
 		 * @return ref to i-th item
 		 * @{
@@ -107,10 +107,12 @@ namespace Korin
 		{
 			if constexpr (jdx == idx)
 			{
+				// Index match, return this item
 				return item;
 			}
 			else
 			{
+				// Recursively search in rest of tuple
 				return BaseT::template get<jdx>();
 			}
 		}
@@ -136,7 +138,7 @@ namespace Korin
 		/**
 		 * @brief Construct subtuple by copying
 		 * the given item.
-		 * 
+		 *
 		 * @param head item to copy
 		 */
 		constexpr TupleBase(HeadT const& head)
@@ -148,7 +150,7 @@ namespace Korin
 		/**
 		 * @brief Cosntruct the subtuple by moving
 		 * the given item.
-		 * 
+		 *
 		 * @param head item to move
 		 */
 		constexpr TupleBase(auto&& head)
@@ -203,9 +205,9 @@ namespace Korin
 	/**
 	 * @brief A tuple is a compile-time, multi-type
 	 * container.
-	 * 
+	 *
 	 * See @c tuple and @c tie.
-	 * 
+	 *
 	 * @tparam ItemsT types of the items
 	 */
 	template<typename ...ItemsT>
@@ -215,45 +217,113 @@ namespace Korin
 
 	public:
 		using BaseT::BaseT;
+		using BaseT::get;
 
 		/**
-		 * @brief Returns the number of items
-		 * in the tuple.
+		 * @brief Returns the number of items in the tuple.
 		 */
-		constexpr sizet getNumItems() const
+		constexpr sizet getLength() const
 		{
 			return numItems;
 		}
 
-		// TODO: Tuple concatenation
+		/**
+		 * @brief Returns a new tuple equal to the
+		 * concatenation of this tuple with the other tuple.
+		 *
+		 * @param other another tuple
+		 * @return new tuple
+		 * @{
+		 */
+		constexpr FORCE_INLINE auto operator+(auto&& other) const&
+		{
+			static_assert(IsTuple<typename Decay<decltype(other)>::Type>::value, "Expected Tuple type");
+			return concat_Impl(*this, FORWARD(other), rangeFor(*this), rangeFor(other));
+		}
+
+		template<typename ...ItemsU>
+		constexpr FORCE_INLINE auto operator+(auto&& other)&&
+		{
+			static_assert(IsTuple<typename Decay<decltype(other)>::Type>::value, "Expected Tuple type");
+			return concat_Impl(move(*this), FORWARD(other), rangeFor(*this), rangeFor(other));
+		}
+		/** @} */
 
 	protected:
 		/* Compile-time computed number of items. */
 		static constexpr sizet numItems = sizeof...(ItemsT);
+
+		/**
+		 * @brief Helper for tuple concatenation. Uses
+		 * integer sequences to unpack tuples.
+		 *
+		 * @tparam ItemsU the types of the other tuple's
+		 * items
+		 * @tparam idxs indices to unpack first tuple
+		 * @tparam jdxs indices to unpack second tuple
+		 * @param lhs,rhs tuples to concatenate
+		 * @return new tuple
+		 * @{
+		 */
+		template<typename ...ItemsU, sizet ...idxs, sizet ...jdxs>
+		friend constexpr FORCE_INLINE Tuple<ItemsT..., ItemsU...> concat_Impl(Tuple<ItemsT...> const& lhs,
+		                                                                      Tuple<ItemsU...> const& rhs,
+																			  IndexSequence<idxs...>,
+																			  IndexSequence<jdxs...>)
+		{
+			return {lhs.template get<idxs>()..., rhs.template get<jdxs>()...};
+		}
+
+		template<typename ...ItemsU, sizet ...idxs, sizet ...jdxs>
+		friend constexpr FORCE_INLINE Tuple<ItemsT..., ItemsU...> concat_Impl(Tuple<ItemsT...> const& lhs,
+		                                                                      Tuple<ItemsU...>&& rhs,
+																			  IndexSequence<idxs...>,
+																			  IndexSequence<jdxs...>)
+		{
+			return {lhs.template get<idxs>()..., move(rhs.template get<jdxs>())...};
+		}
+
+		template<typename ...ItemsU, sizet ...idxs, sizet ...jdxs>
+		friend constexpr FORCE_INLINE Tuple<ItemsT..., ItemsU...> concat_Impl(Tuple<ItemsT...>&& lhs,
+		                                                                      Tuple<ItemsU...> const& rhs,
+																			  IndexSequence<idxs...>,
+																			  IndexSequence<jdxs...>)
+		{
+			return {move(lhs.template get<idxs>())..., rhs.template get<jdxs>()...};
+		}
+
+		template<typename ...ItemsU, sizet ...idxs, sizet ...jdxs>
+		friend constexpr FORCE_INLINE Tuple<ItemsT..., ItemsU...> concat_Impl(Tuple<ItemsT...>&& lhs,
+		                                                                      Tuple<ItemsU...>&& rhs,
+																			  IndexSequence<idxs...>,
+																			  IndexSequence<jdxs...>)
+		{
+			return {move(move(lhs.template get<idxs>()))..., move(rhs.template get<jdxs>())...};
+		}
+		/** @} */
 	};
 
 	/**
 	 * @brief Create a new tuple, copying or
 	 * moving the given items.
-	 * 
+	 *
 	 * @tparam ItemsT the type of the items
 	 * @param items items to insert into tuple
 	 * @return new tuple of items
 	 */
 	template<typename ...ItemsT>
-	constexpr auto tuple(ItemsT&& ...items)
+	constexpr auto tup(ItemsT&& ...items)
 	{
-		using TupleT = Tuple<typename Decay<ItemsT>::Type...>;
-		return TupleT{forward<ItemsT>(items)...};
+		return Tuple<typename Decay<ItemsT>::Type...>{FORWARD(items)...};
 	}
 
 	/**
 	 * @brief Create a new tuple with the
 	 * refs of the given items.
-	 * 
+	 *
 	 * May be used to forward all items
 	 * inside tuple.
-	 * 
+	 *
 	 * @tparam ItemsT the type of the items
 	 * @param items items to take refs to
 	 * @return new tuple of refs

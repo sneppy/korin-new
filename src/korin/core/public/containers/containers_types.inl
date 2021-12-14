@@ -3,7 +3,7 @@ namespace Korin
 	template<typename ...ItemsT>
 	constexpr sizet len(Tuple<ItemsT...> const& tup)
 	{
-		return tup.getNumItems();
+		return tup.getLength();
 	}
 
 	template<typename T>

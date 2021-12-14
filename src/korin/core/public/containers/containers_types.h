@@ -66,6 +66,21 @@ namespace Korin
 	template<typename KeyT, typename ValT, typename HashPolicyT = typename ChooseHashPolicy<KeyT>::Type> class HashMap;
 
 	/**
+	 * @brief Returns true if the type is a tuple.
+	 *
+	 * @tparam T the type to test
+	 * @{
+	 */
+	template<typename T>
+	struct IsTuple
+	{
+		enum { value = false };
+	};
+
+	template<typename ...ItemsT> struct IsTuple<Tuple<ItemsT...>> { enum { value = true }; };
+	/** @} */
+
+	/**
 	 * @brief Returns the size of a given container.
 	 *
 	 * @param container a container instance.

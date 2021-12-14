@@ -741,7 +741,6 @@ namespace Korin
 		 */
 		FORCE_INLINE IteratorT remove(ConstIteratorT it)
 		{
-			// TODO: Move forward and return iterator
 			ASSERT(it->node != nullptr);
 
 			NodeT* node = it.node;
