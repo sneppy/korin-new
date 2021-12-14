@@ -4,13 +4,83 @@
 #include "hal/platform_memory.h"
 #include "hal/platform_string.h"
 #include "containers_types.h"
+#include "tuple.h"
 #include "array.h"
-
-// TODO: Just to see how it's done, replace with Korin::Tuple
-#include <tuple>
 
 namespace Korin
 {
+	template<typename> class StringSource;
+	template<typename> class StringBase;
+
+	/**
+	 * @brief Helper class that computes the source
+	 * and length of any string source (e.g. C strings,
+	 * buffer and length, static strings, Korin::String)
+	 */
+	template<typename CharT>
+	struct StringSource
+	{
+		/* Pointer to the string buffer. */
+		CharT const* const src;
+
+		/* Length of the string (excluding any terminating
+		   character). */
+		sizet const len;
+
+		/**
+		 * @brief Accept a buffer with length.
+		 *
+		 * @param inSrc pointer to string source
+		 * @param inLen length of the string
+		 */
+		constexpr FORCE_INLINE StringSource(CharT const* const inSrc, sizet inLen)
+			: src{inSrc}
+			, len{inLen}
+		{
+			//
+		}
+
+		/**
+		 * @brief Accept a C string.
+		 *
+		 * @param cstr pointer to a null-terminated
+		 * string
+		 */
+		constexpr FORCE_INLINE StringSource(CharT const* const cstr)
+			: StringSource{cstr, PlatformString::len(cstr)}
+		{
+			//
+		}
+
+		/**
+		 * @brief Accept a static array.
+		 *
+		 * @tparam len length of the string
+		 * @param str pointer to the array
+		 * @return constexpr FORCE_INLINE
+		 */
+		template<sizet len>
+		constexpr FORCE_INLINE StringSource(CharT const str[len])
+			: StringSource{str, len}
+		{
+			//
+		}
+
+		/**
+		 * @brief Accept a managed string.
+		 *
+		 * @param other a managed string
+		 */
+		constexpr FORCE_INLINE StringSource(StringBase<CharT> const& other)
+			: StringSource{*other, other.getLen()}
+		{
+			//
+		}
+
+	private:
+		StringSource() = delete;
+	};
+
 	/**
 	 * @brief Base class for string types.
 	 *
@@ -23,76 +93,9 @@ namespace Korin
 
 		static constexpr CharT termChar{0};
 
-		/**
-		 * @brief Helper class that computes the source
-		 * and length of any string source (e.g. C strings,
-		 * buffer and length, static strings, Korin::String)
-		 */
-		struct StringSource
-		{
-			/* Pointer to the string buffer. */
-			CharT const* const src;
-
-			/* Length of the string (excluding
-			   any terminating character). */
-			sizet const len;
-
-			/**
-			 * @brief Accept a buffer with length.
-			 *
-			 * @param inSrc pointer to string source
-			 * @param inLen length of the string
-			 */
-			constexpr FORCE_INLINE StringSource(CharT const* const inSrc, sizet inLen)
-				: src{inSrc}
-				, len{inLen}
-			{
-				//
-			}
-
-			/**
-			 * @brief Accept a C string.
-			 *
-			 * @param cstr pointer to a null-terminated
-			 * string
-			 */
-			constexpr FORCE_INLINE StringSource(CharT const* const cstr)
-				: src{cstr}
-				, len{PlatformString::len(cstr)}
-			{
-				//
-			}
-
-			/**
-			 * @brief Accept a static array.
-			 *
-			 * @tparam len length of the string
-			 * @param str pointer to the array
-			 * @return constexpr FORCE_INLINE
-			 */
-			template<sizet len>
-			constexpr FORCE_INLINE StringSource(CharT const str[len])
-				: StringSource{str, len}
-			{
-				//
-			}
-
-			/**
-			 * @brief Accept a managed string.
-			 *
-			 * @param other a managed string
-			 */
-			constexpr FORCE_INLINE StringSource(StringBase const& other)
-				: StringSource{*other, other.getLen()}
-			{
-				//
-			}
-
-		private:
-			StringSource() = delete;
-		};
-
 	public:
+		using StringSourceT = StringSource<CharT>;
+
 		/**
 		 * @brief Construct an empty string.
 		 */
@@ -108,7 +111,7 @@ namespace Korin
 		 *
 		 * @param src string source
 		 */
-		FORCE_INLINE StringBase(StringSource const& src)
+		FORCE_INLINE StringBase(StringSourceT const& src)
 			: array{src.len + 1, termChar}
 		{
 			// Copy source string
@@ -122,7 +125,7 @@ namespace Korin
 		 * @param cstr pointer to C string
 		 */
 		FORCE_INLINE StringBase(CharT const* cstr)
-			: StringBase{StringSource{cstr}}
+			: StringBase{StringSourceT{cstr}}
 		{
 			//
 		}
@@ -135,7 +138,7 @@ namespace Korin
 		 * @param len number of characters to read
 		 */
 		FORCE_INLINE StringBase(CharT const* src, sizet len)
-			: StringBase{StringSource{src, len}}
+			: StringBase{StringSourceT{src, len}}
 		{
 			//
 		}
@@ -149,7 +152,7 @@ namespace Korin
 		 */
 		template<sizet len>
 		FORCE_INLINE StringBase(CharT const src[len])
-			: StringBase{StringSource{src, len}}
+			: StringBase{StringSourceT{src, len}}
 		{
 			//
 		}
@@ -241,7 +244,7 @@ namespace Korin
 		 * @return true if strings are equal
 		 * @return false otherwise
 		 */
-		FORCE_INLINE bool operator==(StringSource const& other) const
+		FORCE_INLINE bool operator==(StringSourceT const& other) const
 		{
 			return PlatformString::cmpn(*array, other.src, other.len) == 0;
 		}
@@ -253,7 +256,7 @@ namespace Korin
 		 * @return true if strings are not equal
 		 * @return false otherwise
 		 */
-		FORCE_INLINE bool operator!=(StringSource const& other) const
+		FORCE_INLINE bool operator!=(StringSourceT const& other) const
 		{
 			return !(*this == other);
 		}
@@ -266,7 +269,7 @@ namespace Korin
 		 * @return true if this string precedes other
 		 * @return false otherwise
 		 */
-		FORCE_INLINE bool operator<(StringSource const& other) const
+		FORCE_INLINE bool operator<(StringSourceT const& other) const
 		{
 			return PlatformString::cmpn(*array, other.src, other.len) < 0;
 		}
@@ -279,7 +282,7 @@ namespace Korin
 		 * @return true if this string succeeds other
 		 * @return false otherwise
 		 */
-		FORCE_INLINE bool operator>(StringSource const& other) const
+		FORCE_INLINE bool operator>(StringSourceT const& other) const
 		{
 			return PlatformString::cmpn(*array, other.src, other.len) > 0;
 		}
@@ -293,7 +296,7 @@ namespace Korin
 		 * string
 		 * @return false otherwise
 		 */
-		FORCE_INLINE bool operator<=(StringSource const& other) const
+		FORCE_INLINE bool operator<=(StringSourceT const& other) const
 		{
 			return !(*this > other);
 		}
@@ -307,10 +310,72 @@ namespace Korin
 		 * string
 		 * @return false otherwise
 		 */
-		FORCE_INLINE bool operator>=(StringSource const& other) const
+		FORCE_INLINE bool operator>=(StringSourceT const& other) const
 		{
 			return !(*this < other);
 		}
+
+		/**
+		 * @brief Append a character to the end of the
+		 * string.
+		 *
+		 * @param c the character to append
+		 * @return ref to self
+		 */
+		StringBase& operator+=(CharT c)
+		{
+			// Grow array if necessary
+			array.growToFit(array.count + 1);
+
+			// Set character
+			array[getLength()] = c;
+			array.count++;
+			terminate();
+
+			return *this;
+		}
+
+		/**
+		 * @brief Return a new string equal to this string
+		 * and append the character.
+		 *
+		 * @param c the character to append
+		 * @return new string ending with the character
+		 * @{
+		 */
+		StringBase operator+(CharT c) const&
+		{
+			// Create new string from this one
+			StringBase newString{*this, 1};
+
+			// Append character
+			newString[newString.getLength()] = c;
+			newString.array.count++;
+			newString.terminate();
+
+			return newString;
+		}
+
+		StringBase operator+(CharT c)&&
+		{
+			// We can probably reuse the buffer from this string
+			if (UNLIKELY(array.size < array.count + 1))
+			{
+				// No optimization available
+				return *this + c;
+			}
+
+			// Create string using this string's buffer
+			StringBase newString{move(*this)};
+
+			// Append character
+			newString[newString.getLength()] = c;
+			newString.array.count++;
+			newString.terminate();
+
+			return newString;
+		}
+		/** @} */
 
 		/**
 		 * @brief Append another string source to this
@@ -319,7 +384,7 @@ namespace Korin
 		 * @param other any string source
 		 * @return ref to self
 		 */
-		StringBase& operator+=(StringSource const& other)
+		StringBase& operator+=(StringSourceT const& other)
 		{
 			ASSERT(other.src != nullptr)
 
@@ -327,7 +392,7 @@ namespace Korin
 			array.growToFit(array.count + other.len);
 
 			// Copy data
-			copyItems(*array + getLen(), other.src, other.len);
+			copyItems(*array + getLength(), other.src, other.len);
 			array.count += other.len;
 			terminate();
 
@@ -340,8 +405,9 @@ namespace Korin
 		 *
 		 * @param lhs,rhs any two string sources
 		 * @return new string
+		 * @{
 		 */
-		friend StringBase operator+(StringSource const& lhs, StringSource const& rhs)
+		friend StringBase operator+(StringSourceT const& lhs, StringSourceT const& rhs)
 		{
 			ASSERT(lhs.src != nullptr)
 			ASSERT(rhs.src != nullptr)
@@ -356,25 +422,122 @@ namespace Korin
 			return newString;
 		}
 
+		friend StringBase operator+(StringBase&& lhs, StringSourceT const& rhs)
+		{
+			// Get required length
+			sizet const newLen = lhs.getLength() + rhs.len;
+			if (lhs.array.size < newLen + 1)
+			{
+				// No optimization available
+				return lhs + rhs;
+			}
+
+			// We can reuse lhs buffer
+			StringBase newString{move(lhs)};
+
+			// Copy characters from second source
+			copyItems(*newString + lhs.getLength(), rhs.src, rhs.len);
+			newString.array.count = newLen + 1;
+			newString.terminate();
+
+			return newString;
+		}
+
+		friend StringBase operator+(StringSourceT const& lhs, StringBase&& rhs)
+		{
+			// Get required length
+			sizet const newLen = lhs.len + rhs.getLength();
+			if (rhs.array.size < newLen + 1)
+			{
+				// No optimization available
+				return lhs + rhs;
+			}
+
+			// We can reuse rhs buffer
+			StringBase newString{move(rhs)};
+
+			// We still have to copy all the items though
+			copyItems(*newString, lhs.src, lhs.len);
+			copyItems(*newString + lhs.len, *rhs, rhs.getLength());
+			newString.array.count = newLen + 1;
+			newString.terminate();
+
+			return newString;
+		}
+		/** @} */
+
 		/**
-		 * @brief Format a string source with the
-		 * given format arguments.
+		 * @brief Set this string equal to itself repeated
+		 * N times.
 		 *
-		 * The format string uses the usual C
-		 * format placeholders.
+		 * @param repeats number of repeats
+		 * @return ref to self
+		 */
+		StringBase& operator*=(uint32 repeats)
+		{
+			// Compute new size and reserve space
+			sizet const prefixLen = getLength();
+			sizet const newLen = prefixLen * repeats;
+			array.growToFit(newLen + 1);
+
+			for (uint32 rep = 1; rep < repeats; rep *= 2)
+			{
+				// Copy in powers of two, much more efficient
+				// TODO: Replace with `min()`
+				uint32 const maxRep = rep < repeats - rep ? rep : repeats - rep;
+				copyItems(*array + rep * prefixLen, *array, maxRep * prefixLen);
+			}
+			array.count = newLen + 1;
+			terminate();
+
+			return *this;
+		}
+
+		/**
+		 * @brief Returns a new string which is equal to the
+		 * prefix string repeated N times.
 		 *
-		 * TODO: Replace @c std::tuple with @c Korin::Tuple
+		 * @param prefix the prefix to repeat
+		 * @param repeats the number of repeats
+		 * @return new string
+		 */
+		friend StringBase operator*(StringSourceT const& prefix, sizet repeats)
+		{
+			// The case where the prefix is an r-value is not handled specially because it's basically impossible that
+			// the buffer would be able to contain the repeated result
+
+			// Compute new size and create new string big enough to fit
+			sizet const prefixLen = prefix.len;
+			sizet const newLen = prefixLen * repeats;
+			StringBase newString{newLen};
+
+			// Copy prefix once first
+			copyItems(*newString, prefix.src, prefixLen);
+			for (uint32 rep = 1; rep < repeats; rep *= 2)
+			{
+				// Copy in powers of two, much more efficient
+				// TODO: Replace with `min()`
+				uint32 const maxRep = rep < repeats - rep ? rep : repeats - rep;
+				copyItems(*newString + rep * prefixLen, *newString, maxRep * prefixLen);
+			}
+
+			return newString;
+		}
+
+		template<typename ...FormatArgsT>
+		friend StringBase operator%(StringSourceT const& fmt, Tuple<FormatArgsT...> const& args);
+
+		/**
+		 * @brief Formats a string using the given
+		 * .arguments
 		 *
-		 * @tparam FormatArgsT the type of the
-		 * format arguments
-		 * @param fmt format string source
-		 * @param args tuple of format arguments
+		 * @param args arguments used to format the string
 		 * @return new formatted string
 		 */
-		template<typename ...FormatArgsT>
-		friend FORCE_INLINE StringBase operator%(StringSource const& fmt, std::tuple<FormatArgsT...> const& args)
+		FORCE_INLINE StringBase format(auto&& ...args) const&
 		{
-			return StringBase::format_Impl(fmt, args, std::index_sequence_for<FormatArgsT...>{});
+			// How cool is this??
+			return *this % tie(FORWARD(args)...);
 		}
 
 	protected:
@@ -392,12 +555,26 @@ namespace Korin
 		}
 
 		/**
+		 * @brief Copy another string and reserve extra
+		 * space for it.
+		 *
+		 * @param other another string to copy
+		 * @param slack extra space to reserve
+		 */
+		FORCE_INLINE StringBase(StringBase const& other, sizet slack)
+			: array{other.array, slack}
+		{
+			// Make sure string is terminated
+			terminate();
+		}
+
+		/**
 		 * @brief Append the terminating character
 		 * to the end of the string.
 		 */
 		FORCE_INLINE void terminate()
 		{
-			array[getLen()] = CharT{0};
+			array[getLength()] = CharT{0};
 		}
 
 		/* The array that holds the string characters. */
@@ -405,27 +582,28 @@ namespace Korin
 
 	private:
 		/**
-		 * @brief Private implementation to format
-		 * a string.
+		 * @brief Private implementation for formatting
+		 * using a tuple.
 		 *
 		 * @tparam idxs index sequence used to iterate
-		 * over arguments tuple
+		 * over tuple's items.
 		 * @param fmt format string
 		 * @param args tuple of format arguments
 		 * @return new string
 		 */
-		template<typename std::size_t ...idxs>
-		static StringBase format_Impl(StringSource const& fmt, auto const& args, std::index_sequence<idxs...>)
+		template<sizet ...idxs>
+		static StringBase formatTuple_Impl(StringSourceT const& fmt, auto const& args, IndexSequence<idxs...>)
 		{
 			// We don't know a priori the length of the
 			// formatted string.
-			const sizet newLen = ::snprintf(nullptr, 0, fmt.src, prepareFormatArg(std::get<idxs>(args))...);
+			const sizet newLen = ::snprintf(nullptr, 0, fmt.src, prepareFormatArg(args.template get<idxs>())...);
 
 			// Create new string
 			StringBase newString{newLen};
 
 			// Format string
-			[[maybe_unused]] sizet printLen = ::snprintf(*newString, newLen + 1, fmt.src, prepareFormatArg(std::get<idxs>(args))...);
+			[[maybe_unused]] sizet printLen = ::snprintf(*newString, newLen + 1, fmt.src,
+			                                             prepareFormatArg(args.template get<idxs>())...);
 			KORIN_ASSERT(printLen == newLen)
 
 			return newString;
@@ -457,6 +635,24 @@ namespace Korin
 		}
 		/** @} */
 	};
+
+	/**
+	 * @brief Format string with the given tuple of
+	 * arguments.
+	 *
+	 * The format string uses the usual C printf syntax.
+	 *
+	 * @tparam FormatArgsT the types of the format arguments
+	 * @param fmt format string source
+	 * @param args tuple of format arguments
+	 * @return new formatted string
+	 */
+	template<typename ...FormatArgsT>
+	FORCE_INLINE StringBase<char> operator%(StringSource<char> const& fmt, Tuple<FormatArgsT...> const& args)
+	{
+		// Call StrinBase private implementation
+		return StringBase<char>::formatTuple_Impl(fmt, args, iseqFor(args));
+	}
 
 	/**
 	 * @brief Specialization for hashing string keys.
