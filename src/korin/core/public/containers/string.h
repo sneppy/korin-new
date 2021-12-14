@@ -467,6 +467,64 @@ namespace Korin
 		/** @} */
 
 		/**
+		 * @brief Set this string equal to itself repeated
+		 * N times.
+		 *
+		 * @param repeats number of repeats
+		 * @return ref to self
+		 */
+		StringBase& operator*=(uint32 repeats)
+		{
+			// Compute new size and reserve space
+			sizet const prefixLen = getLength();
+			sizet const newLen = prefixLen * repeats;
+			array.growToFit(newLen + 1);
+
+			for (uint32 rep = 1; rep < repeats; rep *= 2)
+			{
+				// Copy in powers of two, much more efficient
+				// TODO: Replace with `min()`
+				uint32 const maxRep = rep < repeats - rep ? rep : repeats - rep;
+				copyItems(*array + rep * prefixLen, *array, maxRep * prefixLen);
+			}
+			array.count = newLen + 1;
+			terminate();
+
+			return *this;
+		}
+
+		/**
+		 * @brief Returns a new string which is equal to the
+		 * prefix string repeated N times.
+		 *
+		 * @param prefix the prefix to repeat
+		 * @param repeats the number of repeats
+		 * @return new string
+		 */
+		friend StringBase operator*(StringSourceT const& prefix, sizet repeats)
+		{
+			// The case where the prefix is an r-value is not handled specially because it's basically impossible that
+			// the buffer would be able to contain the repeated result
+
+			// Compute new size and create new string big enough to fit
+			sizet const prefixLen = prefix.len;
+			sizet const newLen = prefixLen * repeats;
+			StringBase newString{newLen};
+
+			// Copy prefix once first
+			copyItems(*newString, prefix.src, prefixLen);
+			for (uint32 rep = 1; rep < repeats; rep *= 2)
+			{
+				// Copy in powers of two, much more efficient
+				// TODO: Replace with `min()`
+				uint32 const maxRep = rep < repeats - rep ? rep : repeats - rep;
+				copyItems(*newString + rep * prefixLen, *newString, maxRep * prefixLen);
+			}
+
+			return newString;
+		}
+
+		/**
 		 * @brief Format a string source with the
 		 * given format arguments.
 		 *
