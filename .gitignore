@@ -61,6 +61,7 @@ CMakeSettings.json
 # Python build stuff
 dist/
 *.egg-info*
+.venv/
 
 # External sources
 external/
