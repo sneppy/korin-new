@@ -16,12 +16,12 @@ static constexpr FORCE_INLINE T max(T const& a, auto const& b)
 #endif
 
 namespace Korin
-{	
+{
 	/**
 	 * @brief A templated growing array
 	 * that stores item in a contiguous
 	 * memory buffer.
-	 * 
+	 *
 	 * @tparam T the type of the items
 	 */
 	template<typename T>
@@ -54,7 +54,7 @@ namespace Korin
 		/**
 		 * @brief Resize the buffer and move
 		 * the items to the new buffer.
-		 * 
+		 *
 		 * @param newSize new size of the buffer
 		 * in number of items
 		 */
@@ -85,13 +85,13 @@ namespace Korin
 		/**
 		 * @brief Resize the buffer to fit the
 		 * required number of items.
-		 * 
+		 *
 		 * @param requiredSize min size in number
 		 * of items
 		 * @return true if buffer was resized
 		 * @return false otherwise
 		 */
-		bool growToFit(sizet const requiredSize)
+		FORCE_INLINE bool growToFit(sizet const requiredSize)
 		{
 			if (size < requiredSize)
 			{
@@ -110,10 +110,10 @@ namespace Korin
 		/**
 		 * @brief Shrink down the buffer allocation
 		 * as much as possible.
-		 * 
+		 *
 		 * The buffer must still fit the required
 		 * number of items.
-		 * 
+		 *
 		 * @param requiredSize number of items to
 		 * fit
 		 * @return true if buffer was resized
@@ -124,7 +124,7 @@ namespace Korin
 			// Find required size
 			sizet newSize = size;
 			for (; newSize > requiredSize * 2; newSize = newSize >> 1);
-			
+
 			if (newSize != size)
 			{
 				// Resize the buffer
@@ -138,7 +138,7 @@ namespace Korin
 		/**
 		 * @brief Copy construct items in array
 		 * with the given value.
-		 * 
+		 *
 		 * @param idx index of current item
 		 * @param item current item
 		 * @param items rest of items
@@ -154,10 +154,10 @@ namespace Korin
 				initItems(idx + 1, FORWARD(items)...);
 			}
 		}
-		
+
 		/**
 		 * @brief Implementation for @c concat.
-		 * 
+		 *
 		 * Items of other will be copied into
 		 * this array.
 		 */
@@ -180,17 +180,17 @@ namespace Korin
 
 		/**
 		 * @brief Implementation for @c concat.
-		 * 
+		 *
 		 * Items of other will be moved into
 		 * this array, and other's count set to
 		 * zero.
-		 * 
+		 *
 		 * When other will be destroyed, there
 		 * will be no items to be destroyed, but
 		 * buffer should still be freed.
-		 * 
-		 * @param other 
-		 * @param others 
+		 *
+		 * @param other
+		 * @param others
 		 */
 		void concatImpl(sizet numItems, Array&& other, auto&& ...others)
 		{
@@ -226,7 +226,7 @@ namespace Korin
 		/**
 		 * @brief Construct an array with an
 		 * initial size (but no items).
-		 * 
+		 *
 		 * @param reservedSize size to reserve
 		 */
 		FORCE_INLINE Array(sizet reservedSize)
@@ -239,16 +239,16 @@ namespace Korin
 		/**
 		 * @brief Construct a new array and insert
 		 * @c numItems copies of @c item in it.
-		 * 
+		 *
 		 * @param numItems number of copies to insert
 		 * @param item item to copy
-		 * @param extraSlack extra size reserved
+		 * @param slack extra size reserved
 		 */
-		FORCE_INLINE Array(sizet numItems, T const& item, sizet extraSlack = 0)
+		FORCE_INLINE Array(sizet numItems, T const& item, sizet slack = 0)
 			: Array{}
 		{
 			// Create buffer if necessary
-			growToFit(numItems + extraSlack);
+			growToFit(numItems + slack);
 			count = numItems;
 
 			// Initialize items
@@ -258,7 +258,7 @@ namespace Korin
 		/**
 		 * @brief Construct a new array to fit the
 		 * given content, and copy the items.
-		 * 
+		 *
 		 * @param items pointer to items to copy
 		 * @param numItems number of items to copy
 		 * @param extraSlack extra space to reserve
@@ -277,7 +277,7 @@ namespace Korin
 		/**
 		 * @brief Construct a copy of another
 		 * array.
-		 * 
+		 *
 		 * @param other another array
 		 */
 		Array(Array const& other)
@@ -297,8 +297,41 @@ namespace Korin
 		}
 
 		/**
+		 * @brief Construct a new array by copying another
+		 * array, and reserve extra space for it.
+		 *
+		 * the extra items are not initialized, nor should
+		 * they be managed before calling one of the methods
+		 * to insert new items (unless it is safe to do so).
+		 *
+		 * @param other another array to copy
+		 * @param slack extra space to reserve (in number
+		 * of items)
+		 */
+		Array(Array const& other, uint64 slack)
+			: data{nullptr}
+			, size{0}
+			, count{0}
+		{
+			if (other.data || slack > 0)
+			{
+				// Determine size
+				size = other.size;
+				if (!growToFit(other.count + slack))
+				{
+					// Then simply resize to other buffer size
+					resize(other.size);
+				}
+
+				// Copy items from other array
+				copyConstructItems(data, other.data, other.count);
+				count = other.count;
+			}
+		}
+
+		/**
 		 * @brief Move another array.
-		 * 
+		 *
 		 * @param other another array
 		 */
 		Array(Array&& other)
@@ -312,7 +345,7 @@ namespace Korin
 
 		/**
 		 * @brief Copy another array.
-		 * 
+		 *
 		 * @param other another array
 		 * @return ref to self
 		 */
@@ -350,7 +383,7 @@ namespace Korin
 
 		/**
 		 * @brief Move another array.
-		 * 
+		 *
 		 * @param other another array
 		 * @return ref to self
 		 */
@@ -380,7 +413,7 @@ namespace Korin
 
 		/**
 		 * @brief Returns the number of items
-		 * in the array. 
+		 * in the array.
 		 */
 		FORCE_INLINE sizet getNumItems() const
 		{
@@ -399,7 +432,7 @@ namespace Korin
 		/**
 		 * @brief Returns a pointer that points
 		 * to the array buffer.
-		 * @{ 
+		 * @{
 		 */
 		FORCE_INLINE T const* operator*() const
 		{
@@ -415,7 +448,7 @@ namespace Korin
 		/**
 		 * @brief Returns a reference to the
 		 * i-th item.
-		 * 
+		 *
 		 * @param idx index of the item
 		 * @return ref to the item
 		 */
@@ -497,7 +530,7 @@ namespace Korin
 		/**
 		 * @brief Append one or more items to
 		 * the array
-		 * 
+		 *
 		 * @param items items to append to the
 		 * array
 		 */
@@ -514,7 +547,7 @@ namespace Korin
 		/**
 		 * @brief Insert one or more item in
 		 * a precise position.
-		 * 
+		 *
 		 * @param idx index of the first item
 		 * inserted
 		 * @param items the items to insert
@@ -545,7 +578,7 @@ namespace Korin
 		/**
 		 * @brief Construct and append an item
 		 * to the array.
-		 * 
+		 *
 		 * @param args arguments used to construct
 		 * the item
 		 */
@@ -558,7 +591,7 @@ namespace Korin
 		/**
 		 * @brief Construct and insert an item
 		 * in the array.
-		 * 
+		 *
 		 * @param idx index of inserted item
 		 * @param args arguments used to construct
 		 * the item
@@ -572,11 +605,11 @@ namespace Korin
 		/**
 		 * @brief Append one or more other arrays
 		 * at the end of this array.
-		 * 
+		 *
 		 * If the array to append is passed as
 		 * an r-value reference, all its items
 		 * will be moved instead of copied.
-		 * 
+		 *
 		 * @param others arrays to append
 		 * @{
 		 */
@@ -600,7 +633,7 @@ namespace Korin
 		/**
 		 * @brief Remove one or more items at
 		 * the given position.
-		 * 
+		 *
 		 * @param idx index of first item to
 		 * remove
 		 * @param numItems number of items to
@@ -639,11 +672,11 @@ namespace Korin
 		/**
 		 * @brief Remove all items in the given
 		 * range.
-		 * 
+		 *
 		 * @param from iterator that points to the
 		 * first item to remove
 		 * @param to iterator that points after the
-		 * last item to remove 
+		 * last item to remove
 		 */
 		FORCE_INLINE void remove(ConstIterator from, ConstIterator to)
 		{
@@ -654,7 +687,7 @@ namespace Korin
 		/**
 		 * @brief Returns a slice of the array
 		 * as a copy.
-		 * 
+		 *
 		 * @param beginIdx index of the beginning
 		 * of the slice
 		 * @param endIdx index of the end of the
@@ -667,7 +700,7 @@ namespace Korin
 			CHECK(endIdx <= count)
 			CHECK(beginIdx <= endIdx)
 			CHECKF(beginIdx != endIdx, "Slice [%llu:%llu] is empty", beginIdx, endIdx)
-			
+
 			const sizet numItems = endIdx - beginIdx;
 
 			// Resize array to fit the items

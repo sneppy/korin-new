@@ -316,6 +316,68 @@ namespace Korin
 		}
 
 		/**
+		 * @brief Append a character to the end of the
+		 * string.
+		 *
+		 * @param c the character to append
+		 * @return ref to self
+		 */
+		StringBase& operator+=(CharT c)
+		{
+			// Grow array if necessary
+			array.growToFit(array.count + 1);
+
+			// Set character
+			array[getLength()] = c;
+			array.count++;
+			terminate();
+
+			return *this;
+		}
+
+		/**
+		 * @brief Return a new string equal to this string
+		 * and append the character.
+		 *
+		 * @param c the character to append
+		 * @return new string ending with the character
+		 * @{
+		 */
+		StringBase operator+(CharT c) const&
+		{
+			// Create new string from this one
+			StringBase newString{*this, 1};
+
+			// Append character
+			newString[newString.getLength()] = c;
+			newString.array.count++;
+			newString.terminate();
+
+			return newString;
+		}
+
+		StringBase operator+(CharT c)&&
+		{
+			// We can probably reuse the buffer from this string
+			if (UNLIKELY(array.size < array.count + 1))
+			{
+				// No optimization available
+				return *this + c;
+			}
+
+			// Create string using this string's buffer
+			StringBase newString{move(*this)};
+
+			// Append character
+			newString[newString.getLength()] = c;
+			newString.array.count++;
+			newString.terminate();
+
+			return newString;
+		}
+		/** @} */
+
+		/**
 		 * @brief Append another string source to this
 		 * string.
 		 *
@@ -330,7 +392,7 @@ namespace Korin
 			array.growToFit(array.count + other.len);
 
 			// Copy data
-			copyItems(*array + getLen(), other.src, other.len);
+			copyItems(*array + getLength(), other.src, other.len);
 			array.count += other.len;
 			terminate();
 
@@ -343,6 +405,7 @@ namespace Korin
 		 *
 		 * @param lhs,rhs any two string sources
 		 * @return new string
+		 * @{
 		 */
 		friend StringBase operator+(StringSourceT const& lhs, StringSourceT const& rhs)
 		{
@@ -358,6 +421,50 @@ namespace Korin
 
 			return newString;
 		}
+
+		friend StringBase operator+(StringBase&& lhs, StringSourceT const& rhs)
+		{
+			// Get required length
+			sizet const newLen = lhs.getLength() + rhs.len;
+			if (lhs.array.size < newLen + 1)
+			{
+				// No optimization available
+				return lhs + rhs;
+			}
+
+			// We can reuse lhs buffer
+			StringBase newString{move(lhs)};
+
+			// Copy characters from second source
+			copyItems(*newString + lhs.getLength(), rhs.src, rhs.len);
+			newString.array.count = newLen + 1;
+			newString.terminate();
+
+			return newString;
+		}
+
+		friend StringBase operator+(StringSourceT const& lhs, StringBase&& rhs)
+		{
+			// Get required length
+			sizet const newLen = lhs.len + rhs.getLength();
+			if (rhs.array.size < newLen + 1)
+			{
+				// No optimization available
+				return lhs + rhs;
+			}
+
+			// We can reuse rhs buffer
+			StringBase newString{move(rhs)};
+
+			// We still have to copy all the items though
+			copyItems(*newString, lhs.src, lhs.len);
+			copyItems(*newString + lhs.len, *rhs, rhs.getLength());
+			newString.array.count = newLen + 1;
+			newString.terminate();
+
+			return newString;
+		}
+		/** @} */
 
 		/**
 		 * @brief Format a string source with the
@@ -390,12 +497,26 @@ namespace Korin
 		}
 
 		/**
+		 * @brief Copy another string and reserve extra
+		 * space for it.
+		 *
+		 * @param other another string to copy
+		 * @param slack extra space to reserve
+		 */
+		FORCE_INLINE StringBase(StringBase const& other, sizet slack)
+			: array{other.array, slack}
+		{
+			// Make sure string is terminated
+			terminate();
+		}
+
+		/**
 		 * @brief Append the terminating character
 		 * to the end of the string.
 		 */
 		FORCE_INLINE void terminate()
 		{
-			array[getLen()] = CharT{0};
+			array[getLength()] = CharT{0};
 		}
 
 		/* The array that holds the string characters. */
