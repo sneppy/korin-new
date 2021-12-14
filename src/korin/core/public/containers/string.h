@@ -524,21 +524,21 @@ namespace Korin
 			return newString;
 		}
 
-		/**
-		 * @brief Format a string source with the
-		 * given format arguments.
-		 *
-		 * The format string uses the usual C
-		 * format placeholders.
-		 *
-		 * @tparam FormatArgsT the type of the
-		 * format arguments
-		 * @param fmt format string source
-		 * @param args tuple of format arguments
-		 * @return new formatted string
-		 */
 		template<typename ...FormatArgsT>
 		friend StringBase operator%(StringSourceT const& fmt, Tuple<FormatArgsT...> const& args);
+
+		/**
+		 * @brief Formats a string using the given
+		 * .arguments
+		 *
+		 * @param args arguments used to format the string
+		 * @return new formatted string
+		 */
+		FORCE_INLINE StringBase format(auto&& ...args) const&
+		{
+			// How cool is this??
+			return *this % tie(FORWARD(args)...);
+		}
 
 	protected:
 		/**
@@ -636,6 +636,17 @@ namespace Korin
 		/** @} */
 	};
 
+	/**
+	 * @brief Format string with the given tuple of
+	 * arguments.
+	 *
+	 * The format string uses the usual C printf syntax.
+	 *
+	 * @tparam FormatArgsT the types of the format arguments
+	 * @param fmt format string source
+	 * @param args tuple of format arguments
+	 * @return new formatted string
+	 */
 	template<typename ...FormatArgsT>
 	FORCE_INLINE StringBase<char> operator%(StringSource<char> const& fmt, Tuple<FormatArgsT...> const& args)
 	{
