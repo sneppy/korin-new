@@ -3,17 +3,22 @@ from typing import Any
 import gdb
 
 from gdb_pp.printer import Printer
-from gdb_pp.types import ArrayPrinter, HashMapPrinter, HashSetPrinter, StringBasePrinter
+from gdb_pp.types import ArrayPrinter, HashMapPrinter, HashSetPrinter, ListPrinter, MapPrinter, SetPrinter, StringBasePrinter, TreePrinter, TuplePrinter
 
 
 def create_default_printer() -> Printer:
 	"""Creates the default pretty-printer for Korin types."""
 
 	printer = Printer()
+	printer.register(TuplePrinter)
 	printer.register(ArrayPrinter)
 	printer.register(StringBasePrinter)
-	printer.register(HashMapPrinter)
+	printer.register(ListPrinter)
+	printer.register(TreePrinter)
+	printer.register(SetPrinter)
+	#printer.register(MapPrinter) # TODO: Rewrite Map has a subclass of Tree first
 	printer.register(HashSetPrinter)
+	printer.register(HashMapPrinter)
 	return printer
 
 

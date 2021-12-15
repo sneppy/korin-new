@@ -1,8 +1,39 @@
-from typing import Any, Iterator, Tuple
+from typing import Any, Iterable, Iterator, Tuple
 
 import gdb
 
 from .printer import TypePrinter
+
+
+class TuplePrinter(TypePrinter):
+	"""Implements a pretty-printer for tuples."""
+
+	NAME = "Tuple"
+
+	def __init__(self, value: gdb.Value) -> None:
+
+		super().__init__(value)
+
+		self.num_items = value["numItems"]
+
+	def display_hint(self) -> str:
+
+		return "array"
+
+	def to_string(self) -> str:
+
+		return "Tuple<>[%d]" % (self.num_items)
+
+	def children(self) -> Iterator[Tuple[str, Any]]:
+
+		base_type = self._type.fields()[0]
+		base = self._value[base_type]
+
+		for idx in range(self.num_items):
+			yield ("[%d]" % idx, base["item"])
+			# Next base
+			base_type = base.type.fields()[0]
+			base = base[base_type]
 
 
 class ArrayPrinter(TypePrinter):
@@ -57,6 +88,118 @@ class StringBasePrinter(TypePrinter):
 			return ""
 		else:
 			return self.array["data"].string()
+
+
+class ListPrinter(TypePrinter):
+	"""Implements a pretty-printer for linked-lists."""
+
+	NAME = "Tree"
+
+
+	def __init__(self, value: gdb.Value) -> None:
+
+		super().__init__(value)
+
+		self.head = value["head"]
+		self.tail = value["tail"]
+		self.num_nodes = value["numNodes"]
+
+	def display_hint(self) -> str:
+
+		return "array"
+
+	def to_string(self) -> str:
+
+		return "List<%s>[%d]" % (self._type.template_arguments(0), self.num_nodes)
+
+	def children(self) -> Iterator[Tuple[str, Any]]:
+
+		it = self.head
+		idx = 0
+		while it:
+			node = it.dereference()
+			yield ("[%d]" % idx, node["value"])
+			it = node["next"]
+			idx += 1
+
+
+class TreePrinter(TypePrinter):
+	"""Implements a pretty-printer for Tree-based types.
+
+	Tree nodes are printed as a linked list rather than an
+	actual binary tree.
+
+	"""
+
+	NAME = "Tree"
+
+	def __init__(self, value: gdb.Value) -> None:
+
+		super().__init__(value)
+
+		self.root = value["root"]
+		self.num_nodes = value["numNodes"]
+
+	def display_hint(self) -> str:
+
+		return "array"
+
+	def to_string(self) -> str:
+
+		return "Tree<%s>[%d]" % (self._type.template_arguments(0), self.num_nodes)
+
+	def children(self) -> Iterator[Tuple[str, Any]]:
+
+		def _get_leftmost(root):
+
+			it = root
+			while root:
+				it = root
+				node = root.dereference()
+				root = node["left"]
+			return it
+
+		# Iterate as a list
+		it = _get_leftmost(self.root)
+		idx = 0
+		while it:
+			node = it.dereference()
+			yield ("[%d]" % idx, node["value"])
+			it = node["next"]
+			idx += 1
+
+
+class SetPrinter(TreePrinter):
+	"""Implements a pretty-printer for sets."""
+
+	NAME = "Set"
+
+	def to_string(self) -> str:
+
+		return "Set<%s>[%d]" % (self._type.template_arguments(0), self.num_nodes)
+
+
+class MapPrinter(TreePrinter):
+	"""Implements a pretty-printer for maps."""
+
+	NAME = "Map"
+
+	def display_hint(self) -> str:
+		"""  """
+
+		return "map"
+
+	def to_string(self) -> str:
+
+		return "Map<%s, %s>[%d]" % (self._type.template_arguments(0), self._type.template_arguments(1), self.num_nodes)
+
+	def children(self) -> Iterator[Tuple[str, Any]]:
+
+		idx = 0
+		for _, item in super().children():
+			yield ("[%d]" % idx, item["first"])
+			yield ("[%d]" % (idx + 1), item["second"])
+			idx += 2
 
 
 class HashTablePrinter(TypePrinter):

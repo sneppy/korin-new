@@ -1,8 +1,8 @@
-from typing import Any, Optional, Type
 import re
+from logging import warning
+from typing import Any, Optional, Type
 
 import gdb
-
 
 _type_pattern = re.compile("^(\w[\w:]+)(<.*>)?$")
 """Pattern used to strip template arguments."""
@@ -62,6 +62,8 @@ class Printer(object):
 
 		assert issubclass(TypePrinterT, TypePrinter)
 		lookup_name = "::".join((self.name, TypePrinterT.NAME))
+		if lookup_name in self._type_printers:
+			warning("Overriding existing printer for type '%s'", lookup_name)
 		self._type_printers[lookup_name] = TypePrinterT
 
 	def __call__(self, value: gdb.Value) -> Any:
