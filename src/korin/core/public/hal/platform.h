@@ -3,33 +3,37 @@
 #include "misc/build.h"
 
 #if PLATFORM_WINDOWS
-#	include "windows/platform.h"
+# include "windows/platform.h"
 #elif PLATFORM_APPLE
-#	include "apple/platform.h"
+# include "apple/platform.h"
 #elif PLATFORM_LINUX
-#	include "linux/platform.h"
+# include "linux/platform.h"
 #else
-#	error "Unknown platform"
+# error "Unknown platform"
 #endif
 
 #ifndef PLATFORM_POSIX
-#	define PLATFORM_POSIX 0
+# define PLATFORM_POSIX 0
 #endif
 
 #ifndef FORCE_INLINE
-#	define FORCE_INLINE inline
+# define FORCE_INLINE inline
 #endif
 
 #ifndef UNLIKELY
-#	define UNLIKELY(x) (x)
+# define UNLIKELY(x) (x)
 #endif
 
 #ifndef LIKELY
-#	define LIKELY(x) (x)
+# define LIKELY(x) (x)
 #endif
 
 #ifndef RESTRICT
-#	define RESTRICT restrict
+# define RESTRICT restrict
+#endif
+
+#ifndef LOAD_DEBUG_SCRIPT
+# define LOAD_DEBUG_SCRIPT
 #endif
 
 // Declare all C++ types in global scope
