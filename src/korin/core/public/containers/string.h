@@ -540,6 +540,31 @@ namespace Korin
 			return *this % tie(FORWARD(args)...);
 		}
 
+		/**
+		 * @brief Returns a new string equal to a substring
+		 * of this string.
+		 *
+		 * If a end offset is not specified, the suffix
+		 * starting from the start offset is returned.
+		 *
+		 * @param start the start offset of the substring
+		 * @param end the end offset of the substring
+		 * @return new string
+		 * @{
+		 */
+		FORCE_INLINE StringBase substr(sizet start, sizet end) const
+		{
+			KORIN_ASSERT(end >= start)
+			KORIN_ASSERT(end <= getLength())
+			return StringBase{*array + start, end - start};
+		}
+
+		FORCE_INLINE StringBase substr(sizet start)
+		{
+			return substr(start, getLength());
+		}
+		/** @} */
+
 	protected:
 		/**
 		 * @brief Create an empty string, with an
