@@ -191,4 +191,122 @@ struct GenericPlatformMath
 
 		return m * n;
 	}
+
+	/**
+	 * @brief Returns the integer base 2 logarithm of the
+	 * given number.
+	 *
+	 * This is equivalent to the position of the most
+	 * significant non-zero bit.
+	 *
+	 * If the value is zero, the result is undefined.
+	 *
+	 * @param n the value to compute the log of
+	 * @return floor[log2(n)]
+	 */
+	static constexpr FORCE_INLINE uint64 log2i(uint64 n)
+	{
+		uint64 p = 0;
+		uint64 k = 32;
+
+		for (; n != 0 && k != 0; k /= 2)
+		{
+			if (n >> k)
+			{
+				n = n >> k;
+				p += k;
+			}
+		}
+
+		return p;
+	}
+
+	/**
+	 * @brief Return the number of non-zero bits modulo 2 in
+	 * the given value.
+	 *
+	 * @param n the value to compute the parity of
+	 * @return number of 1s modulo 2
+	 */
+	static constexpr FORCE_INLINE uint64 parity(uint64 n)
+	{
+		n = (n >> 32) ^ (n & 0xffffffff);
+		n = (n >> 16) ^ (n & 0xffff);
+		n = (n >> 8) ^ (n & 0xff);
+		n = (n >> 4) ^ (n & 0xf);
+		n = (n >> 2) ^ (n & 0b11);
+		n = (n >> 1) ^ (n & 0b1);
+		return n;
+	}
+
+	/**
+	 * @brief Returns true if the given value is a power of
+	 * 2.
+	 *
+	 * @param n the value to test
+	 * @return true if value is power of 2
+	 * @return false otherwise
+	 */
+	static constexpr FORCE_INLINE bool isPowerOf2(uint64 n)
+	{
+		return (n & (n - 1)) == 0;
+	}
+
+	/**
+	 * @brief Returns a new value equal to the closest
+	 * multiple of @c p and smaller than the given value.
+	 *
+	 * @c p must be a power of 2. If @c p is not a power of
+	 * 2, the result is undefined.
+	 *
+	 * @param n the value to align
+	 * @param p the required alignment
+	 * @return value aligned to smaller value
+	 */
+	static constexpr FORCE_INLINE bool align2Down(uint64 n, uint64 p)
+	{
+		return n & ~(p - 1);
+	}
+
+	/**
+	 * @brief Similar to align2Down(), but the returned
+	 * value is larger than the given value.
+	 *
+	 * @param n the value to align
+	 * @param p the required alignment
+	 * @return value aligned to larger value
+	 */
+	static constexpr FORCE_INLINE bool align2Up(uint64 n, uint64 p)
+	{
+		return align2Down(n + p - 1, p);
+	}
+
+	/**
+	 * @brief Given a value, returns the previous power of
+	 * 2.
+	 *
+	 * For instance, 17 -> 16, 80 -> 64, 128 -> 128, etc.
+	 *
+	 * If the given value is a power of two, the result is
+	 * the value itself.
+	 *
+	 * @param n the given value
+	 * @return previous power of 2
+	 */
+	static constexpr FORCE_INLINE uint64 closestSmallerPowerOf2(uint64 n)
+	{
+		return 1ull << log2i(n);
+	}
+
+	/**
+	 * @brief Similar to closestSmallerPowerOf2(), but
+	 * returns the next power of two
+	 *
+	 * @param n the given value
+	 * @return next power of 2
+	 */
+	static constexpr FORCE_INLINE uint64 closestLargerPowerOf2(uint64 n)
+	{
+		return 1ull << (log2i(n - 1) + 1);
+	}
 };

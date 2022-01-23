@@ -1,19 +1,14 @@
 #include "hal/platform_crt.h"
+#include "hal/platform_math.h"
 #include "hal/malloc_pool.h"
 #include "hal/malloc_ansi.h"
 
-namespace
-{
+
 #define NEXT_BLOCK(block, logSize) (*reinterpret_cast<void**>(reinterpret_cast<uintp>(block) + logSize))
 
-	// TODO: Replace with PlatformMath or Math call
-	FORCE_INLINE sizet align2Up(sizet n, sizet m)
-	{
-		ASSERT(m > 0)
-		sizet p = m - 1;
-		return (n + p) & ~p;
-	}
 
+namespace
+{
 	/* Initialize the block list of a memory pool. */
 	FORCE_INLINE void initMemoryPool(MemoryPool* pool)
 	{
@@ -22,7 +17,7 @@ namespace
 
 		const uint32 numBlocks = pool->createInfo.numBlocks;
 		const sizet blockLogSize = pool->createInfo.blockSize;
-		const sizet blockPhySize = align2Up(blockLogSize + sizeof(void*), pool->createInfo.blockAlignment);
+		const sizet blockPhySize = PlatformMath::align2Up(blockLogSize + sizeof(void*), pool->createInfo.blockAlignment);
 
 		void* block = pool->blocks = pool->buffer;
 		for (uint32 blockIdx = 0; blockIdx < numBlocks - 1; ++blockIdx)
@@ -85,11 +80,11 @@ namespace
 
 		const uint32 numBlocks = pool->createInfo.numBlocks;
 		const sizet blockLogSize = pool->createInfo.blockSize;
-		const sizet blockPhySize = align2Up(blockLogSize + sizeof(void*), pool->createInfo.blockAlignment);
-		
+		const sizet blockPhySize = PlatformMath::align2Up(blockLogSize + sizeof(void*), pool->createInfo.blockAlignment);
+
 		void** blocks = new void*[numBlocks];
 		memset(blocks, 0, numBlocks * sizeof(void*));
-		
+
 		// Traverse blocks list
 		for (void* block = pool->blocks; block; NEXT_BLOCK(block, blockLogSize))
 		{
@@ -105,9 +100,11 @@ namespace
 
 		delete[] blocks;
 	}
+} // namespace
+
 
 #undef NEXT_BLOCK
-} // namespace
+
 
 MallocPool::MallocPool(MemoryPool::CreateInfo const& inCreateInfo)
 	: root{nullptr}
@@ -257,13 +254,13 @@ FORCE_INLINE MallocPool::NodeT* MallocPool::createPool()
 {
 	// Compute size needed
 	const sizet blockLogSize = createInfo.blockSize;
-	const sizet blockPhySize = align2Up(blockLogSize + sizeof(void*), createInfo.blockAlignment);
+	const sizet blockPhySize = PlatformMath::align2Up(blockLogSize + sizeof(void*), createInfo.blockAlignment);
 	const sizet bufferLogSize = createInfo.numBlocks * blockPhySize;
-	const sizet poolHandleOffset = align2Up(bufferLogSize, alignof(*root));
+	const sizet poolHandleOffset = PlatformMath::align2Up(bufferLogSize, alignof(*root));
 	const sizet bufferPhySize = poolHandleOffset + sizeof(*root);
 
 	// Allocate buffer using global allocator
-	void* buffer = gMalloc->malloc(align2Up(bufferLogSize, alignof(*root)) + sizeof(*root), createInfo.blockAlignment);
+	void* buffer = gMalloc->malloc(PlatformMath::align2Up(bufferLogSize, alignof(*root)) + sizeof(*root), createInfo.blockAlignment);
 
 	// Create node and init memory pool
 	NodeT* node = new (reinterpret_cast<void*>(reinterpret_cast<uintp>(buffer) + poolHandleOffset)) NodeT{};

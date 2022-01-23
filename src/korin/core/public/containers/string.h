@@ -464,8 +464,7 @@ namespace Korin
 			for (uint32 rep = 1; rep < repeats; rep *= 2)
 			{
 				// Copy in powers of two, much more efficient
-				// TODO: Replace with `min()`
-				uint32 const maxRep = rep < repeats - rep ? rep : repeats - rep;
+				uint32 const maxRep = min(rep, repeats - rep);
 				copyItems(*array + rep * prefixLen, *array, maxRep * prefixLen);
 			}
 			array.count = newLen + 1;
@@ -482,7 +481,7 @@ namespace Korin
 		 * @param repeats the number of repeats
 		 * @return new string
 		 */
-		friend StringBase operator*(StringSourceT const& prefix, sizet repeats)
+		friend StringBase operator*(StringSourceT const& prefix, uint32 repeats)
 		{
 			// The case where the prefix is an r-value is not handled specially because it's basically impossible that
 			// the buffer would be able to contain the repeated result
@@ -497,8 +496,7 @@ namespace Korin
 			for (uint32 rep = 1; rep < repeats; rep *= 2)
 			{
 				// Copy in powers of two, much more efficient
-				// TODO: Replace with `min()`
-				uint32 const maxRep = rep < repeats - rep ? rep : repeats - rep;
+				uint32 const maxRep = min(rep, repeats - rep);
 				copyItems(*newString + rep * prefixLen, *newString, maxRep * prefixLen);
 			}
 

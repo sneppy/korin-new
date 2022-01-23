@@ -1,5 +1,6 @@
 #pragma once
 
+#include "hal/platform_math.h"
 #include "containers_types.h"
 #include "list_node.h"
 
@@ -638,8 +639,8 @@ namespace Korin
 			BucketT** oldBuckets = buckets;
 			sizet const oldNumBuckets = numBuckets;
 
-			// TODO: Check number of buckets is po2 and round up if necessary
-			numBuckets = desiredNumBuckets;
+			// Round up to desired number of buckets to next power of 2
+			numBuckets = PlatformMath::closestLargerPowerOf2(desiredNumBuckets);
 			if (numBuckets == oldNumBuckets)
 				// Skip, no need to realloc
 				return;

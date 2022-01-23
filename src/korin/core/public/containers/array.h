@@ -4,16 +4,11 @@
 #include "misc/logging.h"
 #include "templates/utility.h"
 #include "hal/platform_memory.h"
+#include "hal/platform_math.h"
 
-// TODO: Replace with platform math
-template<typename T>
-static constexpr FORCE_INLINE T max(T const& a, auto const& b)
-{
-	return a > b ? a : b;
-}
 
 #ifndef KORIN_ARRAY_MIN_SIZE
-# define KORIN_ARRAY_MIN_SIZE 4
+# define KORIN_ARRAY_MIN_SIZE 4ull
 #endif
 
 namespace Korin
@@ -498,9 +493,6 @@ namespace Korin
 		 */
 		FORCE_INLINE bool shrinkToFit()
 		{
-			#define log2i(x) (x)
-			// TODO: Waiting for log2i
-
 			if (numItems == 0)
 			{
 				destroy();
@@ -526,7 +518,6 @@ namespace Korin
 			}
 
 			return false;
-			#undef log2i
 		}
 
 	protected:
@@ -631,12 +622,7 @@ namespace Korin
 		 */
 		FORCE_INLINE sizet computeMinSize(uint64 desiredNumItems)
 		{
-			// Size should always be a power of two
-			// TODO: Replace everything with getClosestLargerPowerOf2
-			sizet minSize = size >= KORIN_ARRAY_MIN_SIZE ? size : KORIN_ARRAY_MIN_SIZE;
-			for (; minSize < desiredNumItems; minSize *= 2);
-			KORIN_ASSERT((minSize & (minSize - 1)) == 0) // TODO: Replace with isPowerOf2
-			return minSize;
+			return PlatformMath::closestLargerPowerOf2(desiredNumItems);
 		}
 
 		/**

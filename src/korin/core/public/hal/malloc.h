@@ -7,7 +7,7 @@
 
 
 /* The minimum required alignment */
-enum { MIN_ALIGNMENT = sizeof(void*) };
+enum : sizet { MIN_ALIGNMENT = sizeof(void*) };
 
 
 /**

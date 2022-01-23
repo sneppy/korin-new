@@ -5,6 +5,7 @@
 #include "types.h"
 #include "enable_if.h"
 
+
 /**
  * @brief Cast any type to an r-value reference
  * of the same type.
@@ -290,5 +291,47 @@ FORCE_INLINE typename EnableIf<!IsTriviallyDestructible<T>::value>::Type destroy
 		// Destroy all items
 		items[i].~T();
 	}
+}
+/** @} */
+
+
+/**
+ * @brief Return the least of two values.
+ *
+ * @param x the first value
+ * @param y the second value
+ * @return x < y ? x : y
+ * @{
+ */
+constexpr FORCE_INLINE auto min(auto const& x, auto const& y)
+{
+	return x < y ? x : y;
+}
+
+template<typename T>
+constexpr FORCE_INLINE T& min(T& x, T& y)
+{
+	return x < y ? x : y;
+}
+/** @} */
+
+
+/**
+ * @brief Returns the greatest of two values.
+ *
+ * @tparam T the type of the values
+ * @param x the first value
+ * @param y the second value
+ * @return x > y ? x : y
+ */
+constexpr FORCE_INLINE auto max(auto const& x, auto const& y)
+{
+	return x > y ? x : y;
+}
+
+template<typename T>
+constexpr FORCE_INLINE T& max(T& x, T& y)
+{
+	return x > y ? x : y;
 }
 /** @} */
