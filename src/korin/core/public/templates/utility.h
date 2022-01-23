@@ -50,7 +50,7 @@ constexpr FORCE_INLINE T&& forward(typename RemoveReference<T>::Type&& x)
  * @param x,y values to swap
  */
 template<typename T>
-FORCE_INLINE void swap(T& x, T& y)
+constexpr FORCE_INLINE void swap(T& x, T& y) // TODO: This constexpr may cause trouble
 {
 	auto z = move(x);
 	x = move(y);

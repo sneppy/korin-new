@@ -16,6 +16,23 @@ struct SameType
 
 template<typename T> struct SameType<T, T> { enum { value = true}; };
 
+
+/**
+ * @brief Choose one or the other type
+ * based on a truth value.
+ *
+ * @tparam cond condition to evaluate
+ * @tparam A,B types to choose from
+ */
+template<bool cond, typename A, typename B>
+struct ChooseType
+{
+	using Type = A;
+};
+
+template<typename A, typename B> struct ChooseType<false, A, B> { using Type = B; };
+
+
 /**
  * @brief Check if type is an integral type.
  *
@@ -37,6 +54,23 @@ template<> struct IsIntegral<int32>  { enum { value = true }; };
 template<> struct IsIntegral<int64>  { enum { value = true }; };
 template<> struct IsIntegral<char>   { enum { value = true }; };
 
+
+/**
+ * @brief Returns true if type is either
+ * float32 or float64.
+ *
+ * @tparam T the type to test
+ */
+template<typename T>
+struct IsFloating
+{
+	enum { value = false };
+};
+
+template<> struct IsFloating<float32> { enum { value = true }; };
+template<> struct IsFloating<float64> { enum { value = true }; };
+
+
 /**
  * @brief Return true if type is a cv POD type.
  *
@@ -47,6 +81,7 @@ struct IsPOD
 {
 	enum { value = __is_pod(T) };
 };
+
 
 /**
  * @brief Check if a type is a base for
@@ -61,6 +96,7 @@ struct IsBaseOf
 	enum { value = __is_base_of(BaseT, DerivedT) };
 };
 
+
 /**
  * @brief Check if type has trivial constructor.
  *
@@ -71,6 +107,7 @@ struct IsTriviallyConstructible
 {
 	enum { value = __has_trivial_constructor(T) };
 };
+
 
 /**
  * @brief Check if a type has a trivial
@@ -86,6 +123,7 @@ struct IsTriviallyCopyable
 	enum { value = __has_trivial_assign(T) };
 };
 
+
 /**
  * @brief Check if a type has a trivial
  * destructor.
@@ -99,6 +137,7 @@ struct IsTriviallyDestructible
 {
 	enum { value = __has_trivial_destructor(T) };
 };
+
 
 /**
  * @brief Strips the reference from a type.
@@ -115,6 +154,7 @@ struct RemoveReference
 template<typename T> struct RemoveReference<T&> { using Type = T; };
 template<typename T> struct RemoveReference<T&&> { using Type = T; };
 
+
 /**
  * @brief Remove the const and volatile
  * qualifier from a type.
@@ -130,6 +170,7 @@ struct RemoveCV
 template<typename T> struct RemoveCV<T const>          { using Type = T; };
 template<typename T> struct RemoveCV<T volatile>       { using Type = T; };
 template<typename T> struct RemoveCV<T const volatile> { using Type = T; };
+
 
 /**
  * @brief Strip type from references and

@@ -26,7 +26,14 @@ add_library(${MODULE_NAME} OBJECT
 )
 add_library(${PROJECT_NAME}::${MODULE_NAME} ALIAS ${MODULE_NAME})
 
-# Include public directory
+# Require GCE-Math library for constexpr math
+FetchContent_MakeAvailable(gcem)
+target_link_libraries(${MODULE_NAME}
+
+	gcem
+)
+
+# Include directories
 target_include_directories(${MODULE_NAME}
 
 	PUBLIC "./public"

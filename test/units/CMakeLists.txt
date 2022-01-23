@@ -3,6 +3,7 @@ set(KORIN_UNITS
 
 	"containers"
 	"memory"
+	"math"
 )
 
 # Enable testing
@@ -18,13 +19,13 @@ foreach(UNIT_NAME ${KORIN_UNITS})
 	endif(NOT EXISTS ${PUBLIC_FILE})
 
 	if(NOT EXISTS ${PRIVATE_FILE})
-		configure_file("./unit.cpp.in" ${PRIVATE_FILE} @ONLY)	
+		configure_file("./unit.cpp.in" ${PRIVATE_FILE} @ONLY)
 	endif(NOT EXISTS ${PRIVATE_FILE})
 
 	# Create unit executable
 	set(UNIT_TARGET_NAME unit_${UNIT_NAME})
 	add_executable(${UNIT_TARGET_NAME}
-	
+
 		${PUBLIC_FILE}
 		${PRIVATE_FILE}
 	)
@@ -32,7 +33,7 @@ foreach(UNIT_NAME ${KORIN_UNITS})
 
 	# Link project library
 	target_link_libraries(${UNIT_TARGET_NAME}
-	
+
 		${PROJECT_NAME}
 		gtest
 		${CMAKE_THREAD_LIBS_INIT}
