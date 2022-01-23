@@ -8,7 +8,7 @@
 /**
  * @brief Cast any type to an r-value reference
  * of the same type.
- * 
+ *
  * @param x value to cast
  * @return value cast to r-value reference
  */
@@ -23,7 +23,7 @@ constexpr FORCE_INLINE typename RemoveReference<T>::Type&& move(T&& x)
  * @brief Forwards l-value references as l-value
  * references and r-value references as r-value
  * references.
- * 
+ *
  * @param x value to forward
  * @return l-value or r-value depending on input
  * 	value type
@@ -46,7 +46,7 @@ constexpr FORCE_INLINE T&& forward(typename RemoveReference<T>::Type&& x)
 /**
  * @brief Swap two values of the same type.
  * The type must be movable.
- * 
+ *
  * @param x,y values to swap
  */
 template<typename T>
@@ -60,7 +60,7 @@ FORCE_INLINE void swap(T& x, T& y)
 /**
  * @brief Initialize items with the given
  * value.
- * 
+ *
  * @tparam T the type of the items
  * @param dst pointer to the items
  * @param src value to initialize to
@@ -96,9 +96,9 @@ FORCE_INLINE typename EnableIf<!IsTriviallyConstructible<T>::value>::Type constr
 /**
  * @brief Initialize a buffer of items by
  * copying another buffer.
- * 
+ *
  * The two buffers must not overlap.
- * 
+ *
  * @param dst ptr to the buffer to construct
  * @param src ptr to the buffer to copy
  * @param n the number of items to construct
@@ -134,7 +134,7 @@ FORCE_INLINE typename EnableIf<!IsTriviallyConstructible<T>::value>::Type copyCo
 /**
  * @brief Initialize a buffer of items by
  * moving items from another buffer.
- * 
+ *
  * @param dst ptr to the buffer to construct
  * @param src ptr to the buffer to move
  * @param n number of items to construct
@@ -169,20 +169,20 @@ FORCE_INLINE typename EnableIf<!IsTriviallyConstructible<T>::value>::Type moveCo
 
 /**
  * @brief Copy items from source to destination.
- * 
+ *
  * if items are trivially copyable, uses
  * memcpy, otherwise uses class-defined
  * copy assignment operator.
- * 
+ *
  * It assumes that destination and source
  * are not overlapping. If they are, use
  * @c moveItems instead.
- * 
+ *
  * Note that if type is not trivially
  * constructible and items are not
  * initialized you should use
  * @c copyConstructItems instead.
- * 
+ *
  * @param dst pointer to destination items
  * @param src pointer to source items
  * @param n number of items to copy
@@ -216,11 +216,11 @@ FORCE_INLINE typename EnableIf<!IsTriviallyCopyable<T>::value>::Type copyItems(T
 
 /**
  * @brief Move items from source to destination.
- * 
+ *
  * If items are trivially copyable, uses
  * memmove, otherwise uses class-defined
  * move assignment operator.
- * 
+ *
  * @param dst ptr to destination items
  * @param src ptr to source items
  * @param n number of items to move
@@ -263,10 +263,12 @@ FORCE_INLINE typename EnableIf<!IsTriviallyCopyable<T>::value>::Type moveItems(T
 	}
 }
 
+// TODO: Add no overlap case
+
 /**
  * @brief If type has non-trivial destructor,
  * destroy all items.
- * 
+ *
  * @param items ptr to items to destroy
  * @param n number of items to destroy
  * @{

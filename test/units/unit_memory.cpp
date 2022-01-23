@@ -1,4 +1,6 @@
 #include "unit_memory.h"
+#include "debug_utils.h"
+
 
 int main(int argc, char** argv)
 {

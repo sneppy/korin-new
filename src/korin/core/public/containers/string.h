@@ -72,7 +72,7 @@ namespace Korin
 		 * @param other a managed string
 		 */
 		constexpr FORCE_INLINE StringSource(StringBase<CharT> const& other)
-			: StringSource{*other, other.getLen()}
+			: StringSource{*other, other.getLength()}
 		{
 			//
 		}
@@ -115,7 +115,7 @@ namespace Korin
 			: array{src.len + 1, termChar}
 		{
 			// Copy source string
-			PlatformMemory::memcpy(*array, src.src, src.len);
+			copyConstructItems(*array, src.src, src.len);
 		}
 
 		/**
@@ -172,32 +172,13 @@ namespace Korin
 		}
 
 		/**
-		 * @brief Returns the length of the string.
-		 * @deprecated Use @c getLength() instead
-		 */
-		FORCE_INLINE sizet getLen() const
-		{
-			// Exclude terminating character
-			return array.getNumItems() - 1;
-		}
-
-		/**
 		 * @brief Returns the length of the string
 		 * (excluding the terminating character).
 		 */
 		FORCE_INLINE sizet getLength() const
 		{
 			// Subtract terminating character
-			return array.getNumItems() - 1;
-		}
-
-		/**
-		 * @brief Helper that returns the number of bytes
-		 * required to store the string.
-		 */
-		FORCE_INLINE sizet getNumBytes() const
-		{
-			return array.getNumBytes();
+			return array.getLength() - 1;
 		}
 
 		/**
@@ -210,13 +191,13 @@ namespace Korin
 		 */
 		FORCE_INLINE CharT const& operator[](int32 idx) const
 		{
-			CHECK(idx < getLen())
+			CHECK(idx < getLength())
 			return array[idx];
 		}
 
 		FORCE_INLINE CharT& operator[](int32 idx)
 		{
-			CHECK(idx < getLen())
+			CHECK(idx < getLength())
 			return array[idx];
 		}
 		/** @} */
@@ -566,6 +547,9 @@ namespace Korin
 		/** @} */
 
 	protected:
+		/* The array that holds the string characters. */
+		ArrayBase<CharT> array;
+
 		/**
 		 * @brief Create an empty string, with an
 		 * initial array size equal to the given
@@ -601,9 +585,6 @@ namespace Korin
 		{
 			array[getLength()] = CharT{0};
 		}
-
-		/* The array that holds the string characters. */
-		Array<CharT> array;
 
 	private:
 		/**
@@ -700,7 +681,7 @@ namespace Korin
 			 */
 			FORCE_INLINE HashKey operator()(StringT const& key) const
 			{
-				return murmur(*key, key.getNumBytes());
+				return murmur(*key, key.getLength() * sizeof(CharT));
 			}
 		};
 	};

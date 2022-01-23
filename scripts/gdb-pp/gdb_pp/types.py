@@ -36,6 +36,34 @@ class TuplePrinter(TypePrinter):
 			base = base[base_type]
 
 
+class ArrayBasePrinter(TypePrinter):
+	"""Implements a pretty-printer for array base type. """
+
+	NAME = "ArrayBase"
+
+	def __init__(self, value: gdb.Value) -> None:
+
+		super().__init__(value)
+
+		self.buffer = value["buffer"]
+		self.size = value["size"]
+		self.num_items = value["numItems"]
+
+	def display_hint(self) -> str:
+
+		return "array"
+
+	def to_string(self) -> str:
+
+		return "ArrayBase<%s>[%d]".format(self._type.template_arguments(0), self.num_items)
+
+	def children(self) -> Iterator[Tuple[str, Any]]:
+
+		for idx in range(self.num_items):
+			item = (self.buffer + idx).dereference()
+			yield ("[%d]" % idx, item)
+
+
 class ArrayPrinter(TypePrinter):
 	"""Implements a pretty-printer for arrays."""
 
@@ -84,10 +112,10 @@ class StringBasePrinter(TypePrinter):
 
 	def to_string(self) -> None:
 
-		if self.array["data"] == 0:
+		if self.array["buffer"] == 0:
 			return ""
 		else:
-			return self.array["data"].string()
+			return self.array["buffer"].string()
 
 
 class ListPrinter(TypePrinter):

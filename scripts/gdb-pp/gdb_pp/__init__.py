@@ -3,7 +3,7 @@ from typing import Any
 import gdb
 
 from gdb_pp.printer import Printer
-from gdb_pp.types import ArrayPrinter, HashMapPrinter, HashSetPrinter, ListPrinter, MapPrinter, SetPrinter, StringBasePrinter, TreePrinter, TuplePrinter
+from gdb_pp.types import ArrayBasePrinter, ArrayPrinter, HashMapPrinter, HashSetPrinter, HashTablePrinter, ListPrinter, MapPrinter, SetPrinter, StringBasePrinter, TreePrinter, TuplePrinter
 
 
 def create_default_printer() -> Printer:
@@ -22,8 +22,18 @@ def create_default_printer() -> Printer:
 	return printer
 
 
-def register_default_printer(scope: Any=None) -> None:
-	"""Registers the default pretty-printer.
+def create_dev_printer() -> Printer:
+	"""Create a printer with private and base type printers."""
+
+	printer = create_default_printer()
+	printer.register(ArrayBasePrinter)
+	printer.register(HashTablePrinter)
+	return printer
+
+
+def register_printer(printer: Printer, scope: Any=None) -> None:
+	"""Registers a GDB pretty-printer within the given
+	scope.
 
 	By default, it attempts to register the pretty-printer
 	within the current objfile (if included from the source
@@ -33,6 +43,8 @@ def register_default_printer(scope: Any=None) -> None:
 
 	Parameter
 	---------
+	printer : Printer
+		The pretty-printer instance to register
 	scope : any gdb type that can register pretty printers
 		If given, register the pretty printer within this
 		scope. Defaults to either the current objfile or
@@ -40,6 +52,12 @@ def register_default_printer(scope: Any=None) -> None:
 
 	"""
 
-	def_printer = create_default_printer()
 	scope = scope or gdb.current_objfile() or gdb.current_progspace()
-	scope.pretty_printers.append(def_printer)
+	scope.pretty_printers.append(printer)
+
+
+def register_default_printer(scope: Any=None) -> None:
+	"""Registers the default pretty-printer."""
+
+	def_printer = create_default_printer()
+	register_printer(def_printer, scope)

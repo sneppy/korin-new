@@ -41,7 +41,7 @@ namespace Korin::Testing
 				mem = ::realloc(mem, other.size);
 				size = other.size;
 			}
-			
+
 			::memcpy(mem, other.mem, size);
 
 			return *this;
@@ -79,6 +79,16 @@ namespace Korin::Testing
 			{
 				*it = i & 0xff;
 			}
+		}
+
+		bool operator==(Object const& other) const
+		{
+			return getSize() == other.getSize();
+		}
+
+		bool operator!=(Object const& other) const
+		{
+			return !(*this == other);
 		}
 
 	protected:

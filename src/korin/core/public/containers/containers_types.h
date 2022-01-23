@@ -14,6 +14,7 @@ namespace Korin
 	template<typename>                     class Stack;
 	template<typename>                     class Queue;
 	template<typename>                     class List;
+	template<typename>                     class ArrayBase;
 	template<typename>                     class Array;
 	template<typename, typename>           class Tree;
 	template<typename, typename>           class Set;

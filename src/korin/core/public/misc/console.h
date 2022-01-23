@@ -1,0 +1,5 @@
+#pragma once
+
+#define KORIN_TERM_COLOR_RESET "\u001b[0m"
+#define KORIN_TERM_COLOR_BRIGHT_RED "\u001b[31;1m"
+#define KORIN_TERM_COLOR_BRIGHT_YELLOW "\u001b[33;1m"

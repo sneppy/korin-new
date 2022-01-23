@@ -27,7 +27,7 @@ namespace Korin
 	template<typename CharT>
 	constexpr sizet len(StringBase<CharT> const& str)
 	{
-		return str.getLen();
+		return str.getLength();
 	}
 
 	template<typename ItT>

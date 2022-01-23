@@ -1,31 +1,19 @@
 #include "hal/malloc_ansi.h"
 #include "hal/platform_crt.h"
+#include "misc/assert.h"
+
+#include "memalign.inl"
 
 void* MallocAnsi::malloc(sizet size, sizet alignment)
 {
-	void* mem = nullptr;
-
-#if PLATFORM_WINDOWS
-	// TODO
-#elif PLATFORM_POSIX
-	::posix_memalign((void**)&mem, alignment, size);
-#else
-#	warning "Cannot impose memory alignment"
-	mem = ::malloc(size);
-#endif
-
-	return mem;
+	KORIN_CHECK(alignment >= MIN_ALIGNMENT)
+	return korinMalloc(size, alignment);
 }
 
 void MallocAnsi::free(void* mem)
 {
-#if PLATFORM_WINDOWS
-	// TODO
-#elif PLATFORM_POSIX
-	::free(mem);
-#else
-	::free(mem);
-#endif
+	KORIN_CHECK(mem != nullptr)
+	korinFree(mem);
 }
 
 sizet MallocAnsi::getUsedMemory() const
@@ -33,7 +21,7 @@ sizet MallocAnsi::getUsedMemory() const
 	return {};
 }
 
-#ifndef USE_CUSTOM_GLOBAL_MALLOC
+#if !KORIN_USE_CUSTOM_GMALLOC
 // Create the global allocator
 MallocAnsi _gMalloc;
 MallocBase* gMalloc = &_gMalloc;

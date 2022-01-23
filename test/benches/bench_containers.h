@@ -151,7 +151,7 @@ static void BM_containers_std_unordered_map(benchmark::State& state)
 	{
 		std::size_t operator()(String const& key) const
 		{
-			return murmur(*key, key.getNumBytes());
+			return murmur(*key, key.getLength());
 		}
 	};
 

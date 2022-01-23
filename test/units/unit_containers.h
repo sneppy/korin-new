@@ -72,6 +72,106 @@ TEST(containers, Optional)
 
 // TODO: Test tuples
 
+TEST(containers, ArrayBase)
+{
+	ArrayBase<Testing::Object> x, y, z;
+
+	ASSERT_EQ(x.getLength(), 0);
+	ASSERT_EQ(*x, nullptr);
+
+	sizet const testValues[] = {10, 0x100, 0xf34, 4, 0x612, 0xfd4, 0x5f};
+	for (int32 i = 0; i < ARRAY_LEN(testValues); ++i)
+	{
+		x.emplaceBack(testValues[i]);
+	}
+
+	ASSERT_EQ(x.getLength(), ARRAY_LEN(testValues));
+	ASSERT_NE(*x, nullptr);
+	for (int32 i = 0; i < ARRAY_LEN(testValues); ++i)
+	{
+		ASSERT_EQ(&x[i], *x + i);
+		ASSERT_EQ(x[i].getSize(), testValues[i]);
+		x[i].test();
+	}
+
+	for (int32 i = 0; i < ARRAY_LEN(testValues); ++i)
+	{
+		y.append({testValues[i]});
+	}
+
+	ASSERT_EQ(x, y);
+
+	for (int32 i = 0; i < ARRAY_LEN(testValues); ++i)
+	{
+		z.emplaceAt(0, testValues[i]);
+	}
+
+	ASSERT_EQ(x.getLength(), ARRAY_LEN(testValues));
+	for (int32 i = 0; i < ARRAY_LEN(testValues); ++i)
+	{
+		z[i].test();
+		ASSERT_EQ(z[i], x[ARRAY_LEN(testValues) - 1 - i]);
+	}
+
+	for (int32 i = 0; i < ARRAY_LEN(testValues); ++i)
+	{
+		auto item = x.pop();
+		ASSERT_EQ(item, testValues[ARRAY_LEN(testValues) - 1 - i]);
+	}
+
+	ASSERT_EQ(x.getLength(), 0);
+	ASSERT_EQ(x, ArrayBase<Testing::Object>{});
+
+	for (int32 i = 0; i < ARRAY_LEN(testValues) / 2; ++i)
+	{
+		y.pop();
+	}
+
+	ASSERT_EQ(y.getLength(), ARRAY_LEN(testValues) - ARRAY_LEN(testValues) / 2);
+	for (int32 i = 0; i < ARRAY_LEN(testValues) - ARRAY_LEN(testValues) / 2; ++i)
+	{
+		ASSERT_EQ(y[i].getSize(), testValues[i]);
+	}
+
+	z.clear();
+
+	ASSERT_EQ(z.getLength(), 0);
+
+	for (int32 i = 0; i < ARRAY_LEN(testValues); i++)
+	{
+		auto it = z.emplaceBack(testValues[i]);
+		ASSERT_EQ(it, *z + i);
+	}
+
+	for (int32 i = 0, j = 0; i < ARRAY_LEN(testValues); i += 2, ++j)
+	{
+		auto item = z.removeAt(j);
+		ASSERT_EQ(item.getSize(), testValues[i]);
+	}
+
+	ASSERT_EQ(y.getLength(), ARRAY_LEN(testValues) - ARRAY_LEN(testValues) / 2);
+
+	x = z;
+
+	ASSERT_EQ(x, z);
+
+	y = move(x);
+
+	ASSERT_EQ(y, z);
+
+	z.~ArrayBase();
+	new (&z) ArrayBase{y};
+
+	ASSERT_EQ(z, y);
+
+	x.~ArrayBase();
+	new (&x) ArrayBase{move(y)};
+
+	ASSERT_EQ(x, z);
+
+	SUCCEED();
+}
+
 TEST(containers, Array)
 {
 	Array<int32> x, y;
@@ -803,7 +903,7 @@ TEST(containers, HashMap)
 	for (int i = 0; i < ARRAY_LEN(names); ++i)
 	{
 		auto it = o.find(names[i]);
-		ASSERT_TRUE((i & 0x1 && it != o.end()) || (!(i & 0x1) && it == o.end()));
+		ASSERT_TRUE(((i & 0x1) && it != o.end()) || (!(i & 0x1) && it == o.end()));
 	}
 
 	SUCCEED();
